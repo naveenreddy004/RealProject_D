@@ -1,0 +1,1010 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Dashboard — avRoN Tech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+          --midnight:#0B192C;
+          --midnight2:#0e2138;
+          --midnight3:#152844;
+          --steel:#608BC1;
+          --steel-soft:#cdd9eb;
+          --ink:#0a0a0a;
+          --ink2:#2a2a2a;
+          --mut:#5a6a7e;
+          --line:#e6ebf2;
+          --bg:#f5f7fb;
+          --soft:#f7f9fc;
+          --soft2:#eef2f7;
+          --danger:#dc2626;
+          --warn:#d97706;
+          --ok:#15803d;
+        }
+        html,body{min-height:100%;}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+        /* ── Layout ──────────────────────────────────────────────────────────────── */
+        .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+        @media (max-width:900px){.app{grid-template-columns:1fr;}}
+
+        /* Sidebar */
+        .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+        @media (max-width:900px){.sidebar{position:relative;height:auto;}}
+        .sb-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px;border-bottom:1px solid #1a2c4a;margin-bottom:18px;}
+        .sb-brand-mark{width:34px;height:34px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border-radius:6px;}
+        .sb-brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:#fff;letter-spacing:-.3px;}
+        .sb-brand-name span{color:var(--steel);}
+        .sb-brand-sub{font-size:10px;color:#7186a0;letter-spacing:.16em;text-transform:uppercase;margin-top:2px;}
+        .sb-profile{padding:14px 12px;margin-bottom:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:9px;}
+        .sb-av{width:36px;height:36px;border-radius:50%;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;margin-bottom:10px;}
+        .sb-name{font-size:14px;font-weight:700;color:#fff;line-height:1.3;}
+        .sb-email{font-size:11.5px;color:#9eb2c8;margin-top:2px;word-break:break-all;}
+        .sb-cert-chip{display:inline-block;background:rgba(96,139,193,.15);color:var(--steel);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;padding:3px 9px;border-radius:5px;margin-top:8px;letter-spacing:.5px;}
+        .sb-nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+        .sb-nav-section{font-size:10.5px;font-weight:700;color:#5a7396;letter-spacing:.14em;text-transform:uppercase;padding:14px 12px 8px;}
+        .sb-link{text-align:left;background:transparent;border:none;padding:11px 12px;color:#cdd9eb;font-size:13.5px;font-weight:500;border-radius:7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:11px;transition:all .15s;width:100%;}
+        .sb-link:hover{background:rgba(255,255,255,.05);color:#fff;}
+        .sb-link.active{background:var(--steel);color:var(--midnight);font-weight:700;}
+        .sb-link .ico{width:18px;text-align:center;font-size:14px;}
+        .sb-foot{margin-top:18px;padding-top:18px;border-top:1px solid #1a2c4a;display:flex;flex-direction:column;gap:2px;}
+        .sb-link.danger{color:#fda4af;}
+        .sb-link.danger:hover{background:rgba(220,38,38,.15);color:#fecaca;}
+
+        /* Main */
+        .main{padding:28px 36px 60px;max-width:1080px;margin:0 auto;width:100%;}
+        @media (max-width:900px){.main{padding:24px 20px 40px;}}
+        .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+        .page-head h1{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;color:var(--midnight);letter-spacing:-.7px;line-height:1.15;}
+        .page-head p{font-size:14px;color:var(--mut);margin-top:4px;}
+
+        /* Status banner */
+        .status-banner{background:var(--midnight);color:#fff;border-radius:12px;padding:24px 28px;margin-bottom:22px;display:flex;gap:18px;align-items:center;position:relative;overflow:hidden;}
+        .status-banner::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(96,139,193,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(96,139,193,.05) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+        .sb-ic{position:relative;flex:0 0 48px;height:48px;border-radius:10px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:.5px;}
+        .sb-txt{position:relative;flex:1;}
+        .sb-txt h3{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:#fff;}
+        .sb-txt p{font-size:13.5px;color:#9eb2c8;margin-top:4px;}
+        .sb-badge{position:relative;background:rgba(96,139,193,.18);color:var(--steel);font-size:10.5px;font-weight:700;padding:5px 12px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;}
+
+        /* Cards */
+        .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:18px;}
+        .card h2{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--midnight);letter-spacing:-.3px;}
+        .card .sub{font-size:13px;color:var(--mut);margin-top:4px;margin-bottom:14px;}
+
+        /* Stats */
+        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+        @media (max-width:680px){.stats{grid-template-columns:1fr;}}
+        .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+        .stat .lbl{font-size:10.5px;color:var(--mut);font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+        .stat .val{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--midnight);margin-top:6px;letter-spacing:-.3px;line-height:1.3;}
+        .stat .sub{font-size:12px;color:var(--mut);margin-top:2px;}
+
+        /* Curriculum */
+        .curr-head{background:var(--midnight);color:#fff;border-radius:12px;padding:24px 28px;margin-bottom:18px;}
+        .curr-head .pt{font-size:11px;font-weight:600;color:var(--steel);letter-spacing:.14em;text-transform:uppercase;}
+        .curr-head h2{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:-.3px;margin-top:6px;}
+        .curr-head p{font-size:13.5px;color:#9eb2c8;margin-top:8px;max-width:560px;}
+        .curr-meta{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#9eb2c8;}
+        .curr-meta span b{color:#fff;}
+
+        .phase{background:#fff;border:1px solid var(--line);border-radius:10px;padding:0;margin-bottom:14px;overflow:hidden;}
+        .phase-head{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid transparent;transition:all .15s;}
+        .phase-head:hover{background:var(--soft);}
+        .phase.open .phase-head{border-bottom-color:var(--line);background:var(--soft);}
+        .phase-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--steel);font-weight:700;letter-spacing:.5px;}
+        .phase-title{font-family:'Sora',sans-serif;font-size:15.5px;font-weight:700;color:var(--midnight);margin-top:4px;letter-spacing:-.2px;}
+        .phase-toggle{font-size:18px;color:var(--mut);transition:transform .2s;}
+        .phase.open .phase-toggle{transform:rotate(45deg);color:var(--steel);}
+        .phase-body{display:none;padding:18px 22px 22px;}
+        .phase.open .phase-body{display:block;animation:fade .25s;}
+        @keyframes fade{from{opacity:0;}to{opacity:1;}}
+        .phase-h{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+        .phase-topics{list-style:none;padding:0;}
+        .phase-topics li{padding:6px 0;font-size:13.5px;color:var(--ink2);display:flex;gap:10px;}
+        .phase-topics li::before{content:'▸';color:var(--steel);font-weight:700;}
+        .phase-deliv{background:var(--soft);border-left:3px solid var(--steel);border-radius:0 6px 6px 0;padding:12px 16px;margin-top:14px;font-size:13px;color:var(--ink2);line-height:1.6;}
+        .phase-deliv b{color:var(--midnight);}
+
+        .coming-soon{background:#fff;border:1.5px dashed var(--line);border-radius:12px;padding:60px 30px;text-align:center;}
+        .coming-soon .ic{font-size:38px;margin-bottom:12px;}
+        .coming-soon h3{font-family:'Sora',sans-serif;font-size:18px;color:var(--midnight);}
+        .coming-soon p{font-size:13.5px;color:var(--mut);margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto;}
+
+        /* Certificate preview — medium card */
+        .cert-frame{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;position:relative;}
+        .cert-wrap{max-width:480px;margin:0 auto;}
+        .cert-preview{aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:2px solid var(--midnight);border-radius:8px;padding:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:zoom-in;transition:transform .2s, box-shadow .2s;}
+        .cert-preview:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,25,44,.12);}
+        .cert-preview::before{content:'DEMO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:'Sora',sans-serif;font-size:54px;font-weight:800;color:rgba(11,25,44,.09);letter-spacing:8px;pointer-events:none;white-space:nowrap;}
+        .cp-zoom-hint{position:absolute;bottom:8px;right:10px;font-size:10px;color:var(--mut);background:rgba(255,255,255,.85);padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.05em;}
+        .cp-logo{font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:var(--midnight);letter-spacing:-.5px;}
+        .cp-logo span{color:var(--steel);}
+        .cp-sub{font-size:8.5px;color:var(--mut);letter-spacing:.18em;text-transform:uppercase;margin-top:2px;}
+        .cp-divider{width:36px;height:2px;background:var(--steel);margin:11px auto;}
+        .cp-presents{font-size:9px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;}
+        .cp-name{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--midnight);margin-top:5px;letter-spacing:-.5px;}
+        .cp-for{font-size:10px;color:var(--mut);margin-top:9px;}
+        .cp-domain{font-size:13px;font-weight:700;color:var(--midnight);margin-top:3px;}
+        .cp-cid{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);font-weight:600;}
+
+        /* Cert lightbox (enlarge) */
+        .cert-lightbox{position:fixed;inset:0;background:rgba(11,25,44,.85);backdrop-filter:blur(8px);z-index:10001;display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
+        .cert-lightbox.show{display:flex;animation:fadeIn .2s;}
+        .cert-lightbox .cert-big{width:min(92vw,900px);aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:3px solid var(--midnight);border-radius:10px;padding:48px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:default;}
+        .cert-lightbox .cert-big::before{content:'DEMO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:'Sora',sans-serif;font-size:130px;font-weight:800;color:rgba(11,25,44,.08);letter-spacing:14px;pointer-events:none;}
+        .cert-lightbox .cert-big .cp-logo{font-size:30px;}
+        .cert-lightbox .cert-big .cp-sub{font-size:12px;}
+        .cert-lightbox .cert-big .cp-divider{width:64px;margin:22px auto;}
+        .cert-lightbox .cert-big .cp-presents{font-size:13px;}
+        .cert-lightbox .cert-big .cp-name{font-size:40px;margin-top:10px;}
+        .cert-lightbox .cert-big .cp-for{font-size:14px;margin-top:20px;}
+        .cert-lightbox .cert-big .cp-domain{font-size:22px;margin-top:6px;}
+        .cert-lightbox .cert-big .cp-cid{font-size:14px;margin-top:22px;}
+        .cert-lightbox .close-x{position:absolute;top:18px;right:22px;color:#fff;font-size:34px;cursor:pointer;background:none;border:none;font-weight:300;line-height:1;}
+
+        /* Notifications */
+        .notif-list{display:flex;flex-direction:column;gap:10px;}
+        .notif{display:flex;gap:14px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;align-items:flex-start;transition:all .15s;position:relative;}
+        .notif.unread{border-left:3px solid var(--steel);background:#f7faff;}
+        .notif:hover{border-color:var(--steel);}
+        .notif-ic{flex:0 0 36px;height:36px;border-radius:8px;background:var(--soft2);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+        .notif.type-info .notif-ic{background:#dbeafe;color:#1e40af;}
+        .notif.type-success .notif-ic{background:#dcfce7;color:#15803d;}
+        .notif.type-warn .notif-ic{background:#fef3c7;color:#92400e;}
+        .notif.type-event .notif-ic{background:#ede9fe;color:#6d28d9;}
+        .notif-body{flex:1;min-width:0;}
+        .notif-title{font-size:14px;font-weight:700;color:var(--midnight);}
+        .notif-msg{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.5;}
+        .notif-time{font-size:11px;color:var(--mut);margin-top:6px;}
+        .notif-dot{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--steel);}
+        .notif-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+        .notif-toolbar .count{font-size:12.5px;color:var(--mut);}
+        .notif-toolbar .count b{color:var(--midnight);}
+
+        /* Sidebar badge */
+        .sb-link .badge-n{margin-left:auto;background:var(--danger);color:#fff;font-size:10.5px;font-weight:800;min-width:20px;padding:2px 6px;border-radius:12px;text-align:center;line-height:1.3;}
+        .sb-link.active .badge-n{background:#fff;color:var(--danger);}
+
+        /* Support / Help Desk */
+        .help-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;}
+        @media (max-width:840px){.help-grid{grid-template-columns:1fr;}}
+        .help-channels{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;}
+        .help-chan{padding:14px;border:1px solid var(--line);border-radius:9px;background:var(--soft);text-decoration:none;color:inherit;transition:all .15s;display:block;}
+        .help-chan:hover{border-color:var(--steel);background:#fff;transform:translateY(-1px);}
+        .help-chan .ic{font-size:18px;margin-bottom:6px;}
+        .help-chan b{display:block;font-size:13px;color:var(--midnight);font-weight:700;}
+        .help-chan span{font-size:11.5px;color:var(--mut);}
+
+        .tk-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;}
+        .tk-empty{padding:30px 16px;text-align:center;color:var(--mut);font-size:13px;border:1.5px dashed var(--line);border-radius:9px;}
+        .tk-item{padding:13px 15px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+        .tk-item .row1{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+        .tk-item .tk-subj{font-size:13.5px;font-weight:700;color:var(--midnight);}
+        .tk-item .tk-meta{font-size:11px;color:var(--mut);margin-top:4px;}
+        .tk-item .tk-msg{font-size:12.5px;color:var(--ink2);margin-top:8px;line-height:1.5;background:var(--soft);padding:8px 10px;border-radius:6px;}
+        .tk-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.06em;}
+        .tk-status.open{background:#dbeafe;color:#1e40af;}
+        .tk-status.progress{background:#fef3c7;color:#92400e;}
+        .tk-status.resolved{background:#dcfce7;color:#15803d;}
+        .tk-status.closed{background:#e5e7eb;color:#475569;}
+        .tk-id{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);font-weight:700;}
+        .fi-sel{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;background:#fff;}
+        .fi-ta{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;background:#fff;min-height:110px;resize:vertical;}
+        .fi-sel:focus,.fi-ta:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
+
+        .cert-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;}
+        .cert-locked-note{background:#fef3c7;border:1px solid #fcd34d;color:#854d0e;border-radius:8px;padding:14px 18px;font-size:13.5px;display:flex;gap:11px;align-items:flex-start;margin-top:18px;}
+        .cert-locked-note .lic{font-size:18px;line-height:1;}
+
+        /* Payment */
+        .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+        @media (max-width:680px){.pay-grid{grid-template-columns:1fr;}}
+        .qr-block{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:20px;text-align:center;}
+        .qr-block img{width:100%;max-width:210px;border-radius:8px;}
+        .qr-name{font-weight:700;color:var(--midnight);margin-top:10px;font-size:13.5px;}
+        .qr-upi{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--steel);background:#fff;display:inline-block;padding:3px 9px;border-radius:5px;margin-top:5px;}
+        .qr-amount{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--midnight);margin-top:6px;}
+
+        .fg{margin-bottom:14px;}
+        .fg label{display:block;font-size:12px;font-weight:700;color:var(--midnight);margin-bottom:6px;}
+        .fi{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;background:#fff;transition:all .2s;}
+        .fi:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
+        .btn-pay{width:100%;background:var(--midnight);color:#fff;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;}
+        .btn-pay:hover:not(:disabled){background:var(--midnight2);}
+        .btn-pay:disabled{opacity:.6;cursor:not-allowed;}
+
+        /* Buttons */
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .2s;text-decoration:none;}
+        .btn-primary{background:var(--midnight);color:#fff;}
+        .btn-primary:hover:not(:disabled){background:var(--midnight2);}
+        .btn-primary:disabled{background:#94a3b8;cursor:not-allowed;}
+        .btn-outline{background:#fff;color:var(--midnight);border:1.5px solid var(--line);}
+        .btn-outline:hover{border-color:var(--midnight);}
+        .btn-li{background:#0a66c2;color:#fff;}
+        .btn-li:hover{background:#0850a0;}
+
+        .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;}
+        @keyframes rot{to{transform:rotate(360deg);}}
+
+        /* Modal */
+        .modal{position:fixed;inset:0;background:rgba(11,25,44,.6);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+        .modal.show{display:flex;animation:fadeIn .2s;}
+        @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+        .modal-card{background:#fff;border-radius:12px;max-width:440px;width:100%;overflow:hidden;}
+        .modal-head{padding:22px 26px;border-bottom:1px solid var(--line);}
+        .modal-head h3{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--midnight);}
+        .modal-head p{font-size:13px;color:var(--mut);margin-top:4px;}
+        .modal-body{padding:22px 26px;}
+        .modal-foot{padding:0 26px 22px;display:flex;gap:10px;}
+        .modal-foot button{flex:1;}
+
+        /* Profile */
+        .profile-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+        .profile-row:last-child{border:none;}
+        .profile-row .lbl{color:var(--mut);}
+        .profile-row .val{font-weight:600;color:var(--ink);}
+
+        /* Section visibility */
+        .tab-section{display:none;}
+        .tab-section.active{display:block;animation:fade .25s;}
+
+        /* Toast */
+        .toast{position:fixed;top:24px;right:24px;background:var(--midnight);color:#fff;padding:13px 20px;border-radius:9px;font-size:13.5px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.2);transform:translateX(120%);transition:transform .3s;z-index:10000;max-width:340px;}
+        .toast.show{transform:translateX(0);}
+        .toast.err{background:var(--danger);}
+
+        /* Loading */
+        .loading{padding:80px 20px;text-align:center;color:var(--mut);font-size:14px;}
+        .loading::before{content:'';display:block;width:40px;height:40px;border:3px solid var(--line);border-top-color:var(--steel);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 14px;}
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+        <div class="sb-brand">
+            <div class="sb-brand-mark">aR</div>
+            <div>
+                <div class="sb-brand-name">av<span>RoN</span> Tech</div>
+                <div class="sb-brand-sub">avRoNTech.in</div>
+            </div>
+        </div>
+
+        <div class="sb-profile">
+            <div class="sb-av" id="sb-av">—</div>
+            <div class="sb-name" id="sb-name">Loading...</div>
+            <div class="sb-email" id="sb-email">—</div>
+            <div class="sb-cert-chip" id="sb-cert">—</div>
+        </div>
+
+        <nav class="sb-nav">
+            <div class="sb-nav-section">Workspace</div>
+            <button data-testid="tab-dashboard" class="sb-link active" onclick="showTab('dashboard',this)"><span class="ico">▣</span> Dashboard</button>
+            <button data-testid="tab-internships" class="sb-link" onclick="showTab('internships',this)"><span class="ico">⌗</span> My Internships</button>
+            <button data-testid="tab-certificates" class="sb-link" onclick="showTab('certificates',this)"><span class="ico">◇</span> Certificates</button>
+            <button data-testid="tab-notifications" class="sb-link" onclick="showTab('notifications',this)"><span class="ico">⌕</span> Notifications<span class="badge-n" id="notif-badge" style="display:none;">0</span></button>
+            <button data-testid="tab-support" class="sb-link" onclick="showTab('support',this)"><span class="ico">⚒</span> Support &amp; Help Desk</button>
+            <button data-testid="tab-profile" class="sb-link" onclick="showTab('profile',this)"><span class="ico">◉</span> Profile</button>
+        </nav>
+
+        <div class="sb-foot">
+            <button class="sb-link" data-testid="change-pw-btn" onclick="openModal('pwModal')"><span class="ico">⊙</span> Change Password</button>
+            <a href="/" class="sb-link"><span class="ico">↻</span> Main Site</a>
+            <button data-testid="logout-btn" class="sb-link danger" onclick="logout()"><span class="ico">⊗</span> Logout</button>
+        </div>
+    </aside>
+
+    <!-- ── Main content ────────────────────────────────────────────────── -->
+    <main class="main">
+        <div id="loadingScreen" class="loading">Loading your dashboard…</div>
+
+        <div id="content" style="display:none;">
+
+            <!-- ── TAB: DASHBOARD ─────────────────────────────────────────── -->
+            <section class="tab-section active" id="sec-dashboard">
+                <div class="page-head">
+                    <div>
+                        <h1>Welcome back, <span id="firstName">there</span>.</h1>
+                        <p>Track your internship progress, payments and certificates from one place.</p>
+                    </div>
+                </div>
+
+                <div class="status-banner">
+                    <div class="sb-ic" id="status-ic">…</div>
+                    <div class="sb-txt">
+                        <h3 id="status-title" data-testid="status-title">—</h3>
+                        <p id="status-desc">—</p>
+                    </div>
+                    <div class="sb-badge" id="status-badge">—</div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat"><div class="lbl">Domain</div><div class="val" id="s-domain">—</div></div>
+                    <div class="stat"><div class="lbl">Duration</div><div class="val" id="s-duration">—</div><div class="sub" id="s-period">—</div></div>
+                    <div class="stat"><div class="lbl">Package</div><div class="val" id="s-pkg">—</div><div class="sub" id="s-amt">—</div></div>
+                </div>
+
+                <!-- Payment section (visible if pending) -->
+                <div class="card" id="payCard" style="display:none;">
+                    <h2>Complete your UPI payment</h2>
+                    <div class="sub">Pay via UPI and submit your UTR + screenshot below. Admin verifies within hours.</div>
+
+                    <div class="pay-grid" style="margin-top:14px;">
+                        <div class="qr-block">
+                            <div id="qrBox"><div style="padding:24px;color:var(--mut);font-size:12px;">Loading QR…</div></div>
+                            <div class="qr-name" id="upi-name">avRoN Tech</div>
+                            <div class="qr-upi" id="upi-id">—</div>
+                            <div class="qr-amount">₹<span id="upi-amt">199</span></div>
+                        </div>
+                        <div>
+                            <div class="fg"><label>UTR Number *</label>
+                                <input type="text" class="fi" id="utrInput" placeholder="e.g. 407812345678" style="text-transform:uppercase;" data-testid="utr-input">
+                            </div>
+                            <div class="fg"><label>Payment Screenshot</label>
+                                <input type="file" class="fi" id="screenshotInput" accept="image/*" data-testid="screenshot-input">
+                            </div>
+                            <button class="btn-pay" id="payBtn" onclick="submitPayment()" data-testid="submit-payment-btn">
+                                <span id="payBtnTxt">Submit Payment</span>
+                                <span class="spin" id="paySpin" style="display:none;"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment under review -->
+                <div class="card" id="payReviewCard" style="display:none;">
+                    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start;">
+                        <div style="font-size:24px;line-height:1;">⏳</div>
+                        <div>
+                            <h2 style="color:#854d0e;">Payment under review</h2>
+                            <p style="font-size:13.5px;color:#854d0e;margin-top:6px;">Our admin team is verifying your UPI transaction. You'll receive an Offer Letter PDF by email as soon as it's approved — usually within a few hours.</p>
+                            <div style="margin-top:12px;display:flex;gap:18px;font-size:12.5px;color:#854d0e;flex-wrap:wrap;">
+                                <span>UTR: <b style="font-family:monospace;" id="r-utr">—</b></span>
+                                <span>Amount: <b>₹<span id="r-amt">—</span></b></span>
+                                <span>Submitted: <b id="r-when">—</b></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: MY INTERNSHIPS ───────────────────────────────────── -->
+            <section class="tab-section" id="sec-internships">
+                <div class="page-head">
+                    <div>
+                        <h1 id="curr-page-title">My Internship</h1>
+                        <p>Your day-by-day curriculum and weekly deliverables.</p>
+                    </div>
+                </div>
+
+                <div id="currHead"></div>
+                <div id="currBody"></div>
+            </section>
+
+            <!-- ── TAB: CERTIFICATES ─────────────────────────────────────── -->
+            <section class="tab-section" id="sec-certificates">
+                <div class="page-head">
+                    <div>
+                        <h1>My Certificate</h1>
+                        <p>This is a demo preview of the certificate format. Your final certificate unlocks once admin approves your payment.</p>
+                    </div>
+                </div>
+
+                <div class="cert-frame">
+                    <div class="cert-wrap">
+                        <div class="cert-preview" id="certPreview" data-testid="cert-preview" onclick="openCertLightbox()" title="Click to enlarge">
+                            <div class="cp-logo">av<span>RoN</span> Tech</div>
+                            <div class="cp-sub">CORPORATE INTERNSHIP DIVISION</div>
+                            <div class="cp-divider"></div>
+                            <div class="cp-presents">This is to certify that</div>
+                            <div class="cp-name" id="cp-name">Sample Student</div>
+                            <div class="cp-for">has successfully completed the</div>
+                            <div class="cp-domain" id="cp-domain">Full Stack Web Development Internship</div>
+                            <div class="cp-cid" id="cp-cid">CERT-ID: DEMO-0000-XXXX</div>
+                            <div class="cp-zoom-hint">⤢ Click to enlarge</div>
+                        </div>
+                    </div>
+
+                    <div class="cert-actions" style="justify-content:center;">
+                        <button class="btn btn-primary" id="dlBtn" onclick="downloadCertificate()" disabled data-testid="cert-download-btn">
+                            <span id="dl-txt">🔒 Download locked</span>
+                            <span class="spin" id="dl-spin" style="display:none;"></span>
+                        </button>
+                        <button class="btn btn-outline" id="dlOfferBtn" onclick="downloadOfferLetter()" disabled data-testid="offer-download-btn" style="display:none;">
+                            📄 Offer Letter
+                        </button>
+                        <button class="btn btn-outline" id="dlReceiptBtn" onclick="downloadReceipt()" data-testid="receipt-download-btn" style="display:none;">
+                            🧾 Receipt
+                        </button>
+                        <button class="btn btn-li" id="shareBtn" onclick="shareLinkedIn()" disabled data-testid="cert-share-btn">Share on LinkedIn</button>
+                        <button class="btn btn-outline" id="verifyBtn" onclick="verifyOnline()" disabled data-testid="cert-verify-btn">Verify Online</button>
+                    </div>
+
+                    <div class="cert-locked-note" id="lockNote">
+                        <div class="lic">🔒</div>
+                        <div>
+                            <b>This is a demo preview</b><br>
+                            <span style="color:#9a6005;">The certificate shown above is a sample template. Your personalised certificate will be issued once admin approves your payment. You'll also receive it as an email attachment.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: NOTIFICATIONS ────────────────────────────────────── -->
+            <section class="tab-section" id="sec-notifications">
+                <div class="page-head">
+                    <div>
+                        <h1>Notifications &amp; Announcements</h1>
+                        <p>Latest updates, announcements and reminders from the avRoN Tech team.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="notif-toolbar">
+                        <div class="count"><b id="notif-unread-count">0</b> unread of <b id="notif-total-count">0</b> total</div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-outline" data-testid="notif-mark-all" onclick="markAllNotifsRead()" style="padding:8px 14px;font-size:12.5px;">Mark all as read</button>
+                        </div>
+                    </div>
+                    <div class="notif-list" id="notifList" data-testid="notif-list"></div>
+                </div>
+            </section>
+
+            <!-- ── TAB: SUPPORT / HELP DESK ──────────────────────────────── -->
+            <section class="tab-section" id="sec-support">
+                <div class="page-head">
+                    <div>
+                        <h1>Support &amp; Help Desk</h1>
+                        <p>Raise a ticket and our team will get back to you. Track all your tickets here.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Reach us directly</h2>
+                    <div class="sub">Choose any channel — we usually respond within 24 hours on business days.</div>
+                    <div class="help-channels">
+                        <a class="help-chan" href="mailto:support@avrontech.in" data-testid="help-email">
+                            <div class="ic">✉</div>
+                            <b>Email</b>
+                            <span>support@avrontech.in</span>
+                        </a>
+                        <a class="help-chan" href="tel:+918008886270" data-testid="help-phone">
+                            <div class="ic">☎</div>
+                            <b>Phone</b>
+                            <span>+91 80088 86270</span>
+                        </a>
+                        <a class="help-chan" href="https://wa.me/918008886270" target="_blank" data-testid="help-whatsapp">
+                            <div class="ic">◐</div>
+                            <b>WhatsApp</b>
+                            <span>Chat with us instantly</span>
+                        </a>
+                        <a class="help-chan" href="#" onclick="showTab('support',null);document.getElementById('tk-subject').focus();return false;" data-testid="help-ticket-cta">
+                            <div class="ic">⚒</div>
+                            <b>Raise a Ticket</b>
+                            <span>Use the form below</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="help-grid">
+                    <div class="card">
+                        <h2>Raise a new ticket</h2>
+                        <div class="sub">Tell us what's wrong — be as specific as you can.</div>
+                        <div class="fg"><label>Category</label>
+                            <select class="fi-sel" id="tk-category" data-testid="ticket-category">
+                                <option value="Payment">Payment Issue</option>
+                                <option value="Certificate">Certificate Issue</option>
+                                <option value="Curriculum">Curriculum / Course</option>
+                                <option value="Account">Account &amp; Login</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="fg"><label>Priority</label>
+                            <select class="fi-sel" id="tk-priority" data-testid="ticket-priority">
+                                <option value="Low">Low</option>
+                                <option value="Normal" selected>Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="fg"><label>Subject *</label>
+                            <input type="text" class="fi" id="tk-subject" placeholder="e.g. Unable to download certificate" data-testid="ticket-subject">
+                        </div>
+                        <div class="fg"><label>Describe the issue *</label>
+                            <textarea class="fi-ta" id="tk-message" placeholder="Steps to reproduce, what you expected, what happened…" data-testid="ticket-message"></textarea>
+                        </div>
+                        <button class="btn-pay" onclick="submitTicket()" data-testid="ticket-submit-btn">
+                            <span>Submit Ticket</span>
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h2>Your tickets</h2>
+                        <div class="sub"><span id="tk-count">0</span> ticket(s) on your account.</div>
+                        <div class="tk-list" id="tkList" data-testid="ticket-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── TAB: PROFILE ──────────────────────────────────────────── -->
+            <section class="tab-section" id="sec-profile">
+                <div class="page-head"><div><h1>Profile</h1><p>Your account details and registration info.</p></div></div>
+
+                <div class="card">
+                    <h2>Personal Details</h2>
+                    <div style="margin-top:8px;">
+                        <div class="profile-row"><span class="lbl">Full Name</span><span class="val" id="pr-name">—</span></div>
+                        <div class="profile-row"><span class="lbl">Email</span><span class="val" id="pr-email">—</span></div>
+                        <div class="profile-row"><span class="lbl">Mobile</span><span class="val" id="pr-mobile">—</span></div>
+                        <div class="profile-row"><span class="lbl">College</span><span class="val" id="pr-college">—</span></div>
+                        <div class="profile-row"><span class="lbl">Course</span><span class="val" id="pr-course">—</span></div>
+                        <div class="profile-row"><span class="lbl">Certificate ID</span><span class="val" id="pr-certid" style="font-family:monospace;">—</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Internship Details</h2>
+                    <div style="margin-top:8px;">
+                        <div class="profile-row"><span class="lbl">Domain</span><span class="val" id="pri-domain">—</span></div>
+                        <div class="profile-row"><span class="lbl">Duration</span><span class="val" id="pri-duration">—</span></div>
+                        <div class="profile-row"><span class="lbl">Period</span><span class="val" id="pri-period">—</span></div>
+                        <div class="profile-row"><span class="lbl">Package</span><span class="val" id="pri-pkg">—</span></div>
+                        <div class="profile-row"><span class="lbl">Status</span><span class="val" id="pri-status">—</span></div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- Certificate Lightbox -->
+<div class="cert-lightbox" id="certLightbox" onclick="closeCertLightbox(event)" data-testid="cert-lightbox">
+    <button class="close-x" onclick="closeCertLightbox(event,true)" data-testid="cert-lightbox-close">×</button>
+    <div class="cert-big" onclick="event.stopPropagation()">
+        <div class="cp-logo">av<span>RoN</span> Tech</div>
+        <div class="cp-sub">CORPORATE INTERNSHIP DIVISION</div>
+        <div class="cp-divider"></div>
+        <div class="cp-presents">This is to certify that</div>
+        <div class="cp-name">Sample Student</div>
+        <div class="cp-for">has successfully completed the</div>
+        <div class="cp-domain">Full Stack Web Development Internship</div>
+        <div class="cp-cid">CERT-ID: DEMO-0000-XXXX</div>
+    </div>
+</div>
+
+<!-- Modal: Payment under review (popup after submit) -->
+<div class="modal" id="payDoneModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3>Payment submitted ✓</h3>
+            <p>Thank you. Our admin team will review your payment shortly. Once approved, your Offer Letter will be emailed and your certificate will be unlocked automatically.</p>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-primary" onclick="closeModal('payDoneModal')" data-testid="payreview-close">Got it</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: change password -->
+<div class="modal" id="pwModal">
+    <div class="modal-card">
+        <div class="modal-head"><h3>Change password</h3><p>Set a new password for your account.</p></div>
+        <div class="modal-body">
+            <div class="fg"><label>Current password</label><input type="password" id="curPw" class="fi" data-testid="cur-pw"></div>
+            <div class="fg"><label>New password</label><input type="password" id="newPw" class="fi" data-testid="new-pw"></div>
+            <div class="fg"><label>Confirm new password</label><input type="password" id="cnfPw" class="fi" data-testid="cnf-pw"></div>
+            <div id="pwErr" style="display:none;font-size:12px;color:var(--danger);"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-outline" onclick="closeModal('pwModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="changePw()" data-testid="save-pw-btn">Update password</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = localStorage.getItem('cp_token');
+    if(!token) location.href = '/portal';
+
+    let regData = null, curriculum = null;
+
+    function showToast(msg, err=false){
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (err?' err':'');
+      clearTimeout(t._h); t._h = setTimeout(()=> t.className='toast'+(err?' err':''), 4200);
+    }
+    function openModal(id){document.getElementById(id).classList.add('show');}
+    function closeModal(id){document.getElementById(id).classList.remove('show');}
+    function logout(){localStorage.removeItem('cp_token');localStorage.removeItem('cp_user');location.href='/portal';}
+    function showTab(name, btn){
+      document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+      document.getElementById('sec-'+name).classList.add('active');
+      document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
+      if(btn) btn.classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    const STATUS = {
+      payment_pending:    {ic:'₹', t:'Payment Pending', d:'Submit your UPI payment to begin the verification process.', badge:'Action needed'},
+      payment_submitted:  {ic:'⏳', t:'Under Admin Review', d:'Your payment has been received and is awaiting approval. You will be emailed an Offer Letter on approval.', badge:'Reviewing'},
+      payment_verified:   {ic:'✓', t:'Payment Verified', d:'Your internship is active. Open the My Internships tab to begin.', badge:'Verified'},
+      active:             {ic:'A', t:'Internship Active', d:'Open My Internships to view your day-by-day curriculum.', badge:'Active'},
+      completed:          {ic:'✓', t:'Internship Completed', d:'All tasks complete. Awaiting certificate release.', badge:'Completed'},
+      certificate_sent:   {ic:'★', t:'Certificate Issued', d:'Your QR-verified certificate has been emailed and is ready to download.', badge:'Issued'},
+      rejected:           {ic:'!', t:'Application Rejected', d:'Please contact support.', badge:'Rejected'},
+      pending:            {ic:'…', t:'Pending', d:'Awaiting next step.', badge:'Pending'},
+    };
+
+    async function loadDashboard(){
+      try{
+        const res = await fetch('/api/student/dashboard', {headers:{'Authorization':'Bearer '+token}});
+        if(res.status === 401){logout();return;}
+        const data = await res.json();
+        if(!data.success || !data.registration){
+          document.getElementById('loadingScreen').textContent = 'No active registration found.';
+          return;
+        }
+        regData = data.registration;
+        const user = data.user;
+
+        // Sidebar profile
+        document.getElementById('sb-av').textContent = (user.fullName||'?').slice(0,2).toUpperCase();
+        document.getElementById('sb-name').textContent = user.fullName;
+        document.getElementById('sb-email').textContent = user.email;
+        document.getElementById('sb-cert').textContent = regData.certId;
+        document.getElementById('firstName').textContent = (user.fullName||'').split(' ')[0] || 'there';
+
+        // Stats
+        document.getElementById('s-domain').textContent = regData.domain;
+        document.getElementById('s-duration').textContent = regData.duration || '—';
+        document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
+        document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
+        document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+
+        // Status banner
+        const meta = STATUS[regData.status] || STATUS.pending;
+        document.getElementById('status-ic').textContent = meta.ic;
+        document.getElementById('status-title').textContent = meta.t;
+        document.getElementById('status-desc').textContent = meta.d;
+        document.getElementById('status-badge').textContent = meta.badge;
+
+        // Payment card
+        const needsPay = regData.status === 'payment_pending';
+        const reviewing = regData.status === 'payment_submitted';
+        document.getElementById('payCard').style.display = needsPay ? 'block' : 'none';
+        document.getElementById('payReviewCard').style.display = reviewing ? 'block' : 'none';
+        if(reviewing && regData.payment){
+          document.getElementById('r-utr').textContent = regData.payment.utrNumber || '—';
+          document.getElementById('r-amt').textContent = regData.payment.amount || '—';
+          document.getElementById('r-when').textContent = regData.payment.submittedAt ? fmtDate(regData.payment.submittedAt) : '—';
+        }
+        if(needsPay){
+          const r = await fetch('/api/upi-qr?amount=' + (regData.amount||199));
+          const d = await r.json();
+          if(d.success){
+            document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
+            document.getElementById('upi-id').textContent = d.upiId;
+            document.getElementById('upi-amt').textContent = regData.amount || d.amount;
+          }
+        }
+
+        // Profile tab
+        document.getElementById('pr-name').textContent = user.fullName;
+        document.getElementById('pr-email').textContent = user.email;
+        document.getElementById('pr-mobile').textContent = user.mobile || '—';
+        document.getElementById('pr-college').textContent = user.college || '—';
+        document.getElementById('pr-course').textContent = user.course || '—';
+        document.getElementById('pr-certid').textContent = regData.certId;
+        document.getElementById('pri-domain').textContent = regData.domain;
+        document.getElementById('pri-duration').textContent = regData.duration || '—';
+        document.getElementById('pri-period').textContent = fmtDate(regData.startDate)+' – '+fmtDate(regData.endDate);
+        document.getElementById('pri-pkg').textContent = regData.package;
+        document.getElementById('pri-status').textContent = (STATUS[regData.status]||{}).t || regData.status;
+
+        // Cert preview stays as DEMO — generic info only, never personalised.
+        // Real certificate is only accessible via the Download button (PDF from MongoDB)
+        // once admin sets status to certificate_sent. This prevents screenshots of
+        // the preview being mistaken for a real certificate.
+
+        // Unlock cert if issued
+        const issued  = regData.status === 'certificate_sent';
+        const hasOffer   = ['active','completed','certificate_sent'].includes(regData.status);
+        const hasPaid = !!(regData.payment && regData.payment.utrNumber);
+        document.getElementById('dlBtn').disabled    = !issued;
+        document.getElementById('shareBtn').disabled = !issued;
+        document.getElementById('verifyBtn').disabled = !issued;
+        document.getElementById('dl-txt').textContent = issued ? '📥 Download Certificate' : '🔒 Download locked';
+        document.getElementById('lockNote').style.display = issued ? 'none' : 'flex';
+        // Show offer letter once payment approved
+        const offerBtn = document.getElementById('dlOfferBtn');
+        offerBtn.style.display = hasOffer ? 'inline-flex' : 'none';
+        offerBtn.disabled = false;
+        // Show receipt once payment submitted
+        const receiptBtn = document.getElementById('dlReceiptBtn');
+        receiptBtn.style.display = hasPaid ? 'inline-flex' : 'none';
+
+        // Init new dashboard features
+        renderNotifications();
+        renderTickets();
+
+        // Load curriculum
+        await loadCurriculum();
+
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      }catch(e){
+        console.error(e);
+        document.getElementById('loadingScreen').textContent = 'Failed to load. ' + e.message;
+      }
+    }
+
+    function fmtDate(d){if(!d)return '—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+    async function loadCurriculum(){
+      try{
+        const res = await fetch('/api/student/curriculum', {headers:{'Authorization':'Bearer '+token}});
+        const d = await res.json();
+        if(!d.success) return;
+        curriculum = d.curriculum;
+        document.getElementById('curr-page-title').textContent = regData.domain;
+        renderCurriculum();
+      }catch(e){console.error(e);}
+    }
+
+    function renderCurriculum(){
+      const head = document.getElementById('currHead');
+      const body = document.getElementById('currBody');
+      if(!curriculum || !curriculum.available){
+        head.innerHTML = '';
+        body.innerHTML = `
+          <div class="coming-soon">
+            <div class="ic">🛠</div>
+            <h3>Working on more courses</h3>
+            <p>${(curriculum && curriculum.message) || "We're polishing this curriculum — your roadmap will be available here shortly. Our team will notify you the moment it's ready."}</p>
+          </div>`;
+        return;
+      }
+      head.innerHTML = `
+        <div class="curr-head">
+          <div class="pt">${curriculum.total_days}-DAY INTERNSHIP ROADMAP</div>
+          <h2>${curriculum.title}</h2>
+          <p>${curriculum.tagline || ''}</p>
+          <div class="curr-meta">
+            <span><b>${curriculum.phases.length}</b> phases</span>
+            <span><b>${curriculum.total_days}</b> days</span>
+            <span><b>${curriculum.phases.length}</b> deliverables</span>
+          </div>
+        </div>
+      `;
+      body.innerHTML = curriculum.phases.map((p,i)=>`
+        <div class="phase ${i===0?'open':''}" data-i="${i}">
+          <div class="phase-head" onclick="togglePhase(${i})">
+            <div>
+              <div class="phase-num">${p.day_range}</div>
+              <div class="phase-title">${p.title}</div>
+            </div>
+            <div class="phase-toggle">+</div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-h">What you'll learn</div>
+            <ul class="phase-topics">${p.topics.map(t=>`<li>${t}</li>`).join('')}</ul>
+            <div class="phase-deliv"><b>Deliverable:</b> ${p.deliverable}</div>
+          </div>
+        </div>`).join('');
+    }
+    function togglePhase(i){
+      document.querySelectorAll('.phase').forEach((el, idx) => {
+        if(idx === i) el.classList.toggle('open');
+      });
+    }
+
+    // ── Payment submit ────────────────────────────────────────────────────────────
+    async function submitPayment(){
+      const utr = document.getElementById('utrInput').value.trim();
+      if(utr.length < 6){showToast('Enter a valid UTR.', true);return;}
+      const sc = document.getElementById('screenshotInput').files[0];
+      const btn = document.getElementById('payBtn'),
+            sp  = document.getElementById('paySpin'),
+            bt  = document.getElementById('payBtnTxt');
+      btn.disabled = true; sp.style.display='inline-block'; bt.textContent='Submitting…';
+      const fd = new FormData();
+      fd.append('utrNumber', utr);
+      if(sc) fd.append('paymentScreenshot', sc);
+      try{
+        const res = await fetch('/api/student/submit-payment', {method:'POST', headers:{'Authorization':'Bearer '+token}, body: fd});
+        const data = await res.json();
+        if(data.success){
+          openModal('payDoneModal');
+          setTimeout(loadDashboard, 600);
+        }else{
+          showToast(data.message||'Failed', true);
+          btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Payment';
+        }
+      }catch{
+        showToast('Network error', true);
+        btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Payment';
+      }
+    }
+
+    // ── Cert actions ──────────────────────────────────────────────────────────────
+    async function downloadCertificate(){
+      try{
+        const res = await fetch('/api/student/certificate', {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d = await res.json().catch(()=>({}));showToast(d.message||'Locked', true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='avRoN_Tech_Certificate_'+regData.certId+'.pdf'; a.click();
+        URL.revokeObjectURL(url);
+      }catch{showToast('Could not download', true);}
+    }
+    async function downloadOfferLetter(){
+      try{
+        const res = await fetch('/api/student/offer-letter', {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d = await res.json().catch(()=>({}));showToast(d.message||'Not available yet', true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='avRoN_Tech_OfferLetter_'+regData.certId+'.pdf'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Offer letter downloaded');
+      }catch{showToast('Could not download offer letter', true);}
+    }
+    async function downloadReceipt(){
+      try{
+        const res = await fetch('/api/student/receipt', {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d = await res.json().catch(()=>({}));showToast(d.message||'Receipt not available', true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='avRoN_Tech_Receipt_'+regData.certId+'.pdf'; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Receipt downloaded');
+      }catch{showToast('Could not download receipt', true);}
+    }
+    function shareLinkedIn(){
+      const url = window.location.origin + '/verify?id=' + regData.certId;
+      const text = `I just earned my ${regData.domain} internship certificate from avRoN Tech! Verify it here: ${url}`;
+      const liUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url);
+      window.open(liUrl, '_blank', 'width=720,height=620');
+      if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('Caption copied to clipboard'));
+    }
+    function verifyOnline(){window.open('/verify?id=' + regData.certId, '_blank');}
+
+    // ── Change password ───────────────────────────────────────────────────────────
+    async function changePw(){
+      const cur = document.getElementById('curPw').value;
+      const nw  = document.getElementById('newPw').value;
+      const cnf = document.getElementById('cnfPw').value;
+      const err = document.getElementById('pwErr');
+      err.style.display='none';
+      if(nw.length < 6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+      if(nw !== cnf){err.textContent='New passwords do not match.';err.style.display='block';return;}
+      try{
+        const res = await fetch('/api/auth/change-password', {method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({currentPassword:cur, newPassword: nw})});
+        const d = await res.json();
+        if(d.success){closeModal('pwModal');showToast('Password updated.');document.getElementById('curPw').value='';document.getElementById('newPw').value='';document.getElementById('cnfPw').value='';}
+        else{err.textContent=d.message;err.style.display='block';}
+      }catch{err.textContent='Network error.';err.style.display='block';}
+    }
+
+    loadDashboard();
+
+    // ── Certificate Lightbox ──────────────────────────────────────────────────────
+    function openCertLightbox(){document.getElementById('certLightbox').classList.add('show');document.body.style.overflow='hidden';}
+    function closeCertLightbox(e, force){
+      if(force || e.target.id === 'certLightbox' || e.target.classList.contains('close-x')){
+        document.getElementById('certLightbox').classList.remove('show');
+        document.body.style.overflow='';
+      }
+    }
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeCertLightbox(null, true); });
+
+    // ── Notifications & Announcements (client-side) ───────────────────────────────
+    const SEED_NOTIFS = [
+      {id:'n-welcome', type:'success', title:'Welcome to avRoN Tech!', msg:'Your dashboard is ready. Explore your curriculum, certificate preview, and reach out to support anytime from the Help Desk tab.', ts: Date.now() - 1000*60*15},
+      {id:'n-cert-demo', type:'info', title:'Certificate format updated', msg:'The certificate preview now shows a demo template. Your personalised certificate will be issued after payment approval.', ts: Date.now() - 1000*60*60*3},
+      {id:'n-support', type:'event', title:'New: Direct Support & Help Desk', msg:'You can now raise tickets directly from the Support tab. Choose category, priority and track responses without leaving the dashboard.', ts: Date.now() - 1000*60*60*6},
+      {id:'n-cohort', type:'warn', title:'Submit weekly deliverables on time', msg:'Reminder — phase deliverables drive your final evaluation. Open the My Internships tab to view what is due this week.', ts: Date.now() - 1000*60*60*24},
+      {id:'n-payment', type:'info', title:'UPI payments verified within hours', msg:'After you submit your UTR and screenshot, admin usually approves within a few hours during business days.', ts: Date.now() - 1000*60*60*48},
+    ];
+    function nKey(){return 'cp_notif_read_' + ((regData && regData.certId) || 'anon');}
+    function getReadIds(){try{return JSON.parse(localStorage.getItem(nKey())||'[]');}catch{return [];}}
+    function setReadIds(arr){localStorage.setItem(nKey(), JSON.stringify(arr));}
+    function timeAgo(ts){
+      const s = Math.floor((Date.now()-ts)/1000);
+      if(s<60) return 'just now';
+      if(s<3600) return Math.floor(s/60)+'m ago';
+      if(s<86400) return Math.floor(s/3600)+'h ago';
+      return Math.floor(s/86400)+'d ago';
+    }
+    function renderNotifications(){
+      const read = new Set(getReadIds());
+      const list = document.getElementById('notifList');
+      const unread = SEED_NOTIFS.filter(n => !read.has(n.id)).length;
+      document.getElementById('notif-unread-count').textContent = unread;
+      document.getElementById('notif-total-count').textContent = SEED_NOTIFS.length;
+      const badge = document.getElementById('notif-badge');
+      if(unread > 0){badge.style.display='inline-block';badge.textContent = unread;}
+      else badge.style.display = 'none';
+
+      list.innerHTML = SEED_NOTIFS.map(n => {
+        const isUnread = !read.has(n.id);
+        return `<div class="notif ${isUnread?'unread':''} type-${n.type}" data-id="${n.id}" onclick="markNotifRead('${n.id}')" data-testid="notif-item-${n.id}">
+          <div class="notif-ic">${n.type==='success'?'✓':n.type==='warn'?'!':n.type==='event'?'★':'i'}</div>
+          <div class="notif-body">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-msg">${n.msg}</div>
+            <div class="notif-time">${timeAgo(n.ts)}</div>
+          </div>
+          ${isUnread?'<div class="notif-dot"></div>':''}
+        </div>`;
+      }).join('');
+    }
+    function markNotifRead(id){
+      const read = new Set(getReadIds()); read.add(id);
+      setReadIds([...read]); renderNotifications();
+    }
+    function markAllNotifsRead(){
+      setReadIds(SEED_NOTIFS.map(n=>n.id));
+      renderNotifications();
+      showToast('All notifications marked as read');
+    }
+
+    // ── Support: Tickets (client-side via localStorage) ───────────────────────────
+    function tKey(){return 'cp_tickets_' + ((regData && regData.certId) || 'anon');}
+    function getTickets(){try{return JSON.parse(localStorage.getItem(tKey())||'[]');}catch{return [];}}
+    function setTickets(arr){localStorage.setItem(tKey(), JSON.stringify(arr));}
+    function newTicketId(){return 'TKT-' + Date.now().toString(36).toUpperCase().slice(-6) + '-' + Math.floor(Math.random()*900+100);}
+    function submitTicket(){
+      const subject = document.getElementById('tk-subject').value.trim();
+      const message = document.getElementById('tk-message').value.trim();
+      const category = document.getElementById('tk-category').value;
+      const priority = document.getElementById('tk-priority').value;
+      if(subject.length < 4){showToast('Please enter a subject (min 4 chars).', true);return;}
+      if(message.length < 10){showToast('Please describe the issue (min 10 chars).', true);return;}
+      const tickets = getTickets();
+      tickets.unshift({
+        id: newTicketId(), subject, message, category, priority,
+        status: 'open', createdAt: Date.now()
+      });
+      setTickets(tickets);
+      document.getElementById('tk-subject').value = '';
+      document.getElementById('tk-message').value = '';
+      document.getElementById('tk-priority').value = 'Normal';
+      renderTickets();
+      showToast('Ticket submitted ✓ Our team will reach out shortly.');
+    }
+    function renderTickets(){
+      const tickets = getTickets();
+      const list = document.getElementById('tkList');
+      document.getElementById('tk-count').textContent = tickets.length;
+      if(!tickets.length){
+        list.innerHTML = '<div class="tk-empty">No tickets yet. Use the form on the left to raise one.</div>';
+        return;
+      }
+      list.innerHTML = tickets.map(t => `
+        <div class="tk-item" data-testid="ticket-${t.id}">
+          <div class="row1">
+            <div>
+              <div class="tk-subj">${escapeHtml(t.subject)}</div>
+              <div class="tk-meta"><span class="tk-id">${t.id}</span> · ${t.category} · ${t.priority} priority · ${timeAgo(t.createdAt)}</div>
+            </div>
+            <span class="tk-status ${t.status==='in_progress'?'progress':t.status}">${t.status.replace('_',' ')}</span>
+          </div>
+          <div class="tk-msg">${escapeHtml(t.message)}</div>
+        </div>
+      `).join('');
+    }
+    function escapeHtml(s){return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: avron-tech
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Set the rest manually in Render dashboard (never commit secrets)
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: UPI_ID
+        sync: false
+      - key: UPI_NAME
+        sync: false
+      - key: UPI_AMOUNT
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: CERT_VALIDITY_YEARS
+        value: 2

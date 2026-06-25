@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: avron_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # All other vars come from .env file below
+    env_file:
+      - .env
+    volumes:
+      # Persist uploads and logs outside the container
+      - uploads_data:/app/public/uploads
+      - qr_data:/app/public/qr
+      - logs_data:/app/logs
+    depends_on:
+      - mongo
+    networks:
+      - avron_net
+
+  # ── Local MongoDB (only needed if NOT using MongoDB Atlas) ───────────────────
+  # If you use Atlas, delete this entire 'mongo' service block
+  # and remove 'depends_on' from app above.
+  mongo:
+    image: mongo:7-jammy
+    container_name: avron_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: changeme123   # ← change this
+      MONGO_INITDB_DATABASE: certifypro
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - avron_net
+    # Do NOT expose port 27017 to the internet on a VPS
+
+volumes:
+  mongo_data:
+  uploads_data:
+  qr_data:
+  logs_data:
+
+networks:
+  avron_net:
+    driver: bridge

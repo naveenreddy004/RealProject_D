@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Apply for Internship — avRoN Tech</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --midnight:#0B192C;
+  --midnight2:#0e2138;
+  --steel:#608BC1;
+  --steel-soft:#cdd9eb;
+  --ink:#0a0a0a;
+  --ink2:#2a2a2a;
+  --mut:#5a6a7e;
+  --line:#e6ebf2;
+  --bg:#f5f7fb;
+  --soft:#f7f9fc;
+  --danger:#dc2626;
+}
+html,body{min-height:100%;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+
+/* Top bar */
+.nav{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:32px;height:32px;background:var(--midnight);color:var(--steel);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border-radius:6px;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:var(--midnight);letter-spacing:-.3px;}
+.brand-name span{color:var(--steel);}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--line);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-ghost:hover{border-color:var(--midnight);color:var(--midnight);}
+
+/* Wrapper */
+.wrap{max-width:780px;margin:0 auto;padding:48px 24px 80px;}
+.head{text-align:center;margin-bottom:36px;}
+.head .eyebrow{display:inline-block;font-size:11px;font-weight:600;color:var(--steel);letter-spacing:.16em;text-transform:uppercase;}
+.head h1{font-family:'Sora',sans-serif;font-size:38px;font-weight:800;color:var(--midnight);letter-spacing:-1px;margin-top:8px;line-height:1.15;}
+.head p{font-size:15px;color:var(--mut);margin-top:10px;max-width:520px;margin-left:auto;margin-right:auto;}
+
+/* Steps progress */
+.steps-bar{display:flex;justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:28px;}
+.step-pill{flex:1;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;border:1.5px solid var(--line);}
+.step-pill.active .step-num{background:var(--midnight);color:#fff;border-color:var(--midnight);}
+.step-pill.done .step-num{background:var(--steel);color:#fff;border-color:var(--steel);}
+.step-pill.done .step-num::after{content:'✓';font-size:13px;}
+.step-pill.done .step-num span{display:none;}
+.step-lbl{font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.02em;}
+.step-pill.active .step-lbl{color:var(--midnight);}
+.step-pill.done .step-lbl{color:var(--steel);}
+@media (max-width:680px){.step-lbl{display:none;}}
+
+/* Card */
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px 36px;box-shadow:0 4px 20px rgba(11,25,44,.04);}
+.card h2{font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--midnight);letter-spacing:-.4px;}
+.card .sub{font-size:14px;color:var(--mut);margin-top:4px;margin-bottom:24px;}
+
+.step{display:none;}
+.step.active{display:block;animation:fadeIn .3s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Package cards */
+.pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px;}
+@media (max-width:620px){.pkg-grid{grid-template-columns:1fr;}}
+.pkg{background:#fff;border:2px solid var(--line);border-radius:12px;padding:24px 22px;cursor:pointer;transition:all .2s;position:relative;}
+.pkg:hover{border-color:var(--steel);transform:translateY(-2px);box-shadow:0 12px 32px rgba(11,25,44,.08);}
+.pkg.selected{border-color:var(--midnight);background:#fafbff;}
+.pkg.featured{background:var(--midnight);border-color:var(--midnight);color:#fff;}
+.pkg.featured.selected{box-shadow:0 0 0 4px rgba(96,139,193,.2);}
+.pkg-name{font-size:11.5px;font-weight:700;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;}
+.pkg.featured .pkg-name{color:var(--steel);}
+.pkg-amt{font-family:'Sora',sans-serif;font-size:42px;font-weight:800;color:var(--midnight);letter-spacing:-1.5px;line-height:1;margin-top:8px;}
+.pkg.featured .pkg-amt{color:#fff;}
+.pkg-amt .cur{font-size:18px;font-weight:600;vertical-align:top;color:var(--mut);}
+.pkg.featured .pkg-amt .cur{color:var(--steel);}
+.pkg-tag{font-size:13px;color:var(--ink2);margin-top:6px;}
+.pkg.featured .pkg-tag{color:var(--steel-soft);}
+.pkg-features{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2);}
+.pkg.featured .pkg-features{border-color:rgba(96,139,193,.2);color:var(--steel-soft);}
+.pkg-features li{display:flex;gap:8px;align-items:flex-start;padding:5px 0;list-style:none;}
+.pkg-features li::before{content:'✓';color:var(--steel);font-weight:800;}
+.pkg.featured .pkg-features li::before{color:#22c55e;}
+.pkg-badge{position:absolute;top:-10px;right:18px;background:var(--steel);color:var(--midnight);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.08em;}
+
+/* Form */
+label{display:block;font-size:12.5px;font-weight:700;color:var(--midnight);margin-bottom:6px;letter-spacing:.01em;}
+label .req{color:var(--danger);}
+.fg{margin-bottom:16px;}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:580px){.fg-row{grid-template-columns:1fr;}}
+.fi{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;color:var(--ink);background:#fff;font-family:inherit;transition:all .2s;}
+.fi:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
+.fi:disabled{background:var(--soft);color:var(--mut);cursor:not-allowed;}
+select.fi{cursor:pointer;}
+.fi-help{font-size:11.5px;color:var(--mut);margin-top:5px;}
+.fi-err{display:none;font-size:12px;color:var(--danger);margin-top:5px;}
+
+/* Buttons row */
+.actions{margin-top:28px;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all .2s;}
+.btn-primary{background:var(--midnight);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--midnight2);transform:translateY(-1px);box-shadow:0 8px 22px rgba(11,25,44,.15);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--midnight);border:1.5px solid var(--line);}
+.btn-outline:hover{border-color:var(--midnight);}
+
+.spin{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(11,25,44,.65);backdrop-filter:blur(10px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal.show{display:flex;animation:fadeIn .2s;}
+.modal-card{background:#fff;border-radius:14px;max-width:440px;width:100%;overflow:hidden;animation:popIn .3s ease-out;}
+@keyframes popIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+.modal-head{background:var(--midnight);padding:22px 26px;color:#fff;}
+.modal-head .pkg-badge{position:static;display:inline-block;margin-bottom:8px;}
+.modal-head h3{font-family:'Sora',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px;}
+.modal-head p{font-size:13.5px;color:var(--steel-soft);margin-top:4px;}
+.modal-body{padding:24px 26px;}
+.modal-foot{padding:0 26px 24px;display:flex;gap:10px;}
+.modal-foot button{flex:1;}
+
+/* QR section */
+.qr-block{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:22px;text-align:center;margin-bottom:20px;}
+.qr-block img{width:200px;border-radius:10px;}
+.qr-info{font-size:13px;color:var(--mut);margin-top:10px;}
+.qr-info b{color:var(--midnight);}
+.qr-amount{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;color:var(--midnight);margin-top:6px;}
+
+/* Success */
+.success{text-align:center;padding:30px 20px;}
+.success-ic{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;}
+.success h2{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--midnight);}
+.success p{font-size:14px;color:var(--mut);margin-top:8px;}
+.success .ref{display:inline-block;background:var(--midnight);color:var(--steel);font-family:'JetBrains Mono',monospace;font-weight:700;padding:8px 16px;border-radius:8px;margin-top:18px;letter-spacing:1px;}
+
+/* Toast */
+.toast{position:fixed;top:80px;right:24px;background:var(--midnight);color:#fff;padding:13px 20px;border-radius:9px;font-size:13.5px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.18);transform:translateX(120%);transition:transform .3s;z-index:10000;max-width:340px;}
+.toast.show{transform:translateX(0);}
+.toast.err{background:var(--danger);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="brand">
+    <div class="brand-mark">aR</div>
+    <div class="brand-name">av<span>RoN</span> Tech</div>
+  </a>
+  <a href="/" class="btn-ghost">← Back to Home</a>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <span class="eyebrow">Internship Application</span>
+    <h1>Apply for your<br>avRoN Tech internship</h1>
+    <p>Four short steps. The whole thing takes about 90 seconds — payment included.</p>
+  </div>
+
+  <div class="steps-bar">
+    <div class="step-pill active" id="bar-1"><div class="step-num"><span>1</span></div><div class="step-lbl">Package</div></div>
+    <div class="step-pill" id="bar-2"><div class="step-num"><span>2</span></div><div class="step-lbl">Your Details</div></div>
+    <div class="step-pill" id="bar-3"><div class="step-num"><span>3</span></div><div class="step-lbl">Payment</div></div>
+    <div class="step-pill" id="bar-4"><div class="step-num"><span>4</span></div><div class="step-lbl">Confirmation</div></div>
+  </div>
+
+  <div class="card">
+    <!-- STEP 1: PACKAGE -->
+    <div class="step active" id="step-1">
+      <h2>Choose your package</h2>
+      <div class="sub">Pick what fits your goal. You can upgrade to the bundle in the next step.</div>
+
+      <div class="pkg-grid">
+        <div class="pkg" id="pkg-basic" onclick="selectPackage('basic')" data-testid="pkg-basic">
+          <div class="pkg-name">Basic Package</div>
+          <div class="pkg-amt"><span class="cur">₹</span>199</div>
+          <div class="pkg-tag">Standard Tracking &amp; Baseline Access</div>
+          <ul class="pkg-features">
+            <li>Domain roadmap in dashboard</li>
+            <li>Offer Letter PDF on approval</li>
+            <li>Email support</li>
+          </ul>
+        </div>
+        <div class="pkg featured" id="pkg-complete" onclick="selectPackage('complete')" data-testid="pkg-complete">
+          <div class="pkg-badge">RECOMMENDED</div>
+          <div class="pkg-name">Complete Certification Bundle</div>
+          <div class="pkg-amt"><span class="cur">₹</span>399</div>
+          <div class="pkg-tag">Project + Verified Certificate</div>
+          <ul class="pkg-features">
+            <li>Everything in Basic</li>
+            <li>Real-world project</li>
+            <li>QR-verified Certificate</li>
+            <li>2-year validity</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span></span>
+        <button class="btn btn-primary" id="step1-next" onclick="next1()" data-testid="step1-next-btn" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: DETAILS -->
+    <div class="step" id="step-2">
+      <h2>Your details</h2>
+      <div class="sub">We'll use these to create your portal account and Offer Letter.</div>
+
+      <div class="fg-row">
+        <div class="fg"><label>Full Name <span class="req">*</span></label><input type="text" id="fullName" class="fi" placeholder="Your full name" data-testid="reg-fullname"></div>
+        <div class="fg"><label>Email <span class="req">*</span></label><input type="email" id="email" class="fi" placeholder="you@example.com" data-testid="reg-email"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Mobile <span class="req">*</span></label><input type="tel" id="mobile" class="fi" placeholder="10-digit mobile" maxlength="10" data-testid="reg-mobile"></div>
+        <div class="fg"><label>Gender</label>
+          <select id="gender" class="fi" data-testid="reg-gender">
+            <option value="">Select</option><option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fg-row">
+        <div class="fg"><label>College</label><input type="text" id="college" class="fi" placeholder="College / University" data-testid="reg-college"></div>
+        <div class="fg"><label>Course</label><input type="text" id="course" class="fi" placeholder="B.Tech CSE / BCA / MCA…" data-testid="reg-course"></div>
+      </div>
+
+      <div class="fg"><label>CSE Internship Domain <span class="req">*</span></label>
+        <select id="domain" class="fi" data-testid="reg-domain">
+          <option value="">Select your domain</option>
+          <option>Java Full Stack Developer</option>
+          <option>Python Full Stack Developer</option>
+          <option>Web Development</option>
+          <option>Java Intern</option>
+          <option>Python Intern</option>
+          <option>Data Science &amp; AI Intern</option>
+          <option>Cyber Security Intern</option>
+        </select>
+      </div>
+
+      <div class="fg-row">
+        <div class="fg"><label>Duration <span class="req">*</span></label>
+          <select id="duration" class="fi" onchange="recomputeEndDate()" data-testid="reg-duration">
+            <option value="">Select duration</option>
+            <option value="2">2 Months</option>
+            <option value="3">3 Months</option>
+            <option value="4">4 Months</option>
+            <option value="6">6 Months</option>
+          </select>
+        </div>
+        <div class="fg"><label>Start Date <span class="req">*</span></label>
+          <input type="date" id="startDate" class="fi" onchange="recomputeEndDate()" data-testid="reg-startdate">
+        </div>
+      </div>
+      <div class="fg"><label>End Date (auto-calculated)</label>
+        <input type="date" id="endDate" class="fi" disabled data-testid="reg-enddate">
+        <div class="fi-help">End date locks automatically based on your duration.</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="next2()" data-testid="step2-next-btn">Continue to Payment →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: PAYMENT -->
+    <div class="step" id="step-3">
+      <h2>Submit your payment</h2>
+      <div class="sub">Pay using any UPI app and submit your UTR number below.</div>
+
+      <div class="qr-block">
+        <div id="qrBox"><div style="padding:40px;color:var(--mut);">Loading QR…</div></div>
+        <div class="qr-info"><b id="upi-name">avRoN Tech</b><br><span id="upi-id" style="font-family:monospace;font-size:12px;">—</span></div>
+        <div class="qr-amount">₹<span id="pay-amount">199</span></div>
+      </div>
+
+      <div class="fg"><label>UTR / Transaction Reference Number <span class="req">*</span></label>
+        <input type="text" id="utr" class="fi" placeholder="e.g. 407812345678" style="text-transform:uppercase;" data-testid="reg-utr">
+        <div class="fi-help">After paying, copy the UTR from your bank app's transaction history.</div>
+      </div>
+
+      <div class="fg"><label>Payment Screenshot <span class="req">*</span></label>
+        <input type="file" id="screenshot" class="fi" accept="image/*" data-testid="reg-screenshot">
+        <div class="fi-help">Upload a clear screenshot of the successful UPI transaction.</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" id="step3-submit" onclick="submitApplication()" data-testid="step3-submit-btn">
+          <span id="step3-txt">Submit Application</span>
+          <div class="spin" id="step3-spin"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: SUCCESS -->
+    <div class="step" id="step-4">
+      <div class="success">
+        <div class="success-ic">✓</div>
+        <h2>Application Received</h2>
+        <p>Thank you. Your registration is confirmed and a welcome email is on its way to your inbox.<br>Our admin team will review your payment shortly and email you the official Offer Letter once approved.</p>
+        <div class="ref" id="cert-ref">—</div>
+        <div class="actions" style="justify-content:center;margin-top:30px;">
+          <a href="/portal" class="btn btn-primary" data-testid="success-portal-btn">Go to Portal →</a>
+          <a href="/" class="btn btn-outline">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPSELL MODAL -->
+<div class="modal" id="upsellModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="pkg-badge">LIMITED OFFER</div>
+      <h3>Wait! Upgrade for just ₹200 more?</h3>
+      <p>Switch to the Complete Certification Bundle and unlock the full-blown experience.</p>
+    </div>
+    <div class="modal-body">
+      <ul style="list-style:none;padding:0;font-size:14px;color:var(--ink2);">
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>Industry-grade real-world project</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>QR-verifiable Certificate of Completion</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>2-year certificate validity</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>LinkedIn-ready credential</li>
+      </ul>
+      <div style="background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:14px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:12px;color:var(--mut);">From <span style="text-decoration:line-through;">₹199</span></div>
+          <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--midnight);">₹399</div></div>
+        <div style="text-align:right;"><div style="font-size:11px;color:var(--mut);">Just add</div>
+          <div style="font-size:18px;font-weight:800;color:var(--steel);">₹200</div></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="keepBasic()" data-testid="upsell-keep-btn">Keep ₹199 Basic</button>
+      <button class="btn btn-primary" onclick="upgradeBundle()" data-testid="upsell-upgrade-btn">Upgrade to ₹399 →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let pkgSelected = null;
+let pkgPrice = 199;
+let certIdRef = '';
+
+const qp = new URLSearchParams(location.search);
+
+// Pre-select from URL
+window.addEventListener('DOMContentLoaded', ()=>{
+  const p = qp.get('package');
+  if(p === 'complete') selectPackage('complete');
+  else if(p === 'basic') selectPackage('basic');
+
+  const d = qp.get('domain');
+  if(d){
+    const sel = document.getElementById('domain');
+    [...sel.options].forEach(o => { if(o.value === d) sel.value = d; });
+  }
+});
+
+function showToast(msg, err=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(t._h); t._h = setTimeout(()=> t.className='toast'+(err?' err':''), 4200);
+}
+function goStep(n){
+  ['step-1','step-2','step-3','step-4'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('active', i+1 === n);
+  });
+  ['bar-1','bar-2','bar-3','bar-4'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if(i+1 < n) el.classList.add('done');
+    else if(i+1 === n) el.classList.add('active');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectPackage(which){
+  pkgSelected = which;
+  pkgPrice = which === 'complete' ? 399 : 199;
+  document.getElementById('pkg-basic').classList.toggle('selected', which==='basic');
+  document.getElementById('pkg-complete').classList.toggle('selected', which==='complete');
+  document.getElementById('step1-next').disabled = false;
+}
+
+function next1(){
+  if(!pkgSelected){showToast('Please pick a package.', true);return;}
+  if(pkgSelected === 'basic'){
+    // Trigger upsell
+    document.getElementById('upsellModal').classList.add('show');
+    return;
+  }
+  goStep(2);
+}
+function keepBasic(){
+  document.getElementById('upsellModal').classList.remove('show');
+  goStep(2);
+}
+function upgradeBundle(){
+  selectPackage('complete');
+  document.getElementById('upsellModal').classList.remove('show');
+  goStep(2);
+}
+
+function recomputeEndDate(){
+  const months = +document.getElementById('duration').value;
+  const start = document.getElementById('startDate').value;
+  if(!months || !start) return;
+  const d = new Date(start);
+  d.setMonth(d.getMonth() + months);
+  // Keep the same calendar day; JS handles month overflow
+  document.getElementById('endDate').value = d.toISOString().slice(0,10);
+}
+
+async function next2(){
+  // Validate
+  const fields = ['fullName','email','mobile','domain','duration','startDate','endDate'];
+  for(const f of fields){
+    const v = document.getElementById(f).value.trim();
+    if(!v){showToast('Please fill all required fields.', true); document.getElementById(f).focus(); return;}
+  }
+  const email = document.getElementById('email').value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('Enter a valid email.', true);return;}
+  if(!/^\d{10}$/.test(document.getElementById('mobile').value.trim())){showToast('Mobile must be exactly 10 digits.', true);return;}
+  // Load UPI QR
+  try{
+    const res = await fetch('/api/upi-qr?amount=' + pkgPrice);
+    const d = await res.json();
+    if(d.success){
+      document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
+      document.getElementById('upi-id').textContent = d.upiId;
+    }
+  }catch{}
+  document.getElementById('pay-amount').textContent = pkgPrice;
+  goStep(3);
+}
+
+async function submitApplication(){
+  const utr = document.getElementById('utr').value.trim();
+  const sc = document.getElementById('screenshot').files[0];
+  if(!utr || utr.length < 6){showToast('Enter a valid UTR.', true); return;}
+  if(!sc){showToast('Please attach your payment screenshot.', true); return;}
+
+  const btn = document.getElementById('step3-submit'),
+        sp  = document.getElementById('step3-spin'),
+        bt  = document.getElementById('step3-txt');
+  btn.disabled = true; sp.style.display='block'; bt.textContent='Submitting…';
+
+  const months = +document.getElementById('duration').value;
+  const durationLabel = months + ' Months';
+  const pkgLabel = pkgSelected === 'complete'
+    ? 'Complete Certification Bundle (₹399)'
+    : 'Basic Package (₹199)';
+
+  // 1) Register
+  const fd = new FormData();
+  fd.append('fullName',  document.getElementById('fullName').value.trim());
+  fd.append('email',     document.getElementById('email').value.trim().toLowerCase());
+  fd.append('mobile',    document.getElementById('mobile').value.trim());
+  fd.append('gender',    document.getElementById('gender').value);
+  fd.append('college',   document.getElementById('college').value);
+  fd.append('course',    document.getElementById('course').value);
+  fd.append('domain',    document.getElementById('domain').value);
+  fd.append('duration',  durationLabel);
+  fd.append('startDate', document.getElementById('startDate').value);
+  fd.append('endDate',   document.getElementById('endDate').value);
+  fd.append('package',   pkgLabel);
+  fd.append('amount',    pkgPrice);
+
+  try{
+    const res = await fetch('/api/auth/register', { method:'POST', body: fd });
+    const data = await res.json();
+    if(!data.success){
+      showToast(data.message || 'Registration failed.', true);
+      btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Application';
+      return;
+    }
+    certIdRef = data.certId;
+
+    // 2) Get a token via OTP — request OTP silently. Student receives it via
+    // email. For now we don't ask for OTP here (kept simple) — student logs
+    // into the portal separately to submit payment.
+    // Actually we'll submit payment using the admin-less direct endpoint:
+    // attempt a tokenless payment submission via a temporary endpoint.
+    // Simpler: just record the UTR + screenshot via a separate "pre-login
+    // payment" endpoint — but for now, just collect and tell the student to
+    // login to verify.
+
+    // We can't auth-submit payment from this anonymous page without OTP, so
+    // we attach the UTR + screenshot directly to the registration through
+    // a dedicated public endpoint:
+    const fd2 = new FormData();
+    fd2.append('email', document.getElementById('email').value.trim().toLowerCase());
+    fd2.append('certId', certIdRef);
+    fd2.append('utrNumber', utr);
+    if(sc) fd2.append('paymentScreenshot', sc);
+    fd2.append('amount', pkgPrice);
+
+    await fetch('/api/student/submit-payment-public', { method:'POST', body: fd2 });
+
+    // Success
+    document.getElementById('cert-ref').textContent = certIdRef;
+    goStep(4);
+  }catch(err){
+    showToast('Network error: ' + err.message, true);
+    btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Application';
+  }
+}
+</script>
+</body>
+</html>

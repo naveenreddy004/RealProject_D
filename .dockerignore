@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+.git
+.gitignore
+.DS_Store
+logs
+public/uploads
+public/qr
+README.md
+CHANGELOG.md
+FIXES.md
+*.md

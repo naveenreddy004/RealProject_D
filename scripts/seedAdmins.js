@@ -1,0 +1,60 @@
+/**
+ * One-time script to seed multiple admin accounts.
+ * Run once after deployment:  node scripts/seedAdmins.js
+ *
+ * Each admin will be prompted to change their password on first login
+ * (they can use the admin panel or you can set permanent passwords below).
+ */
+require('dotenv').config();
+const mongoose = require('mongoose');
+const User = require('../models/User');
+
+// ── Define your 4 admin accounts here ────────────────────────────────────────
+// IMPORTANT: Change these passwords! Each admin should change their own password after first login.
+const ADMINS = [
+  { fullName: 'Admin One',   email: 'admin1@yourdomain.com', password: 'ChangeMe@123' },
+  { fullName: 'Admin Two',   email: 'admin2@yourdomain.com', password: 'ChangeMe@456' },
+  { fullName: 'Admin Three', email: 'admin3@yourdomain.com', password: 'ChangeMe@789' },
+  { fullName: 'Admin Four',  email: 'admin4@yourdomain.com', password: 'ChangeMe@321' },
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function seedAdmins() {
+  await mongoose.connect(process.env.MONGODB_URI);
+  console.log('✅ Connected to MongoDB\n');
+
+  for (const adminData of ADMINS) {
+    const email = adminData.email.toLowerCase();
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (!user.isAdmin) {
+        user.isAdmin = true;
+        await user.save();
+        console.log(`🔼 Promoted existing user to admin: ${email}`);
+      } else {
+        console.log(`⚠️  Already an admin (skipped): ${email}`);
+      }
+    } else {
+      user = new User({
+        fullName: adminData.fullName,
+        email,
+        password: adminData.password,
+        isAdmin: true,
+        isActive: true,
+      });
+      await user.save();
+      console.log(`✅ Admin created: ${email}`);
+    }
+  }
+
+  console.log('\n🎉 Done! All admins are set up.');
+  console.log('📢 Remind each admin to change their password after first login.\n');
+  await mongoose.connection.close();
+  process.exit(0);
+}
+
+seedAdmins().catch(err => {
+  console.error('❌ Error:', err.message);
+  process.exit(1);
+});

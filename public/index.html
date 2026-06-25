@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>avRoN Tech — Corporate Internship Programs</title>
+<meta name="description" content="avRoN Tech runs structured, project-driven virtual internships in Java Full Stack, Python, Web Development, Data Science & Cyber Security with verified certificates.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --midnight:#0B192C;
+  --midnight2:#0e2138;
+  --midnight3:#152844;
+  --steel:#608BC1;
+  --steel-soft:#cdd9eb;
+  --ink:#0a0a0a;
+  --ink2:#2a2a2a;
+  --mut:#5a6a7e;
+  --line:#e6ebf2;
+  --bg:#fcfcfd;
+  --soft:#f5f7fb;
+  --gold:#f59e0b;
+  --emerald:#10b981;
+}
+html,body{min-height:100%;scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+
+/* ── PREMIUM BACKGROUND CANVAS ── */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ── ANIMATED GRADIENT MESH ── */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;overflow:hidden;
+  background: radial-gradient(ellipse 80% 60% at 20% 40%, rgba(96,139,193,0.22) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 50% at 80% 20%, rgba(11,25,44,0.15) 0%, transparent 55%),
+              radial-gradient(ellipse 70% 70% at 50% 100%, rgba(96,139,193,0.10) 0%, transparent 60%),
+              linear-gradient(135deg, #f0f4ff 0%, #e8edf7 40%, #dce6f5 100%);
+}
+.hero-bg::before{
+  content:'';position:absolute;inset:0;
+  background: radial-gradient(ellipse 500px 500px at var(--mx,50%) var(--my,50%), rgba(96,139,193,0.18), transparent 70%);
+  transition: --mx 0.8s ease, --my 0.8s ease;
+  pointer-events:none;
+}
+.orb{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;will-change:transform;}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(96,139,193,0.28),transparent 70%);top:-150px;right:-100px;animation:floatOrb1 12s ease-in-out infinite;}
+.orb-2{width:350px;height:350px;background:radial-gradient(circle,rgba(11,25,44,0.15),transparent 70%);bottom:0;left:-80px;animation:floatOrb2 15s ease-in-out infinite;}
+.orb-3{width:250px;height:250px;background:radial-gradient(circle,rgba(245,158,11,0.12),transparent 70%);top:30%;right:15%;animation:floatOrb3 10s ease-in-out infinite;}
+
+@keyframes floatOrb1{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-40px,30px) scale(1.08);}66%{transform:translate(30px,-20px) scale(0.95);}}
+@keyframes floatOrb2{0%,100%{transform:translate(0,0) scale(1);}40%{transform:translate(30px,-40px) scale(1.1);}70%{transform:translate(-20px,20px) scale(0.93);}}
+@keyframes floatOrb3{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-30px,30px) scale(1.15);}}
+
+/* ── GRID OVERLAY ── */
+.hero-grid{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:linear-gradient(rgba(11,25,44,0.045) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(11,25,44,0.045) 1px, transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse 90% 70% at center, #000 20%, transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 70% at center, #000 20%, transparent 80%);
+}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:all 0.4s ease;}
+.nav.scrolled{background:rgba(255,255,255,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(11,25,44,0.08);box-shadow:0 4px 24px rgba(11,25,44,0.06);}
+.nav.top{background:rgba(255,255,255,0.0);backdrop-filter:blur(0px);}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:72px;display:flex;align-items:center;justify-content:space-between;}
+.brand{display:flex;align-items:center;gap:11px;}
+.brand-mark{width:36px;height:36px;display:flex;align-items:center;justify-content:center;}
+.brand-mark img{width:36px;height:36px;object-fit:contain;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:19px;color:var(--midnight);letter-spacing:-.4px;}
+.brand-name span{color:var(--steel);}
+.brand-sub{font-size:10px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;line-height:1;margin-top:2px;}
+.nav-links{display:flex;align-items:center;gap:36px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--ink2);transition:color .15s;position:relative;}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--steel);transition:width .25s ease;}
+.nav-links a:hover{color:var(--steel);}
+.nav-links a:hover::after{width:100%;}
+.nav-cta{display:flex;gap:10px;align-items:center;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:all .2s;letter-spacing:.01em;}
+.btn-ghost{background:transparent;color:var(--ink2);}
+.btn-ghost:hover{color:var(--midnight);}
+.btn-primary{background:var(--midnight);color:#fff;box-shadow:0 4px 16px rgba(11,25,44,0.22);}
+.btn-primary:hover{background:var(--midnight2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(11,25,44,0.28);}
+.btn-outline{background:transparent;color:var(--midnight);border:1.5px solid rgba(11,25,44,0.3);}
+.btn-outline:hover{background:var(--midnight);color:#fff;border-color:var(--midnight);}
+.btn-lg{padding:14px 28px;font-size:14.5px;border-radius:10px;}
+@media (max-width:920px){.nav-links{display:none;}}
+
+/* ── HERO ── */
+.hero{padding:148px 32px 100px;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;}
+.hero-inner{max-width:1280px;margin:0 auto;width:100%;display:grid;grid-template-columns:1.15fr 1fr;gap:70px;align-items:center;position:relative;z-index:2;}
+@media (max-width:1000px){.hero-inner{grid-template-columns:1fr;}}
+
+/* Entrance animations */
+.fade-up{opacity:0;transform:translateY(32px);transition:opacity 0.7s ease, transform 0.7s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+.fade-up-delay-1{transition-delay:0.1s;}
+.fade-up-delay-2{transition-delay:0.22s;}
+.fade-up-delay-3{transition-delay:0.36s;}
+.fade-up-delay-4{transition-delay:0.5s;}
+.fade-up-delay-5{transition-delay:0.64s;}
+
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);border:1px solid rgba(96,139,193,0.25);border-radius:30px;font-size:11.5px;font-weight:600;color:var(--midnight);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 2px 12px rgba(11,25,44,0.07);}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:pulse-dot 2.5s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.25);}50%{box-shadow:0 0 0 6px rgba(34,197,94,0);}}
+
+/* Gradient animated headline */
+.h1{font-family:'Sora',sans-serif;font-size:64px;font-weight:800;line-height:1.04;letter-spacing:-2.5px;color:var(--midnight);margin-top:20px;}
+.h1 .hl{
+  background:linear-gradient(135deg, var(--steel) 0%, #3b6fb5 40%, #8bb8e8 70%, var(--steel) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0% center;}100%{background-position:200% center;}}
+.h1 .br{display:block;}
+@media (max-width:760px){.h1{font-size:42px;letter-spacing:-1.2px;}}
+.lede{font-size:17.5px;color:var(--mut);margin-top:20px;line-height:1.75;max-width:520px;}
+.hero-cta{margin-top:34px;display:flex;flex-wrap:wrap;gap:14px;}
+
+/* Stats */
+.hero-stats{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:0;max-width:440px;border-top:1px solid rgba(11,25,44,0.1);padding-top:26px;}
+.hero-stat{padding:0 16px 0 0;border-right:1px solid rgba(11,25,44,0.08);}
+.hero-stat:first-child{padding-left:0;}
+.hero-stat:last-child{border-right:none;}
+.hero-stat .num{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;color:var(--midnight);letter-spacing:-1px;}
+.hero-stat .lbl{font-size:11px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;margin-top:3px;}
+
+/* Hero card */
+.hero-vis{
+  background:rgba(11,25,44,0.95);
+  backdrop-filter:blur(20px);
+  border-radius:20px;padding:32px;color:#fff;
+  box-shadow:0 32px 80px rgba(11,25,44,0.28), 0 0 0 1px rgba(96,139,193,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative;overflow:hidden;
+  transform:perspective(1000px) rotateY(-3deg) rotateX(2deg);
+  transition:transform 0.4s ease;
+}
+.hero-vis:hover{transform:perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(-4px);}
+.hero-vis::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(96,139,193,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(96,139,193,.08) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+.hero-vis::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(96,139,193,0.6),transparent);}
+.hv-tag{font-size:10.5px;color:var(--steel);letter-spacing:.2em;text-transform:uppercase;font-weight:700;}
+.hv-title{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;margin-top:10px;letter-spacing:-.3px;}
+.hv-list{margin-top:22px;display:flex;flex-direction:column;gap:10px;position:relative;}
+.hv-item{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 14px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;transition:all .25s;cursor:default;
+}
+.hv-item:hover{background:rgba(96,139,193,0.12);border-color:rgba(96,139,193,0.25);transform:translateX(4px);}
+.hv-ic{
+  width:26px;height:26px;border-radius:7px;
+  background:linear-gradient(135deg,var(--steel),#3b6fb5);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:11px;flex-shrink:0;
+  box-shadow:0 4px 10px rgba(96,139,193,0.35);
+}
+.hv-text{font-size:13.5px;font-weight:500;color:#e8edf5;}
+.hv-text .sm{font-size:11.5px;color:#7a97b8;margin-top:3px;font-weight:400;}
+
+/* ── SECTIONS ── */
+.section{padding:100px 32px;}
+.section.alt{background:linear-gradient(180deg,var(--soft) 0%,#eef2f9 100%);position:relative;}
+.section.alt::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);}
+.section-inner{max-width:1280px;margin:0 auto;}
+.sec-head{text-align:center;max-width:680px;margin:0 auto 60px;}
+.sec-head .eyebrow{margin-bottom:16px;}
+.sec-head h2{font-family:'Sora',sans-serif;font-size:44px;font-weight:800;color:var(--midnight);letter-spacing:-1.2px;line-height:1.12;}
+.sec-head p{font-size:16.5px;color:var(--mut);margin-top:16px;line-height:1.7;}
+
+/* ── DOMAIN CARDS ── */
+.dom-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+.dom-card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 24px;
+  transition:all .3s cubic-bezier(0.34,1.56,0.64,1);cursor:pointer;
+  position:relative;overflow:hidden;
+}
+.dom-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(96,139,193,0.04),transparent);opacity:0;transition:opacity .3s;}
+.dom-card:hover::before{opacity:1;}
+.dom-card:hover{border-color:rgba(96,139,193,0.4);transform:translateY(-6px);box-shadow:0 20px 50px rgba(11,25,44,0.1),0 0 0 1px rgba(96,139,193,0.15);}
+.dom-card.featured{background:linear-gradient(135deg,var(--midnight),var(--midnight2));color:#fff;border-color:transparent;box-shadow:0 16px 48px rgba(11,25,44,0.25);}
+.dom-card.featured::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--steel),#8bb8e8,var(--steel));}
+.dom-card.featured .dom-ic{background:rgba(96,139,193,0.2);color:var(--steel);}
+.dom-card.featured .dom-title{color:#fff;}
+.dom-card.featured .dom-desc{color:rgba(205,217,235,0.85);}
+.dom-card.featured .dom-arr{color:var(--steel);}
+.dom-ic{width:44px;height:44px;border-radius:10px;background:var(--soft);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:.5px;transition:transform .25s;}
+.dom-card:hover .dom-ic{transform:scale(1.1);}
+.dom-title{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--midnight);margin-top:18px;letter-spacing:-.2px;}
+.dom-desc{font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.65;}
+.dom-meta{margin-top:20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);}
+.dom-arr{font-size:18px;color:var(--mut);transition:transform .25s;}
+.dom-card:hover .dom-arr{transform:translateX(6px);}
+.dom-badge{display:inline-block;background:rgba(34,197,94,.1);color:#15803d;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase;}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+@media (max-width:880px){.how-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){.how-grid{grid-template-columns:1fr;}}
+.how-step{padding:28px 8px;position:relative;}
+.how-step::before{content:attr(data-step);position:absolute;top:-10px;right:0;font-family:'Sora',sans-serif;font-size:90px;font-weight:800;color:rgba(96,139,193,0.06);line-height:1;pointer-events:none;}
+.how-num{font-family:'Sora',sans-serif;font-size:50px;font-weight:800;background:linear-gradient(135deg,var(--steel),#3b6fb5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-2px;line-height:1;}
+.how-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--midnight);margin-top:14px;}
+.how-desc{font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.65;}
+
+/* ── PRICING ── */
+.price-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto;}
+@media (max-width:680px){.price-grid{grid-template-columns:1fr;}}
+.price-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:38px 32px;position:relative;transition:all .3s ease;}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(11,25,44,0.08);}
+.price-card.featured{background:linear-gradient(150deg,var(--midnight),#0d1f38);color:#fff;border-color:transparent;transform:scale(1.03);box-shadow:0 24px 64px rgba(11,25,44,0.3);}
+.price-card.featured:hover{transform:scale(1.03) translateY(-4px);}
+.price-card.featured::before{content:'RECOMMENDED';position:absolute;top:-13px;right:24px;background:linear-gradient(135deg,var(--steel),#3b82f6);color:#fff;font-size:10.5px;font-weight:800;padding:5px 14px;border-radius:20px;letter-spacing:.1em;box-shadow:0 4px 12px rgba(96,139,193,0.4);}
+.price-card.featured::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,var(--steel),#8bb8e8,var(--steel));}
+.price-name{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;}
+.price-card.featured .price-name{color:rgba(96,139,193,0.9);}
+.price-amt{font-family:'Sora',sans-serif;font-size:58px;font-weight:800;color:var(--midnight);letter-spacing:-2px;margin-top:10px;}
+.price-card.featured .price-amt{color:#fff;}
+.price-amt .cur{font-size:24px;font-weight:600;vertical-align:top;margin-top:10px;display:inline-block;color:var(--mut);}
+.price-card.featured .price-amt .cur{color:rgba(96,139,193,0.9);}
+.price-list{margin:24px 0;padding:0;list-style:none;border-top:1px solid var(--line);padding-top:20px;}
+.price-card.featured .price-list{border-color:rgba(96,139,193,0.2);}
+.price-list li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;font-size:13.5px;color:var(--ink2);}
+.price-card.featured .price-list li{color:var(--steel-soft);}
+.price-list .chk{flex:0 0 18px;color:var(--steel);font-weight:800;font-size:15px;}
+.price-card.featured .chk{color:#22c55e;}
+.price-btn{width:100%;text-align:center;justify-content:center;}
+
+/* ── FOOTER ── */
+.footer{background:linear-gradient(180deg,var(--midnight) 0%,#07111e 100%);color:#9eb2c8;padding:70px 32px 32px;border-top:3px solid transparent;background-clip:padding-box;position:relative;}
+.footer::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--steel),#8bb8e8,var(--steel));}
+.foot-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:48px;}
+@media (max-width:760px){.foot-inner{grid-template-columns:1fr 1fr;}}
+.foot-brand{display:flex;align-items:center;gap:12px;}
+.foot-brand-mark{width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
+.foot-brand-mark img{width:42px;height:42px;object-fit:contain;}
+.foot-brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:19px;color:#fff;letter-spacing:-.4px;}
+.foot-brand-name span{color:var(--steel);}
+.foot-desc{font-size:13px;color:#617489;margin-top:18px;line-height:1.75;max-width:280px;}
+.foot-col h5{font-family:'Sora',sans-serif;color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
+.foot-col ul{list-style:none;padding:0;}
+.foot-col li{margin-bottom:10px;}
+.foot-col a{font-size:13.5px;color:#617489;transition:color .15s;}
+.foot-col a:hover{color:var(--steel);}
+.foot-bot{max-width:1280px;margin:52px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;font-size:12px;color:#3f5368;}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 0.65s ease, transform 0.65s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:0.1s;}
+.reveal-delay-2{transition-delay:0.2s;}
+.reveal-delay-3{transition-delay:0.3s;}
+.reveal-delay-4{transition-delay:0.4s;}
+
+/* ── FLOATING PARTICLES ── */
+.particle{position:absolute;border-radius:50%;pointer-events:none;opacity:0;animation:particleFloat linear infinite;}
+@keyframes particleFloat{0%{transform:translateY(0) rotate(0deg);opacity:0;}10%{opacity:1;}90%{opacity:0.5;}100%{transform:translateY(-100vh) rotate(720deg);opacity:0;}}
+
+/* ── CURSOR GLOW ── */
+.cursor-glow{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(96,139,193,0.1),transparent 70%);pointer-events:none;z-index:1;transform:translate(-50%,-50%);transition:opacity 0.3s ease;mix-blend-mode:multiply;}
+</style>
+</head>
+<body>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- ── Top nav ── -->
+<nav class="nav top" id="mainNav">
+  <div class="nav-inner">
+    <a href="/" class="brand" data-testid="nav-home-link">
+      <div class="brand-mark"><img src="/logo.svg" alt="avRoN Technologies"></div>
+      <div>
+        <div class="brand-name">av<span>RoN</span> Tech</div>
+        <div class="brand-sub">avRoNTech.in</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#domains">Domains</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/verify">Verify Certificate</a>
+    </div>
+    <div class="nav-cta">
+      <a href="/portal" class="btn btn-ghost" data-testid="nav-login-btn">Login</a>
+      <a href="/register" class="btn btn-primary" data-testid="nav-register-btn">Apply Now →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow fade-up fade-up-delay-1">Cohort 2026 · Now accepting applications</span>
+      <h1 class="h1 fade-up fade-up-delay-2">Build the career<span class="br"></span>your campus<span class="br"></span><span class="hl">never taught you.</span></h1>
+      <p class="lede fade-up fade-up-delay-3">avRoN Tech runs project-driven virtual internships in high-demand CSE domains. Get a structured roadmap, real-world deliverables and a verified corporate certificate that recruiters can validate online.</p>
+      <div class="hero-cta fade-up fade-up-delay-4">
+        <a href="/register" class="btn btn-primary btn-lg" data-testid="hero-apply-btn">Apply for Internship →</a>
+        <a href="#domains" class="btn btn-outline btn-lg" data-testid="hero-domains-btn">Browse Domains</a>
+      </div>
+      <div class="hero-stats fade-up fade-up-delay-5">
+        <div class="hero-stat"><div class="num">7</div><div class="lbl">CSE Tracks</div></div>
+        <div class="hero-stat"><div class="num">45-60</div><div class="lbl">Day Roadmaps</div></div>
+        <div class="hero-stat"><div class="num">QR</div><div class="lbl">Verified Certs</div></div>
+      </div>
+    </div>
+    <div class="hero-vis fade-up fade-up-delay-3" id="heroVis">
+      <div class="hv-tag">PROGRAM SNAPSHOT</div>
+      <div class="hv-title">What you receive on enrolment</div>
+      <div class="hv-list">
+        <div class="hv-item"><div class="hv-ic">1</div><div class="hv-text">Official Offer Letter on PDF<div class="sm">Signed corporate document for your records.</div></div></div>
+        <div class="hv-item"><div class="hv-ic">2</div><div class="hv-text">Day-by-day roadmap inside your dashboard<div class="sm">Phased curriculum with deliverables.</div></div></div>
+        <div class="hv-item"><div class="hv-ic">3</div><div class="hv-text">Project review &amp; verified certificate<div class="sm">QR-scannable, lifetime verification URL.</div></div></div>
+        <div class="hv-item"><div class="hv-ic">4</div><div class="hv-text">LinkedIn-ready profile artefact<div class="sm">Shareable with HR teams and recruiters.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Domains ── -->
+<section class="section" id="domains">
+  <div class="section-inner">
+    <div class="sec-head reveal">
+      <span class="eyebrow">CSE Internship Tracks</span>
+      <h2>Pick the domain that maps to your career goal.</h2>
+      <p>Seven structured programs across full-stack engineering, data science and security — each with phased deliverables.</p>
+    </div>
+    <div class="dom-grid">
+      <a href="/register?domain=Java Full Stack Developer" class="dom-card featured reveal reveal-delay-1" data-testid="domain-java-fullstack">
+        <div class="dom-ic">JF</div>
+        <div class="dom-title">Java Full Stack Developer</div>
+        <div class="dom-desc">Core Java → Spring Boot → REST APIs → React frontend → Deployment. End-to-end backend engineering.</div>
+        <div class="dom-meta"><span class="dom-badge">60-day roadmap</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Web Development" class="dom-card reveal reveal-delay-2" data-testid="domain-web-dev">
+        <div class="dom-ic">WD</div>
+        <div class="dom-title">Web Development</div>
+        <div class="dom-desc">HTML5, CSS3, JavaScript, responsive design and a capstone web application. Project-driven from Day 1.</div>
+        <div class="dom-meta"><span class="dom-badge">45-day roadmap</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Python Full Stack Developer" class="dom-card reveal reveal-delay-3" data-testid="domain-python-fullstack">
+        <div class="dom-ic">PF</div>
+        <div class="dom-title">Python Full Stack Developer</div>
+        <div class="dom-desc">Python, Django/Flask, REST APIs and a React or Vue frontend. Build production-grade systems.</div>
+        <div class="dom-meta"><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">2-6 Months</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Java Intern" class="dom-card reveal reveal-delay-1">
+        <div class="dom-ic">JI</div>
+        <div class="dom-title">Java Intern</div>
+        <div class="dom-desc">Core Java fundamentals, OOP, Collections and a JDBC-backed project. Ideal entry track for backend.</div>
+        <div class="dom-meta"><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">2-4 Months</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Python Intern" class="dom-card reveal reveal-delay-2">
+        <div class="dom-ic">PI</div>
+        <div class="dom-title">Python Intern</div>
+        <div class="dom-desc">Python syntax, automation, data wrangling and a structured capstone project. Beginner friendly.</div>
+        <div class="dom-meta"><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">2-4 Months</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Data Science & AI Intern" class="dom-card reveal reveal-delay-3">
+        <div class="dom-ic">DS</div>
+        <div class="dom-title">Data Science &amp; AI Intern</div>
+        <div class="dom-desc">Pandas, NumPy, EDA, scikit-learn, ML modelling and a real-world dataset project.</div>
+        <div class="dom-meta"><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">3-6 Months</span><span class="dom-arr">→</span></div>
+      </a>
+      <a href="/register?domain=Cyber Security Intern" class="dom-card reveal reveal-delay-4">
+        <div class="dom-ic">CS</div>
+        <div class="dom-title">Cyber Security Intern</div>
+        <div class="dom-desc">Networking basics, OWASP Top 10, Linux, web vulnerabilities and a security audit project.</div>
+        <div class="dom-meta"><span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">3-6 Months</span><span class="dom-arr">→</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ── -->
+<section class="section alt" id="how">
+  <div class="section-inner">
+    <div class="sec-head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>From application to verified certificate in four steps.</h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-step reveal reveal-delay-1" data-step="01">
+        <div class="how-num">01</div>
+        <div class="how-title">Apply &amp; pick a package</div>
+        <div class="how-desc">Choose your domain, duration and package. Submit UPI payment with your UTR number.</div>
+      </div>
+      <div class="how-step reveal reveal-delay-2" data-step="02">
+        <div class="how-num">02</div>
+        <div class="how-title">Receive your Offer Letter</div>
+        <div class="how-desc">Once our admin team verifies your payment, your official Offer Letter PDF arrives in your inbox.</div>
+      </div>
+      <div class="how-step reveal reveal-delay-3" data-step="03">
+        <div class="how-num">03</div>
+        <div class="how-title">Follow your roadmap</div>
+        <div class="how-desc">Open <b>My Internships</b> in your dashboard to see your day-by-day curriculum with deliverables.</div>
+      </div>
+      <div class="how-step reveal reveal-delay-4" data-step="04">
+        <div class="how-num">04</div>
+        <div class="how-title">Verified certificate</div>
+        <div class="how-desc">Submit your project and download your QR-verified certificate. Add it to LinkedIn.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Transparent Pricing</span>
+      <h2>Two simple packages. No hidden fees.</h2>
+      <p>Pick the basic tracking package, or upgrade to the complete bundle for a real-world project and verified certificate.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card reveal reveal-delay-1">
+        <div class="price-name">Basic Package</div>
+        <div class="price-amt"><span class="cur">₹</span>199</div>
+        <ul class="price-list">
+          <li><span class="chk">✓</span><span>Standard tracking and baseline portal access</span></li>
+          <li><span class="chk">✓</span><span>Domain roadmap inside your dashboard</span></li>
+          <li><span class="chk">✓</span><span>Offer Letter PDF after admin verification</span></li>
+          <li><span class="chk">✓</span><span>Email support during the program</span></li>
+        </ul>
+        <a href="/register?package=basic" class="btn btn-outline price-btn" data-testid="pricing-basic-btn">Choose Basic →</a>
+      </div>
+      <div class="price-card featured reveal reveal-delay-2">
+        <div class="price-name">Complete Certification Bundle</div>
+        <div class="price-amt"><span class="cur">₹</span>399</div>
+        <ul class="price-list">
+          <li><span class="chk">✓</span><span>Everything in the Basic Package</span></li>
+          <li><span class="chk">✓</span><span>Industry-grade real-world project</span></li>
+          <li><span class="chk">✓</span><span>QR-verifiable Certificate of Completion</span></li>
+          <li><span class="chk">✓</span><span>2-year certificate validity</span></li>
+          <li><span class="chk">✓</span><span>LinkedIn-ready credential</span></li>
+        </ul>
+        <a href="/register?package=complete" class="btn btn-primary price-btn" data-testid="pricing-complete-btn" style="background:var(--steel);color:var(--midnight);">Choose Complete →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand">
+        <div class="foot-brand-mark"><img src="/logo.svg" alt="avRoN Technologies"></div>
+        <div>
+          <div class="foot-brand-name">av<span>RoN</span> Tech</div>
+          <div style="font-size:10.5px;color:#3f5368;letter-spacing:.16em;text-transform:uppercase;margin-top:2px;">avRoNTech.in</div>
+        </div>
+      </div>
+      <p class="foot-desc">A corporate engine for engineering interns. Roadmaps, projects and verified certificates — delivered with quality.</p>
+    </div>
+    <div class="foot-col">
+      <h5>Programs</h5>
+      <ul>
+        <li><a href="/register?domain=Java Full Stack Developer">Java Full Stack</a></li>
+        <li><a href="/register?domain=Web Development">Web Development</a></li>
+        <li><a href="/register?domain=Python Full Stack Developer">Python Full Stack</a></li>
+        <li><a href="/register?domain=Data Science & AI Intern">Data Science &amp; AI</a></li>
+        <li><a href="/register?domain=Cyber Security Intern">Cyber Security</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Platform</h5>
+      <ul>
+        <li><a href="/register">Apply</a></li>
+        <li><a href="/portal">Student Portal</a></li>
+        <li><a href="/verify">Verify Certificate</a></li>
+        <li><a href="/admin/login">Admin Login</a></li>
+      </ul>
+    </div>
+    <div class="foot-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="#">About avRoN Tech</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="mailto:official@avrontech.in">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot-bot">
+    Copyright © 2026 avRoN Tech · All rights reserved · Built for engineers, by engineers.
+  </div>
+</footer>
+
+<script>
+// ── Navbar scroll effect ──────────────────────────────────────────────────
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 40) {
+    nav.classList.remove('top');
+    nav.classList.add('scrolled');
+  } else {
+    nav.classList.remove('scrolled');
+    nav.classList.add('top');
+  }
+}, { passive: true });
+
+// ── Cursor glow ───────────────────────────────────────────────────────────
+const glow = document.getElementById('cursorGlow');
+let glowX = window.innerWidth / 2, glowY = window.innerHeight / 2;
+let currentX = glowX, currentY = glowY;
+document.addEventListener('mousemove', e => { glowX = e.clientX; glowY = e.clientY; });
+function animateGlow() {
+  currentX += (glowX - currentX) * 0.07;
+  currentY += (glowY - currentY) * 0.07;
+  glow.style.left = currentX + 'px';
+  glow.style.top = currentY + 'px';
+  requestAnimationFrame(animateGlow);
+}
+animateGlow();
+
+// ── Hero card 3D tilt on mouse ────────────────────────────────────────────
+const heroVis = document.getElementById('heroVis');
+if (heroVis) {
+  heroVis.addEventListener('mousemove', e => {
+    const rect = heroVis.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const rx = ((e.clientY - cy) / rect.height) * 10;
+    const ry = ((e.clientX - cx) / rect.width) * -10;
+    heroVis.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+  });
+  heroVis.addEventListener('mouseleave', () => {
+    heroVis.style.transform = 'perspective(1000px) rotateY(-3deg) rotateX(2deg)';
+  });
+}
+
+// ── Hero entrance animation ───────────────────────────────────────────────
+document.querySelectorAll('.fade-up').forEach(el => {
+  setTimeout(() => el.classList.add('visible'), 80);
+});
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Floating particles in hero ────────────────────────────────────────────
+function spawnParticle() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = Math.random() * 5 + 2;
+  const x = Math.random() * 100;
+  const duration = Math.random() * 12 + 8;
+  const delay = Math.random() * 4;
+  const opacity = Math.random() * 0.5 + 0.2;
+  p.style.cssText = `
+    width:${size}px;height:${size}px;
+    left:${x}%;bottom:-10px;
+    background:rgba(96,139,193,${opacity});
+    animation-duration:${duration}s;
+    animation-delay:${delay}s;
+  `;
+  hero.appendChild(p);
+  setTimeout(() => p.remove(), (duration + delay) * 1000);
+}
+setInterval(spawnParticle, 600);
+
+// ── Counter animation for hero stats ─────────────────────────────────────
+function animateCounter(el, target, suffix) {
+  let start = 0;
+  const duration = 1400;
+  const step = timestamp => {
+    if (!start) start = timestamp;
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = typeof target === 'number'
+      ? Math.floor(eased * target) + suffix
+      : target;
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = (typeof target === 'number' ? target : target) + suffix;
+  };
+  requestAnimationFrame(step);
+}
+const statsObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const nums = entry.target.querySelectorAll('.num');
+      nums.forEach(n => {
+        const txt = n.textContent.trim();
+        if (txt === '7') animateCounter(n, 7, '');
+        else if (txt === 'QR') { /* static */ }
+      });
+      statsObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+const statsEl = document.querySelector('.hero-stats');
+if (statsEl) statsObserver.observe(statsEl);
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Verify Certificate — avRoN Tech</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --midnight:#0B192C;--steel:#608BC1;--steel-soft:#cdd9eb;
+  --ink:#0a0a0a;--mut:#5a6a7e;--line:#e6ebf2;--bg:#f5f7fb;--soft:#f7f9fc;
+  --ok:#15803d;--danger:#dc2626;--warn:#d97706;
+}
+html,body{min-height:100%;}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+.nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.brand-mark{width:32px;height:32px;background:var(--midnight);color:var(--steel);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border-radius:6px;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:var(--midnight);letter-spacing:-.3px;}
+.brand-name span{color:var(--steel);}
+.btn-ghost{background:transparent;color:var(--midnight);border:1px solid var(--line);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;}
+.btn-ghost:hover{border-color:var(--midnight);}
+
+.wrap{max-width:680px;margin:0 auto;padding:60px 24px 80px;}
+.head{text-align:center;margin-bottom:36px;}
+.eyebrow{display:inline-block;font-size:11px;font-weight:600;color:var(--steel);letter-spacing:.16em;text-transform:uppercase;}
+.head h1{font-family:'Sora',sans-serif;font-size:36px;font-weight:800;color:var(--midnight);letter-spacing:-.8px;margin-top:8px;line-height:1.15;}
+.head p{font-size:15px;color:var(--mut);margin-top:12px;max-width:480px;margin-left:auto;margin-right:auto;}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px 32px;}
+.input-block{display:flex;gap:10px;}
+.fi{flex:1;padding:14px 16px;border:1.5px solid var(--line);border-radius:9px;font-size:15px;color:var(--ink);font-family:inherit;background:#fff;transition:all .2s;letter-spacing:.3px;text-transform:uppercase;}
+.fi:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
+.fi::placeholder{color:#94a3b8;text-transform:none;letter-spacing:0;}
+.btn-verify{background:var(--midnight);color:#fff;border:none;padding:14px 22px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:all .2s;}
+.btn-verify:hover:not(:disabled){background:#0e2138;}
+.btn-verify:disabled{opacity:.6;cursor:not-allowed;}
+.fi-help{font-size:12px;color:var(--mut);margin-top:10px;text-align:center;}
+
+.spin{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+
+/* Result panels */
+.result{margin-top:24px;display:none;animation:fade .3s ease-out;}
+.result.show{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.valid-card{background:#fff;border:2px solid var(--ok);border-radius:14px;padding:0;overflow:hidden;}
+.valid-head{background:var(--ok);padding:18px 26px;color:#fff;display:flex;align-items:center;gap:14px;}
+.valid-head .ic{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.valid-head h3{font-family:'Sora',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.2px;}
+.valid-head p{font-size:12.5px;color:rgba(255,255,255,.85);margin-top:2px;}
+.valid-body{padding:26px 28px;}
+.vrow{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;}
+.vrow:last-child{border-bottom:none;}
+.vrow .lbl{color:var(--mut);font-weight:500;}
+.vrow .val{font-weight:700;color:var(--midnight);}
+.vrow .val.mono{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--steel);}
+.vstatus{margin-top:18px;background:rgba(21,128,61,.08);border:1px solid rgba(21,128,61,.2);border-left:4px solid var(--ok);border-radius:0 8px 8px 0;padding:14px 18px;}
+.vstatus .vlbl{font-size:11px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+.vstatus .vmsg{font-size:14px;color:var(--midnight);font-weight:700;margin-top:4px;}
+
+.invalid-card{background:#fff;border:2px solid var(--danger);border-radius:14px;padding:0;overflow:hidden;}
+.invalid-card.warn{border-color:var(--warn);}
+.invalid-head{background:var(--danger);padding:18px 26px;color:#fff;display:flex;align-items:center;gap:14px;}
+.invalid-card.warn .invalid-head{background:var(--warn);}
+.invalid-head .ic{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.invalid-head h3{font-family:'Sora',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.2px;}
+.invalid-body{padding:22px 28px;font-size:13.5px;color:var(--mut);line-height:1.7;}
+.invalid-body b{color:var(--midnight);}
+
+.foot{text-align:center;margin-top:48px;font-size:12px;color:var(--mut);}
+.foot a{color:var(--steel);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="brand">
+    <div class="brand-mark">aR</div>
+    <div class="brand-name">av<span>RoN</span> Tech</div>
+  </a>
+  <a href="/" class="btn-ghost">← Home</a>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <span class="eyebrow">Certificate Verification</span>
+    <h1>Verify any avRoN Tech<br>certificate instantly</h1>
+    <p>Enter the Certificate ID printed on the document below or scan the QR code on the certificate. Verification takes under a second.</p>
+  </div>
+
+  <div class="card">
+    <div class="input-block">
+      <input type="text" class="fi" id="certInput" placeholder="Enter Certificate ID (e.g. AT12345678)" autofocus data-testid="cert-input" onkeydown="if(event.key==='Enter')verify()">
+      <button class="btn-verify" id="verifyBtn" onclick="verify()" data-testid="verify-btn">
+        <span id="vbt">Verify →</span>
+        <div class="spin" id="vsp"></div>
+      </button>
+    </div>
+    <p class="fi-help">All verifications are logged. Any tampering is detectable.</p>
+
+    <div class="result" id="resultBox"></div>
+  </div>
+
+  <div class="foot">© 2026 avRoN Tech · <a href="/">avRoNTech.in</a></div>
+</div>
+
+<script>
+const qp = new URLSearchParams(location.search);
+const pre = qp.get('id');
+if(pre){
+  document.getElementById('certInput').value = pre;
+  window.addEventListener('DOMContentLoaded', verify);
+}
+
+function fmt(d){if(!d)return '—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});}
+
+async function verify(){
+  const id = document.getElementById('certInput').value.trim().toUpperCase();
+  if(!id) return;
+  const btn = document.getElementById('verifyBtn'),
+        sp  = document.getElementById('vsp'),
+        bt  = document.getElementById('vbt');
+  btn.disabled = true; sp.style.display='block'; bt.textContent='Verifying...';
+  const box = document.getElementById('resultBox');
+  box.classList.remove('show'); box.innerHTML = '';
+
+  try{
+    const r = await fetch('/api/student/verify/'+encodeURIComponent(id));
+    const d = await r.json();
+
+    if(d.valid){
+      box.innerHTML = `
+        <div class="valid-card">
+          <div class="valid-head">
+            <div class="ic">✓</div>
+            <div>
+              <h3>Certificate Verified</h3>
+              <p>This certificate is authentic and has been issued by avRoN Tech.</p>
+            </div>
+          </div>
+          <div class="valid-body">
+            <div class="vrow"><span class="lbl">Student Name</span><span class="val">${d.name}</span></div>
+            <div class="vrow"><span class="lbl">Domain</span><span class="val">${d.domain}</span></div>
+            ${d.college ? `<div class="vrow"><span class="lbl">College</span><span class="val">${d.college}</span></div>` : ''}
+            <div class="vrow"><span class="lbl">Duration</span><span class="val">${fmt(d.startDate)} – ${fmt(d.endDate)}</span></div>
+            <div class="vrow"><span class="lbl">Issue Date</span><span class="val">${fmt(d.issuedAt)}</span></div>
+            <div class="vrow"><span class="lbl">Certificate ID</span><span class="val mono">${d.certId}</span></div>
+            <div class="vstatus">
+              <div class="vlbl">Verification Status</div>
+              <div class="vmsg">✅ Active &amp; Valid${d.expiresAt ? ` · Expires ${fmt(d.expiresAt)}` : ''}</div>
+            </div>
+          </div>
+        </div>`;
+    } else if(d.state === 'revoked'){
+      box.innerHTML = `
+        <div class="invalid-card">
+          <div class="invalid-head"><div class="ic">⛔</div><div><h3>Certificate Revoked</h3><p style="font-size:12.5px;color:rgba(255,255,255,.85);margin-top:2px;">This certificate has been formally revoked by avRoN Tech.</p></div></div>
+          <div class="invalid-body">
+            <b>Holder:</b> ${d.name||'—'} · <b>Domain:</b> ${d.domain||'—'}<br>
+            <b>Revoked on:</b> ${fmt(d.revokedAt)}<br>
+            ${d.reason ? `<b>Reason:</b> <em>${d.reason}</em><br>` : ''}
+            <br>For queries contact <b>official@avrontech.in</b>.
+          </div>
+        </div>`;
+    } else if(d.state === 'expired'){
+      box.innerHTML = `<div class="invalid-card warn"><div class="invalid-head"><div class="ic">⌛</div><div><h3>Certificate Expired</h3></div></div><div class="invalid-body">This certificate was valid but has now expired. For re-validation contact <b>official@avrontech.in</b>.</div></div>`;
+    } else if(d.state === 'not_issued'){
+      box.innerHTML = `<div class="invalid-card warn"><div class="invalid-head"><div class="ic">⏳</div><div><h3>Not Yet Issued</h3></div></div><div class="invalid-body">This Certificate ID exists but has not been issued yet.</div></div>`;
+    } else {
+      box.innerHTML = `<div class="invalid-card"><div class="invalid-head"><div class="ic">✕</div><div><h3>Certificate Not Found</h3></div></div><div class="invalid-body">This Certificate ID does not exist in our records. Please double-check and try again.<br><br>Contact us at <b>official@avrontech.in</b>.</div></div>`;
+    }
+    box.classList.add('show');
+  } catch(e){
+    box.innerHTML = `<div class="invalid-card"><div class="invalid-head"><div class="ic">⚠</div><div><h3>Verification Error</h3></div></div><div class="invalid-body">Could not reach the server. Please try again in a moment.</div></div>`;
+    box.classList.add('show');
+  } finally {
+    btn.disabled = false; sp.style.display='none'; bt.textContent='Verify →';
+  }
+}
+</script>
+</body>
+</html>

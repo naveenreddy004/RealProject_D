@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Student Portal — avRoN Tech</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg: #0B192C;
+  --bg2: #0e2138;
+  --accent: #608BC1;
+  --accent2: #152844;
+  --line: rgba(255, 255, 255, .08);
+  --card: rgba(255, 255, 255, .04);
+  --txt: #f5f7fb;
+  --mut: #7186a0;
+  --danger: #fda4af;
+}
+html,body{height:100%;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh;}
+
+/* Decorative mesh + radial glow */
+.bg-mesh{position:fixed;inset:0;background-image:linear-gradient(rgba(56,217,150,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,217,150,.04) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.bg-glow{position:fixed;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,rgba(56,217,150,.13),transparent 65%);top:-300px;right:-300px;pointer-events:none;z-index:0;}
+.bg-glow2{position:fixed;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(26,92,70,.25),transparent 70%);bottom:-250px;left:-200px;pointer-events:none;z-index:0;}
+
+/* Header */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;backdrop-filter:blur(20px);background:rgba(10,27,21,.7);border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:800;letter-spacing:-.4px;color:#fff;}
+.brand-ic{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#0b1410;}
+.brand-name{font-size:18px;}.brand-name span{color:var(--accent);}
+.brand-sub{font-size:10px;color:var(--mut);margin-left:4px;letter-spacing:.14em;text-transform:uppercase;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--mut);border:1px solid var(--line);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.back-btn:hover{color:var(--accent);border-color:var(--accent);}
+
+/* Main split layout */
+.shell{position:relative;z-index:1;min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;padding-top:64px;}
+@media (max-width:920px){.shell{grid-template-columns:1fr;}.left-hero{padding:48px 28px 24px;}.right-pane{padding:24px 24px 48px;}}
+
+/* Left side — brand story */
+.left-hero{padding:80px 64px 64px;display:flex;flex-direction:column;justify-content:center;gap:18px;border-right:1px solid var(--line);}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(56,217,150,.1);border:1px solid rgba(56,217,150,.25);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.14em;padding:6px 14px;border-radius:30px;align-self:flex-start;text-transform:uppercase;}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(56,217,150,.2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(56,217,150,.2);}50%{box-shadow:0 0 0 8px rgba(56,217,150,0);}}
+.left-hero h1{font-family:'Sora',sans-serif;font-size:52px;font-weight:800;line-height:1.04;letter-spacing:-1.2px;color:#fff;max-width:540px;}
+.left-hero h1 .hl{background:linear-gradient(90deg,var(--accent),#a7f3d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.left-hero .sub{font-size:15.5px;color:var(--mut);max-width:440px;line-height:1.7;margin-top:8px;}
+.feat-list{margin-top:20px;display:flex;flex-direction:column;gap:14px;max-width:440px;}
+.feat{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(12px);transition:all .25s;}
+.feat:hover{border-color:rgba(56,217,150,.25);transform:translateX(4px);}
+.feat-ic{flex:0 0 36px;height:36px;border-radius:9px;background:rgba(56,217,150,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.feat-title{font-size:14px;font-weight:700;color:#fff;}
+.feat-desc{font-size:12.5px;color:var(--mut);margin-top:2px;line-height:1.5;}
+
+/* Right side — auth card */
+.right-pane{display:flex;align-items:center;justify-content:center;padding:60px 48px;}
+.card{width:100%;max-width:440px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(24px);box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;}
+.card-head{padding:30px 30px 0;text-align:left;}
+.card-head h2{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.card-head p{font-size:13.5px;color:var(--mut);margin-top:6px;line-height:1.6;}
+
+.tabs{display:flex;gap:2px;margin:22px 30px 0;background:rgba(255,255,255,.04);padding:4px;border-radius:12px;border:1px solid var(--line);}
+.tab{flex:1;text-align:center;padding:10px 14px;font-size:13px;font-weight:700;color:var(--mut);border-radius:9px;cursor:pointer;transition:all .2s;}
+.tab.active{background:rgba(56,217,150,.12);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(56,217,150,.2);}
+
+.pane{padding:24px 30px 30px;display:none;}
+.pane.active{display:block;animation:fadeIn .35s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+label{display:block;font-size:12px;font-weight:700;color:#fff;margin-bottom:7px;letter-spacing:.02em;}
+.field{position:relative;margin-bottom:16px;}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:#fff;padding:13px 14px;border-radius:11px;font-size:14px;font-family:inherit;transition:all .2s;outline:none;}
+.field input::placeholder{color:rgba(255,255,255,.3);}
+.field input:focus{border-color:var(--accent);background:rgba(56,217,150,.04);box-shadow:0 0 0 4px rgba(56,217,150,.1);}
+.pw-toggle{position:absolute;right:10px;top:36px;background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;padding:4px 8px;}
+.pw-toggle:hover{color:var(--accent);}
+.err-line{display:none;font-size:12px;color:var(--danger);margin-top:6px;}
+
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#2dbe7f);color:#0a1b15;border:none;border-radius:11px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;box-shadow:0 8px 24px rgba(56,217,150,.25);}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 32px rgba(56,217,150,.35);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-ghost{width:100%;padding:13px;background:transparent;color:var(--mut);border:1px solid var(--line);border-radius:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;}
+.btn-ghost:hover{color:var(--accent);border-color:var(--accent);}
+
+.helper{margin-top:14px;text-align:center;font-size:13px;color:var(--mut);}
+.helper a, .helper span.link{color:var(--accent);cursor:pointer;font-weight:700;text-decoration:none;}
+.helper a:hover, .helper span.link:hover{opacity:.85;}
+
+.spin{display:none;width:14px;height:14px;border:2px solid rgba(10,27,21,.3);border-top-color:#0a1b15;border-radius:50%;animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+
+/* OTP digit inputs */
+.otp-box{display:flex;gap:10px;margin:10px 0 4px;justify-content:space-between;}
+.otp-box input{width:46px;height:54px;background:rgba(255,255,255,.05);border:1.5px solid var(--line);color:#fff;text-align:center;font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;border-radius:11px;outline:none;transition:all .2s;}
+.otp-box input:focus{border-color:var(--accent);background:rgba(56,217,150,.06);}
+.otp-info{font-size:12.5px;color:var(--mut);text-align:center;margin:6px 0 16px;}
+.otp-info b{color:var(--accent);font-weight:700;}
+.resend{text-align:center;font-size:12.5px;color:var(--mut);margin-top:8px;}
+.resend button{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-family:inherit;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;}
+.resend button:disabled{color:var(--mut);text-decoration:none;cursor:not-allowed;}
+
+/* Stepper */
+.stepper{display:flex;gap:6px;padding:0 30px;margin-bottom:12px;margin-top:18px;}
+.step-dot{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.08);transition:all .3s;}
+.step-dot.done{background:var(--accent);}
+.step-dot.active{background:linear-gradient(90deg,var(--accent),rgba(56,217,150,.15));}
+
+/* Success */
+.success-screen{padding:32px 30px;text-align:center;display:none;}
+.success-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(56,217,150,.15),rgba(56,217,150,.05));border:1px solid rgba(56,217,150,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:32px;}
+.success-screen h3{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;}
+.success-screen p{font-size:13.5px;color:var(--mut);line-height:1.65;margin-bottom:22px;}
+
+/* Toast */
+.toast{position:fixed;top:80px;right:24px;background:rgba(20,58,44,.95);color:#fff;padding:13px 22px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.4);border:1px solid rgba(56,217,150,.25);transform:translateX(120%);transition:transform .3s ease-out;z-index:9999;backdrop-filter:blur(20px);max-width:340px;}
+.toast.show{transform:translateX(0);}
+.toast.err{border-color:rgba(255,107,107,.35);background:rgba(58,20,20,.95);}
+
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-ic">aR</div>
+    <div>
+      <div class="brand-name">av<span>RoN</span> Tech <span class="brand-sub">avRoNTech.in</span></div>
+    </div>
+  </div>
+  <button data-testid="back-home-btn" class="back-btn" onclick="location.href='/'">
+    <span style="font-size:14px;">←</span> Home
+  </button>
+</header>
+
+<main class="shell">
+  <!-- LEFT: Brand story -->
+  <section class="left-hero">
+    <span class="eyebrow">Student Portal</span>
+    <h1>Your internship<br>journey starts <span class="hl">here.</span></h1>
+    <p class="sub">Login with your registered email to access tasks, complete your UPI payment and download your QR-verifiable certificate.</p>
+
+    <div class="feat-list">
+      <div class="feat"><div class="feat-ic">🔐</div><div><div class="feat-title">Passwordless first login</div><div class="feat-desc">Get a one-time code on email, set your password, done.</div></div></div>
+      <div class="feat"><div class="feat-ic">⚡</div><div><div class="feat-title">Instant activation</div><div class="feat-desc">Submit payment and your internship goes live immediately.</div></div></div>
+      <div class="feat"><div class="feat-ic">🎓</div><div><div class="feat-title">QR-verified certificate</div><div class="feat-desc">Issued the moment you complete your internship.</div></div></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Auth card -->
+  <section class="right-pane">
+    <div class="card">
+      <div class="card-head">
+        <h2>Welcome back</h2>
+        <p>Choose how you want to login.</p>
+      </div>
+
+      <div class="tabs">
+        <div data-testid="tab-password-login" class="tab active" id="tab-pw" onclick="switchMode('password')">Password</div>
+        <div data-testid="tab-otp-login" class="tab" id="tab-otp" onclick="switchMode('otp')">Email OTP</div>
+      </div>
+
+      <!-- PASSWORD MODE -->
+      <div class="pane active" id="pane-pw">
+        <div class="field">
+          <label for="pw-email">Email</label>
+          <input data-testid="pw-email-input" type="email" id="pw-email" placeholder="you@example.com" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="pw-pass">Password</label>
+          <input data-testid="pw-password-input" type="password" id="pw-pass" placeholder="Enter your password" autocomplete="new-password">
+          <button class="pw-toggle" type="button" onclick="togglePw('pw-pass',this)">👁</button>
+          <div class="err-line" id="pw-err"></div>
+        </div>
+        <button data-testid="pw-login-btn" class="btn-primary" id="pw-btn" onclick="loginPassword()">
+          <span id="pw-btn-txt">Login</span>
+          <div class="spin" id="pw-spin"></div>
+        </button>
+        <div class="helper">
+          Forgot password? <span data-testid="link-use-otp" class="link" onclick="switchMode('otp')">Use Email OTP instead</span>
+        </div>
+      </div>
+
+      <!-- OTP MODE -->
+      <div class="pane" id="pane-otp">
+        <div class="stepper">
+          <div class="step-dot active" id="s1"></div>
+          <div class="step-dot" id="s2"></div>
+          <div class="step-dot" id="s3"></div>
+        </div>
+
+        <!-- Step 1 — email -->
+        <div id="otp-s1">
+          <div class="field">
+            <label for="otp-email">Email</label>
+            <input data-testid="otp-email-input" type="email" id="otp-email" placeholder="you@example.com" autocomplete="email">
+            <div class="err-line" id="otp-email-err"></div>
+          </div>
+          <button data-testid="otp-send-btn" class="btn-primary" id="otp-send-btn" onclick="sendOTP()">
+            <span id="otp-send-txt">Send 6-digit code</span>
+            <div class="spin" id="otp-send-spin"></div>
+          </button>
+          <div class="helper">
+            New here? <a href="/" data-testid="link-register">Register first →</a>
+          </div>
+        </div>
+
+        <!-- Step 2 — enter OTP -->
+        <div id="otp-s2" style="display:none;">
+          <p class="otp-info">Enter the 6-digit code sent to <b id="otp-email-show">your email</b></p>
+          <div class="otp-box">
+            <input data-testid="otp-digit-1" type="text" maxlength="1" inputmode="numeric" id="ob1" oninput="onext(this,'ob2')" onkeydown="oback(event,this,null)">
+            <input data-testid="otp-digit-2" type="text" maxlength="1" inputmode="numeric" id="ob2" oninput="onext(this,'ob3')" onkeydown="oback(event,this,'ob1')">
+            <input data-testid="otp-digit-3" type="text" maxlength="1" inputmode="numeric" id="ob3" oninput="onext(this,'ob4')" onkeydown="oback(event,this,'ob2')">
+            <input data-testid="otp-digit-4" type="text" maxlength="1" inputmode="numeric" id="ob4" oninput="onext(this,'ob5')" onkeydown="oback(event,this,'ob3')">
+            <input data-testid="otp-digit-5" type="text" maxlength="1" inputmode="numeric" id="ob5" oninput="onext(this,'ob6')" onkeydown="oback(event,this,'ob4')">
+            <input data-testid="otp-digit-6" type="text" maxlength="1" inputmode="numeric" id="ob6" oninput="onext(this,null)" onkeydown="oback(event,this,'ob5')">
+          </div>
+          <div class="err-line" id="otp-verify-err"></div>
+          <button data-testid="otp-verify-btn" class="btn-primary" id="otp-verify-btn" onclick="verifyOTP()" style="margin-top:16px;">
+            <span id="otp-verify-txt">Verify code</span>
+            <div class="spin" id="otp-verify-spin"></div>
+          </button>
+          <div class="resend">Didn't get it? <button data-testid="otp-resend-btn" id="resend-btn" onclick="resendOTP()" disabled>Resend in <span id="resend-timer">30s</span></button></div>
+          <button class="btn-ghost" onclick="switchOtpStep(1)">← Change email</button>
+        </div>
+
+        <!-- Step 3 — set password -->
+        <div id="otp-s3" style="display:none;">
+          <p style="font-size:13.5px;color:var(--mut);margin-bottom:14px;line-height:1.6;">You're verified! Set a password so you can login faster next time.</p>
+          <div class="field">
+            <label for="new-pass">New password</label>
+            <input data-testid="set-newpass-input" type="password" id="new-pass" placeholder="At least 6 characters" autocomplete="new-password">
+            <button class="pw-toggle" type="button" onclick="togglePw('new-pass',this)">👁</button>
+          </div>
+          <div class="field">
+            <label for="confirm-pass">Confirm password</label>
+            <input data-testid="set-confirmpass-input" type="password" id="confirm-pass" placeholder="Repeat the password" autocomplete="new-password">
+            <button class="pw-toggle" type="button" onclick="togglePw('confirm-pass',this)">👁</button>
+            <div class="err-line" id="set-pw-err"></div>
+          </div>
+          <button data-testid="set-password-btn" class="btn-primary" onclick="setPassword()">
+            <span>Set password & continue</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="success-screen" id="successPane">
+        <div class="success-icon">✓</div>
+        <h3>You're in!</h3>
+        <p id="success-msg">Welcome back. Taking you to your dashboard...</p>
+        <button data-testid="goto-dashboard-btn" class="btn-primary" onclick="location.href='/dashboard'">Go to dashboard →</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentEmail='',verifiedToken=null,isFirstLogin=false,resendInterval=null,_otpForSetPw='';
+
+function showToast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(err?' err':'');
+  clearTimeout(t._h);t._h=setTimeout(()=>{t.className='toast'+(err?' err':'');},4200);
+}
+function togglePw(id,btn){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'👁':'🙈';
+}
+function switchMode(mode){
+  document.getElementById('tab-pw').classList.toggle('active',mode==='password');
+  document.getElementById('tab-otp').classList.toggle('active',mode==='otp');
+  document.getElementById('pane-pw').classList.toggle('active',mode==='password');
+  document.getElementById('pane-otp').classList.toggle('active',mode==='otp');
+}
+function switchOtpStep(n){
+  document.getElementById('otp-s1').style.display=n===1?'block':'none';
+  document.getElementById('otp-s2').style.display=n===2?'block':'none';
+  document.getElementById('otp-s3').style.display=n===3?'block':'none';
+  ['s1','s2','s3'].forEach((id,i)=>{
+    const el=document.getElementById(id);el.classList.remove('active','done');
+    if(i+1<n)el.classList.add('done');else if(i+1===n)el.classList.add('active');
+  });
+}
+function showSuccess(msg){
+  ['pane-pw','pane-otp'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.querySelector('.tabs').style.display='none';
+  document.querySelector('.card-head').style.display='none';
+  const s=document.getElementById('successPane');s.style.display='block';
+  document.getElementById('success-msg').textContent=msg||'Taking you to your dashboard...';
+}
+
+// ── Password login ────────────────────────────────────────────────────────────
+async function loginPassword(){
+  const email=document.getElementById('pw-email').value.trim();
+  const password=document.getElementById('pw-pass').value;
+  const err=document.getElementById('pw-err');
+  if(!email||!password){err.textContent='Please enter email and password.';err.style.display='block';return;}
+  err.style.display='none';
+  const btn=document.getElementById('pw-btn'),sp=document.getElementById('pw-spin'),bt=document.getElementById('pw-btn-txt');
+  btn.disabled=true;sp.style.display='block';bt.textContent='Logging in...';
+  try{
+    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data=await res.json();
+    if(data.success){
+      localStorage.setItem('cp_token',data.token);
+      localStorage.setItem('cp_user',JSON.stringify(data.user));
+      showSuccess('Welcome back, '+data.user.fullName.split(' ')[0]+'!');
+      setTimeout(()=>location.href='/dashboard',1100);
+    } else if(data.requireOTP){
+      switchMode('otp');document.getElementById('otp-email').value=email;
+      showToast('First-time login — please use OTP',true);
+      btn.disabled=false;sp.style.display='none';bt.textContent='Login';
+    } else {
+      err.textContent=data.message;err.style.display='block';
+      btn.disabled=false;sp.style.display='none';bt.textContent='Login';
+    }
+  }catch{err.textContent='Network error.';err.style.display='block';btn.disabled=false;sp.style.display='none';bt.textContent='Login';}
+}
+
+// ── OTP flow ──────────────────────────────────────────────────────────────────
+async function sendOTP(){
+  const email=document.getElementById('otp-email').value.trim();
+  const err=document.getElementById('otp-email-err');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='Enter a valid email.';err.style.display='block';return;}
+  err.style.display='none';
+  const btn=document.getElementById('otp-send-btn'),sp=document.getElementById('otp-send-spin'),bt=document.getElementById('otp-send-txt');
+  btn.disabled=true;sp.style.display='block';bt.textContent='Sending...';
+  try{
+    const res=await fetch('/api/auth/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.success){
+      currentEmail=email;
+      document.getElementById('otp-email-show').textContent=email;
+      switchOtpStep(2);startResendTimer();
+      document.getElementById('ob1').focus();
+      showToast('✅ OTP sent to '+email);
+      isFirstLogin=!data.hasPassword;
+    } else {
+      err.textContent=data.message;err.style.display='block';
+      btn.disabled=false;sp.style.display='none';bt.textContent='Send 6-digit code';
+    }
+  }catch{err.textContent='Network error.';err.style.display='block';btn.disabled=false;sp.style.display='none';bt.textContent='Send 6-digit code';}
+}
+function onext(el,nextId){
+  el.value=el.value.replace(/\D/,'');
+  if(el.value&&nextId)document.getElementById(nextId).focus();
+  const otp=['ob1','ob2','ob3','ob4','ob5','ob6'].map(id=>document.getElementById(id).value).join('');
+  if(otp.length===6)setTimeout(verifyOTP,180);
+}
+function oback(e,el,prevId){if(e.key==='Backspace'&&!el.value&&prevId)document.getElementById(prevId).focus();}
+async function verifyOTP(){
+  const otp=['ob1','ob2','ob3','ob4','ob5','ob6'].map(id=>document.getElementById(id).value).join('');
+  const err=document.getElementById('otp-verify-err');
+  if(otp.length!==6){err.textContent='Enter all 6 digits.';err.style.display='block';return;}
+  err.style.display='none';
+  const btn=document.getElementById('otp-verify-btn'),sp=document.getElementById('otp-verify-spin'),bt=document.getElementById('otp-verify-txt');
+  btn.disabled=true;sp.style.display='block';bt.textContent='Verifying...';
+  try{
+    const res=await fetch('/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentEmail,otp})});
+    const data=await res.json();
+    if(data.success){
+      verifiedToken=data.token;
+      localStorage.setItem('cp_token',data.token);
+      localStorage.setItem('cp_user',JSON.stringify(data.user));
+      if(resendInterval)clearInterval(resendInterval);
+      showSuccess(data.isFirstLogin?'Welcome to avRoN! Your account is ready.':'Welcome back!');
+      setTimeout(()=>location.href='/dashboard',1300);
+    } else if(data.requirePassword){
+      // Freeze the OTP value before moving to step 3 so setPassword() reuses it
+      _otpForSetPw = otp;
+      switchOtpStep(3);
+      verifiedToken=null;
+      btn.disabled=false;sp.style.display='none';bt.textContent='Verify code';
+    } else {
+      err.textContent=data.message;err.style.display='block';
+      btn.disabled=false;sp.style.display='none';bt.textContent='Verify code';
+    }
+  }catch{err.textContent='Network error.';err.style.display='block';btn.disabled=false;sp.style.display='none';bt.textContent='Verify code';}
+}
+async function setPassword(){
+  // Use the frozen OTP from step 2 (inputs may have been cleared by autocomplete)
+  const otp = _otpForSetPw || ['ob1','ob2','ob3','ob4','ob5','ob6'].map(id=>document.getElementById(id).value).join('');
+  const newPass=document.getElementById('new-pass').value;
+  const confirmPass=document.getElementById('confirm-pass').value;
+  const err=document.getElementById('set-pw-err');
+  if(newPass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  if(newPass!==confirmPass){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const res=await fetch('/api/auth/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentEmail,otp,newPassword:newPass})});
+    const data=await res.json();
+    if(data.success){
+      localStorage.setItem('cp_token',data.token);
+      localStorage.setItem('cp_user',JSON.stringify(data.user));
+      showSuccess('Account ready. Off to your dashboard...');
+      setTimeout(()=>location.href='/dashboard',1300);
+    } else {
+      err.textContent=data.message;err.style.display='block';
+    }
+  }catch{err.textContent='Network error.';err.style.display='block';}
+}
+function startResendTimer(){
+  let s=30;const btn=document.getElementById('resend-btn'),sp=document.getElementById('resend-timer');
+  btn.disabled=true;sp.textContent=s+'s';
+  if(resendInterval)clearInterval(resendInterval);
+  resendInterval=setInterval(()=>{s--;sp.textContent=s+'s';if(s<=0){clearInterval(resendInterval);btn.disabled=false;btn.innerHTML='Resend OTP';}},1000);
+}
+async function resendOTP(){
+  if(!currentEmail)return;
+  const res=await fetch('/api/auth/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentEmail})});
+  const data=await res.json();
+  if(data.success){startResendTimer();showToast('✅ New OTP sent');}
+  else showToast(data.message||'Error',true);
+}
+
+// Auto-redirect if already logged in
+const t=localStorage.getItem('cp_token');
+if(t){
+  fetch('/api/auth/me',{headers:{'Authorization':'Bearer '+t}})
+    .then(r=>r.json()).then(d=>{if(d.success)location.href='/dashboard';}).catch(()=>{});
+}
+</script>
+</body>
+</html>
