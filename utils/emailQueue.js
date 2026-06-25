@@ -90,7 +90,9 @@ function queueEmail(type, payload) {
 
   // No queue → send directly in the next tick. Never blocks the caller.
   setImmediate(() => {
-    handler(payload).catch(e => console.error(`✉️ ${type} send failed:`, e.message));
+    handler(payload)
+      .then(() => console.log(`✉️ [emailQueue] ${type} sent successfully`))
+      .catch(e => console.error(`✉️ [emailQueue] ${type} FAILED:`, e.message, e.code || '', e.response || ''));
   });
 }
 
