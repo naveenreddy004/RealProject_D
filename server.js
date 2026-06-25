@@ -76,6 +76,65 @@ app.use('/api/courses',  coursesRoutes);
 // Initialize email queue worker (no-op without REDIS_URL)
 require('./utils/emailQueue');
 
+// ── Email test endpoint (admin only — remove after confirming emails work) ────
+app.get('/api/test-email', async (req, res) => {
+  const secret = req.query.secret;
+  if (secret !== process.env.ADMIN_KEY) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  const to = req.query.to;
+  if (!to) return res.status(400).json({ success: false, message: 'Pass ?to=youremail@gmail.com&secret=...' });
+
+  try {
+    const nodemailer = require('nodemailer');
+    let transport;
+    if (process.env.RESEND_API_KEY) {
+      transport = nodemailer.createTransport({
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: { user: 'resend', pass: process.env.RESEND_API_KEY },
+      });
+    } else {
+      transport = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      });
+    }
+
+    // Verify connection first
+    await transport.verify();
+
+    const from = process.env.EMAIL_FROM ||
+      (process.env.RESEND_API_KEY ? '"avRoN Tech" <onboarding@resend.dev>' : `"avRoN Tech" <${process.env.EMAIL_USER}>`);
+
+    await transport.sendMail({
+      from,
+      to,
+      subject: 'avRoN Tech — Email Test ✅',
+      text: `Email is working! Provider: ${process.env.RESEND_API_KEY ? 'Resend' : 'Gmail'}. Sent at: ${new Date().toISOString()}`,
+    });
+
+    res.json({
+      success: true,
+      message: `Test email sent to ${to}`,
+      provider: process.env.RESEND_API_KEY ? 'Resend' : 'Gmail',
+      from,
+    });
+  } catch (err) {
+    console.error('Test email error:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      code: err.code,
+      provider: process.env.RESEND_API_KEY ? 'Resend' : 'Gmail',
+      resend_key_set: !!process.env.RESEND_API_KEY,
+      gmail_user_set: !!process.env.EMAIL_USER,
+      gmail_pass_set: !!process.env.EMAIL_PASS,
+    });
+  }
+});
+
 // ── Health check ──────────────────────────────────────────────────────────────
 
 // Helper: format bytes to human-readable
