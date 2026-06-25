@@ -77,13 +77,97 @@ app.use('/api/courses',  coursesRoutes);
 require('./utils/emailQueue');
 
 // ── Health check ──────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown';
-  res.json({
-    status: dbState === 'connected' ? 'ok' : 'degraded',
+
+// Helper: format bytes to human-readable
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// Helper: format uptime to human-readable
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return `${d}d ${h}h ${m}m ${s}s`;
+}
+
+// ── Full health report ────────────────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+  const startTime = Date.now();
+  const dbReadyState = mongoose.connection.readyState;
+  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'][dbReadyState] || 'unknown';
+  const isHealthy = dbState === 'connected';
+
+  // Memory stats
+  const mem = process.memoryUsage();
+
+  // Live DB stats (non-blocking, fail gracefully)
+  let dbStats = null;
+  try {
+    if (isHealthy) {
+      const Registration = require('./models/Registration');
+      const User = require('./models/User');
+      const [totalRegs, totalUsers, pendingPayments] = await Promise.all([
+        Registration.countDocuments(),
+        User.countDocuments(),
+        Registration.countDocuments({ status: 'payment_submitted' }),
+      ]);
+      dbStats = { totalRegistrations: totalRegs, totalUsers, pendingPayments };
+    }
+  } catch (_) { /* non-critical */ }
+
+  // Package version
+  let version = 'unknown';
+  try { version = require('./package.json').version; } catch (_) {}
+
+  const responseTime = Date.now() - startTime;
+
+  const payload = {
+    status: isHealthy ? 'ok' : 'degraded',
     service: BRAND,
-    uptime_seconds: Math.round(process.uptime()),
-    mongo: dbState,
+    version,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    uptime: {
+      seconds: Math.round(process.uptime()),
+      human: formatUptime(Math.round(process.uptime())),
+    },
+    response_time_ms: responseTime,
+    database: {
+      status: dbState,
+      name: mongoose.connection.name || 'certifypro',
+    },
+    memory: {
+      rss:       formatBytes(mem.rss),
+      heapUsed:  formatBytes(mem.heapUsed),
+      heapTotal: formatBytes(mem.heapTotal),
+      external:  formatBytes(mem.external),
+    },
+    email: {
+      configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+      provider: process.env.EMAIL_USER ? process.env.EMAIL_USER.split('@')[1] : 'not configured',
+    },
+    ...(dbStats && { stats: dbStats }),
+  };
+
+  res.status(isHealthy ? 200 : 503).json(payload);
+});
+
+// ── Liveness probe — is the process alive? (used by Render / Docker) ──────────
+app.get('/api/health/live', (req, res) => {
+  res.status(200).json({ alive: true, timestamp: new Date().toISOString() });
+});
+
+// ── Readiness probe — is the app ready to serve traffic? ─────────────────────
+app.get('/api/health/ready', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const ready = dbState === 1; // 1 = connected
+  res.status(ready ? 200 : 503).json({
+    ready,
+    database: ready ? 'connected' : 'not ready',
     timestamp: new Date().toISOString(),
   });
 });
