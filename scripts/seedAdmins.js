@@ -12,7 +12,7 @@ const User = require('../models/User');
 // ── Define your 4 admin accounts here ────────────────────────────────────────
 // IMPORTANT: Change these passwords! Each admin should change their own password after first login.
 const ADMINS = [
-  { fullName: 'Admin One',   email: 'naveenreddyduvvuru6@gmail.com', password: 'Naveen@123.' },
+  { fullName: 'Admin One',   email: 'naveenreddyduvvuru6@gmail.com', password: 'Naveen@1234' },
   { fullName: 'Admin Two',   email: 'admin2@yourdomain.com', password: 'ChangeMe@456' },
   { fullName: 'Admin Three', email: 'admin3@yourdomain.com', password: 'ChangeMe@789' },
   { fullName: 'Admin Four',  email: 'admin4@yourdomain.com', password: 'ChangeMe@321' },

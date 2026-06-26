@@ -58,14 +58,13 @@ const authAdmin = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Admin access required.' });
     }
 
-    // server.js's env-based admin login signs `{ id: 'admin', isAdmin: true }`,
-    // while routes/auth.js's DB-based admin login signs a real user _id.
-    // Support BOTH so dashboard works either way.
+    // Always verify against DB so revoked admins can't use old tokens
     if (decoded.id && decoded.id !== 'admin') {
       const user = await User.findById(decoded.id).select('-password');
-      req.admin = user
-        ? { id: user._id, email: user.email, fullName: user.fullName }
-        : { id: 'admin', email: process.env.ADMIN_EMAIL };
+      if (!user || !user.isAdmin || !user.isActive) {
+        return res.status(403).json({ success: false, message: 'Admin access revoked or account disabled.' });
+      }
+      req.admin = { id: user._id, email: user.email, fullName: user.fullName };
     } else {
       req.admin = { id: 'admin', email: process.env.ADMIN_EMAIL };
     }

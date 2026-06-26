@@ -908,13 +908,17 @@
       }catch{showToast('Could not download receipt', true);}
     }
     function shareLinkedIn(){
+      if(!regData || !regData.certId){ showToast('Certificate not yet available.', true); return; }
       const url = window.location.origin + '/verify?id=' + regData.certId;
       const text = `I just earned my ${regData.domain} internship certificate from avRoN Tech! Verify it here: ${url}`;
       const liUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url);
       window.open(liUrl, '_blank', 'width=720,height=620');
       if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('Caption copied to clipboard'));
     }
-    function verifyOnline(){window.open('/verify?id=' + regData.certId, '_blank');}
+    function verifyOnline(){
+      if(!regData || !regData.certId){ showToast('Certificate not yet available.', true); return; }
+      window.open('/verify?id=' + regData.certId, '_blank');
+    }
 
     // ── Change password ───────────────────────────────────────────────────────────
     async function changePw(){

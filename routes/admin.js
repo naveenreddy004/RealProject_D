@@ -212,7 +212,7 @@ const approvePayment = async (req, res) => {
       }
     });
 
-    logActivity({
+    await logActivity({
       action: 'approve_payment',
       targetId: reg._id,
       targetLabel: reg.user.fullName,

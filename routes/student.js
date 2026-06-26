@@ -33,7 +33,8 @@ router.get('/dashboard', authStudent, async (req, res) => {
 
     const totalTasks = reg.tasks.length;
     const doneTasks = reg.tasks.filter(t => t.completed).length;
-    const progress = Math.round((doneTasks / totalTasks) * 100);
+    // Guard against division by zero when tasks array is empty
+    const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
     res.json({
       success: true,

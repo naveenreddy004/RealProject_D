@@ -112,6 +112,11 @@ router.post('/verify-otp', async (req, res) => {
     const token = generateToken(user._id);
     const reg = await Registration.findOne({ user: user._id }).sort({ createdAt: -1 });
 
+    // Clear otpVerified after issuing token — it's a one-time flag
+    setImmediate(async () => {
+      try { await User.findByIdAndUpdate(user._id, { otpVerified: false }); } catch (_) {}
+    });
+
     res.json({
       success: true,
       token,

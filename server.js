@@ -276,23 +276,41 @@ async function seedAdmin() {
     process.exit(1);
   }
 
-  const email = process.env.ADMIN_EMAIL.toLowerCase();
-  const password = process.env.ADMIN_PASSWORD;
+  // ── Build the list of admins to seed ─────────────────────────────────────
+  // Primary admin always comes from ADMIN_EMAIL + ADMIN_PASSWORD
+  // Extra admins: set ADMIN_2_EMAIL + ADMIN_2_PASSWORD, ADMIN_3_EMAIL + ADMIN_3_PASSWORD, etc.
+  const adminsToSeed = [
+    { email: process.env.ADMIN_EMAIL,   password: process.env.ADMIN_PASSWORD,   fullName: process.env.ADMIN_NAME   || 'Admin' },
+    { email: process.env.ADMIN_2_EMAIL, password: process.env.ADMIN_2_PASSWORD, fullName: process.env.ADMIN_2_NAME || 'Admin 2' },
+    { email: process.env.ADMIN_3_EMAIL, password: process.env.ADMIN_3_PASSWORD, fullName: process.env.ADMIN_3_NAME || 'Admin 3' },
+    { email: process.env.ADMIN_4_EMAIL, password: process.env.ADMIN_4_PASSWORD, fullName: process.env.ADMIN_4_NAME || 'Admin 4' },
+  ].filter(a => a.email && a.password); // skip entries with missing env vars
 
-  let admin = await User.findOne({ email });
-  if (admin) {
-    let changed = false;
-    if (!admin.isAdmin)  { admin.isAdmin  = true; changed = true; }
-    if (!admin.isActive) { admin.isActive = true; changed = true; }
-    // Always sync the password from env so rotating ADMIN_PASSWORD works
-    admin.password = password;   // pre-save hook will re-hash it
-    await admin.save();
-    if (changed) logger.info('🔐 Existing user promoted/updated to admin');
-    return;
+  for (const adminData of adminsToSeed) {
+    const email = adminData.email.toLowerCase();
+    const password = adminData.password;
+
+    let admin = await User.findOne({ email });
+    if (admin) {
+      let changed = false;
+      if (!admin.isAdmin)  { admin.isAdmin  = true; changed = true; }
+      if (!admin.isActive) { admin.isActive = true; changed = true; }
+      // Only re-hash if password actually changed (avoids bcrypt work on every restart)
+      const passwordMatch = await admin.comparePassword(password);
+      if (!passwordMatch) {
+        admin.password = password; // pre-save hook re-hashes
+        changed = true;
+      }
+      if (changed) {
+        await admin.save();
+        logger.info(`🔐 Admin synced: ${email}`);
+      }
+    } else {
+      admin = new User({ fullName: adminData.fullName, email, password, isAdmin: true });
+      await admin.save();
+      logger.info(`🔐 Admin seeded: ${email}`);
+    }
   }
-  admin = new User({ fullName: 'Admin', email, password, isAdmin: true });
-  await admin.save();
-  logger.info(`🔐 Admin account seeded → ${email}`);
 }
 
 // ── MongoDB Connect ───────────────────────────────────────────────────────────

@@ -501,9 +501,13 @@ async function submitApplication(){
     if(sc) fd2.append('paymentScreenshot', sc);
     fd2.append('amount', pkgPrice);
 
-    await fetch('/api/student/submit-payment-public', { method:'POST', body: fd2 });
+    const payRes = await fetch('/api/student/submit-payment-public', { method:'POST', body: fd2 });
+    const payData = await payRes.json();
+    if(!payData.success){
+      showToast(payData.message || 'Payment submission failed. Please login to your portal and resubmit.', true);
+    }
 
-    // Success
+    // Go to success regardless — registration is done, payment can be resubmitted from portal
     document.getElementById('cert-ref').textContent = certIdRef;
     goStep(4);
   }catch(err){

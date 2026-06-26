@@ -7,7 +7,11 @@
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 
-const fmt = (d) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+const fmt = (d) => {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }); }
+  catch { return '—'; }
+};
 
 /** Collect all chunks from a PDFDocument stream into a single Buffer */
 function streamToBuffer(doc) {
