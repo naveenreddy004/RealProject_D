@@ -342,12 +342,18 @@ router.get('/curriculum', authStudent, async (req, res) => {
       const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
       if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
       if (reg.revoked) return res.status(403).json({ success: false, message: 'Curriculum access suspended. Certificate revoked.' });
+      if (!['payment_verified', 'active', 'completed', 'certificate_sent'].includes(reg.status)) {
+        return res.status(403).json({ success: false, message: 'Curriculum access is unlocked after payment verification.' });
+      }
       domain = reg.domain;
     } else {
-      // Check if the registration for this domain is revoked
+      // Check if the registration for this domain is revoked or payment not verified
       const reg = await Registration.findOne({ user: req.user._id, domain }).sort({ createdAt: -1 });
       if (reg && reg.revoked) {
         return res.status(403).json({ success: false, message: 'Curriculum access suspended. Certificate revoked.' });
+      }
+      if (reg && !['payment_verified', 'active', 'completed', 'certificate_sent'].includes(reg.status)) {
+        return res.status(403).json({ success: false, message: 'Curriculum access is unlocked after payment verification.' });
       }
     }
 

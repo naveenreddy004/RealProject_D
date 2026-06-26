@@ -862,6 +862,9 @@
 
       // Only show active (non-revoked) registrations in curriculum
       const activeRegs = allRegistrations.filter(r => !r.revoked);
+      // Only show registrations with verified payment
+      const paidRegs = activeRegs.filter(r => ['payment_verified','active','completed','certificate_sent'].includes(r.status));
+
       if(!activeRegs.length){
         document.getElementById('currHead').innerHTML = '';
         document.getElementById('currBody').innerHTML = `
@@ -873,8 +876,19 @@
         return;
       }
 
-      // Fetch curriculum for each unique active domain
-      const domains = [...new Set(activeRegs.map(r => r.domain))];
+      if(!paidRegs.length){
+        document.getElementById('currHead').innerHTML = '';
+        document.getElementById('currBody').innerHTML = `
+          <div class="coming-soon" style="border-color:#fcd34d;">
+            <div class="ic">🔒</div>
+            <h3 style="color:#92400e;">Curriculum Locked</h3>
+            <p>Your day-by-day roadmap will be unlocked once our admin team verifies your payment. This usually takes a few hours after payment submission.</p>
+          </div>`;
+        return;
+      }
+
+      // Fetch curriculum for each unique active paid domain
+      const domains = [...new Set(paidRegs.map(r => r.domain))];
       for(const domain of domains){
         try{
           const res = await fetch('/api/student/curriculum', {
@@ -885,7 +899,7 @@
         }catch(e){}
       }
 
-      // Build switcher buttons if more than one domain
+      // Build switcher buttons if more than one paid domain
       if(domains.length > 1){
         switcher.style.display = 'flex';
         domains.forEach(domain => {
