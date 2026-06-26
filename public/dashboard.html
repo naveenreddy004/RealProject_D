@@ -278,8 +278,7 @@
         .broadcast-bar.show{display:block;}
         .broadcast-track{display:flex;align-items:center;height:100%;white-space:nowrap;animation:scroll-left 35s linear infinite;}
         .broadcast-track:hover{animation-play-state:paused;}
-        .broadcast-msg{font-size:12.5px;white-space:nowrap;padding:0 80px;color:#e5e7eb;}
-        .broadcast-msg b{color:#60a5fa;margin-right:6px;}
+        .broadcast-msg{font-size:13px;white-space:nowrap;padding:0 60px;color:#e5e7eb;letter-spacing:.01em;}
         @keyframes scroll-left{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
 
         /* Loading */
@@ -728,7 +727,9 @@
           }
           document.getElementById('status-ic').textContent = meta.ic;
           document.getElementById('status-title').textContent = meta.t;
-          document.getElementById('status-desc').textContent = meta.d;
+          // Show registrant name under status
+          const dispName = regData.registrantName || user.fullName;
+          document.getElementById('status-desc').textContent = dispName + ' · ' + meta.d;
           document.getElementById('status-badge').textContent = meta.badge;
           if(regData.revoked){
             document.querySelector('.status-banner').style.background = '#7f1d1d';
@@ -1242,7 +1243,7 @@
         if(!d.success || !d.data || !d.data.length) return;
         const bar = document.getElementById('broadcastBar');
         const track = document.getElementById('broadcastTrack');
-        const msgs = d.data.map(b => `<span class="broadcast-msg">📢 <b>avRoN Tech:</b>${escapeHtml(b.details?.message||'')}</span>`).join('');
+        const msgs = d.data.map(b => `<span class="broadcast-msg">📢 ${escapeHtml(b.details?.message||'')}</span>`).join('  ·  ');
         track.innerHTML = msgs;
         bar.classList.add('show');
         // Auto-hide after 3 minutes

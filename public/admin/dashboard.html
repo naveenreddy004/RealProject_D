@@ -563,14 +563,22 @@
 
 <!-- ── Broadcast Modal ── -->
 <div class="modal-overlay" id="broadcastModal">
-  <div class="modal" style="max-width:480px;">
-    <h3>📢 Post Announcement</h3>
-    <p style="font-size:13px;color:var(--mut);margin-bottom:18px;">This message will appear as a scrolling banner on all student dashboards and in their notification centre.</p>
-    <textarea id="broadcastMsg" placeholder="Type your announcement here... (e.g. Certificates for June batch are now ready!)" style="width:100%;min-height:100px;padding:12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;outline:none;"></textarea>
+  <div class="modal" style="max-width:520px;">
+    <h3>📢 Manage Announcements</h3>
+
+    <!-- Post new -->
+    <p style="font-size:13px;color:var(--mut);margin-bottom:12px;">Post a new announcement to all students.</p>
+    <textarea id="broadcastMsg" placeholder="Type your announcement... (e.g. Certificates for June batch are now ready!)" style="width:100%;min-height:80px;padding:12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;outline:none;"></textarea>
     <div style="font-size:11.5px;color:var(--mut);margin-top:6px;" id="broadcastCharCount">0 / 200 characters</div>
-    <div class="modal-btns">
+    <div class="modal-btns" style="margin-top:12px;">
       <button class="btn-mod secondary" onclick="closeBroadcastModal()">Cancel</button>
       <button class="btn-mod ok" onclick="postBroadcast()">📢 Post to All Students</button>
+    </div>
+
+    <!-- Existing broadcasts -->
+    <div id="existingBroadcasts" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">Previous Announcements</div>
+      <div id="broadcastList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;"></div>
     </div>
   </div>
 </div>
@@ -691,10 +699,39 @@ function openBroadcastModal(){
   document.getElementById('broadcastModal').classList.add('open');
   document.getElementById('broadcastMsg').value = '';
   document.getElementById('broadcastCharCount').textContent = '0 / 200 characters';
+  loadBroadcastList();
   setTimeout(()=>document.getElementById('broadcastMsg').focus(), 100);
 }
 function closeBroadcastModal(){
   document.getElementById('broadcastModal').classList.remove('open');
+}
+async function loadBroadcastList(){
+  try{
+    const r = await fetch('/api/admin/broadcasts', {headers: hdrs()});
+    const d = await r.json();
+    const list = document.getElementById('broadcastList');
+    if(!d.success || !d.data || !d.data.length){
+      list.innerHTML = '<div style="color:var(--mut);font-size:12.5px;text-align:center;padding:12px;">No announcements yet.</div>';
+      return;
+    }
+    list.innerHTML = d.data.map(b => `
+      <div style="background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--ink2);">${b.details?.message||''}</div>
+          <div style="font-size:11px;color:var(--mut);margin-top:3px;">${fmt(b.createdAt)}</div>
+        </div>
+        <button class="act danger" onclick="deleteBroadcast('${b._id}')" style="padding:4px 8px;font-size:11px;flex-shrink:0;">🗑 Delete</button>
+      </div>`).join('');
+  }catch(e){}
+}
+async function deleteBroadcast(id){
+  if(!confirm('Delete this announcement?')) return;
+  try{
+    const r = await fetch(`/api/admin/broadcast/${id}`, {method:'DELETE', headers: hdrs()});
+    const d = await r.json();
+    if(d.success){ toast('Announcement deleted.'); loadBroadcastList(); }
+    else toast(d.message||'Failed', true);
+  }catch(e){ toast('Error', true); }
 }
 document.addEventListener('DOMContentLoaded', ()=>{
   const ta = document.getElementById('broadcastMsg');
@@ -715,8 +752,10 @@ async function postBroadcast(){
     });
     const d = await r.json();
     if(d.success){
-      closeBroadcastModal();
+      document.getElementById('broadcastMsg').value = '';
+      document.getElementById('broadcastCharCount').textContent = '0 / 200 characters';
       toast('📢 Announcement posted to all students!');
+      loadBroadcastList();
     } else {
       toast(d.message || 'Failed to post.', true);
     }
@@ -951,7 +990,7 @@ function closeSidebar(){
             <td>${r.duration||'—'}</td>
             <td style="font-size:11px;">${fmt(r.startDate)}<br>→ ${fmt(r.endDate)}</td>
             <td style="font-size:12px;">${r.package||'—'}</td>
-            <td><span class="badge b-${r.status}">${r.status.replace(/_/g,' ')}</span>${r.revoked?'<br><span class="badge b-revoked">Revoked</span>':''}</td>
+            <td><span class="badge b-${r.revoked?'revoked':r.status}">${r.revoked?'Revoked':r.status.replace(/_/g,' ')}</span></td>
             <td>
               <div class="acts">
                 ${r.status==='payment_submitted'?`<button class="act ok" onclick="verifyPay('${r._id}')">✅ Verify</button>`:''}
@@ -960,7 +999,6 @@ function closeSidebar(){
                 ${r.pdfPath||r.certificatePdf?`<button class="act cyan" onclick="adminDownload('/api/admin/certificate/${r._id}','Certificate_${r.certId}.pdf')">📥 PDF</button>`:''}
                 ${r.status==='certificate_sent'&&!r.revoked?`<button class="act danger" onclick="revoke('${r._id}')">⛔ Revoke</button>`:''}
                 ${r.revoked?`<button class="act ok" onclick="unrevoke('${r._id}')">↺ Restore</button>`:''}
-                ${!['rejected','certificate_sent'].includes(r.status)?`<button class="act danger" onclick="rejectReg('${r._id}')">✕</button>`:''}
                 <button class="act" onclick="viewDetail('${r._id}')">Detail</button>
               </div>
             </td>

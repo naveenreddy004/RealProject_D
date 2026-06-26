@@ -694,4 +694,15 @@ router.get('/broadcasts', async (req, res) => {
   }
 });
 
+// ── DELETE BROADCAST ──────────────────────────────────────────────────────────
+router.delete('/broadcast/:id', async (req, res) => {
+  try {
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.findOneAndDelete({ _id: req.params.id, action: 'broadcast' });
+    res.json({ success: true, message: 'Broadcast deleted.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
