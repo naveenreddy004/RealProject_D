@@ -147,64 +147,47 @@ const approvePayment = async (req, res) => {
     // Sync payment.amount from top-level amount so revenue stats are accurate
     if (!reg.payment.amount) reg.payment.amount = reg.amount;
 
-    // Complete all tasks
-    reg.tasks.forEach(task => {
-      if (!task.completed) {
-        task.completed = true;
-        task.completedAt = new Date();
-      }
-    });
-
-    reg.tasksCompletedCount = reg.tasks.length;
+    // Only mark payment tasks done — student still needs to complete internship
+    const payTask = reg.tasks.find(t => t.title === 'Make Payment');
+    if (payTask && !payTask.completed) { payTask.completed = true; payTask.completedAt = new Date(); }
+    const portalTask = reg.tasks.find(t => t.title === 'Login to Portal');
+    if (portalTask && !portalTask.completed) { portalTask.completed = true; portalTask.completedAt = new Date(); }
+    reg.tasksCompletedCount = reg.tasks.filter(t => t.completed).length;
 
     if (!reg.expiresAt) {
-      const years =
-        reg.validityYears ||
-        Number(process.env.CERT_VALIDITY_YEARS) ||
-        2;
-
-      reg.expiresAt = new Date(
-        Date.now() + years * 365 * 24 * 60 * 60 * 1000
-      );
+      const years = reg.validityYears || Number(process.env.CERT_VALIDITY_YEARS) || 2;
+      reg.expiresAt = new Date(Date.now() + years * 365 * 24 * 60 * 60 * 1000);
     }
 
-    reg.status = 'certificate_sent';
-    reg.sentAt = reg.sentAt || new Date();
+    // Payment approved → activate internship (NOT certificate_sent yet)
+    // Certificate will be sent separately via bulk send or send-certificate button
+    reg.status = 'active';
 
     await reg.save();
 
     res.json({
       success: true,
-      message: `Payment approved. Certificate issued for ${reg.user.fullName} and Offer Letter emailed.`,
+      message: `Payment approved. Internship activated for ${reg.registrantName || reg.user.fullName}. Offer Letter emailed. Certificate can be sent when internship is complete.`,
       certId: reg.certId
     });
 
     setImmediate(async () => {
       try {
-        const [certBuf, offerBuf] = await Promise.all([
-          generateCertificatePDF(reg.user, reg).catch(err => {
-            console.error('Certificate PDF Error:', err.message);
-            return null;
-          }),
-          generateOfferLetterPDF(reg.user, reg).catch(err => {
-            console.error('Offer Letter PDF Error:', err.message);
-            return null;
-          }),
-        ]);
+        // Only generate and send OFFER LETTER — not certificate
+        const offerBuf = await generateOfferLetterPDF(reg.user, reg).catch(err => {
+          console.error('Offer Letter PDF Error:', err.message);
+          return null;
+        });
 
-        // Persist PDFs as binary in MongoDB — no files on disk
-        const updates = {};
-        if (certBuf)  updates.certificatePdf  = certBuf;
-        if (offerBuf) updates.offerLetterPdf  = offerBuf;
-        if (certBuf || offerBuf) {
-          await Registration.findByIdAndUpdate(reg._id, updates);
+        if (offerBuf) {
+          await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: offerBuf });
         }
 
-        // Pass the buffer directly to the email service so it can attach it
+        // Send offer letter email only
         queueEmail('offerLetter', {
           user: reg.user,
           reg,
-          pdfBuffer: offerBuf,       // Buffer — no file path needed
+          pdfBuffer: offerBuf,
         });
 
       } catch (err) {
@@ -215,7 +198,7 @@ const approvePayment = async (req, res) => {
     await logActivity({
       action: 'approve_payment',
       targetId: reg._id,
-      targetLabel: reg.user.fullName,
+      targetLabel: reg.registrantName || reg.user.fullName,
       details: {
         utr: reg.payment.utrNumber,
         certId: reg.certId
@@ -225,7 +208,6 @@ const approvePayment = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-
     res.status(500).json({
       success: false,
       message: err.message

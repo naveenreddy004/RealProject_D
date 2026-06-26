@@ -155,8 +155,9 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:24px 0;}
 
 // ── 1. Registration confirmation ──────────────────────────────────────────────
 async function sendConfirmationEmail(user, reg) {
+  const name = (reg && reg.registrantName) || user.fullName;
   const html = wrap(`
-    <h2>Dear ${user.fullName},</h2>
+    <h2>Dear ${name},</h2>
     <p>Thank you for applying for the <b>${reg.domain}</b> internship program at <b>${BRAND}</b>!</p>
     <div class="kv">
       <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>
@@ -222,8 +223,9 @@ async function sendOTPEmail(user, otp) {
 
 // ── 4. Payment Rejected ───────────────────────────────────────────────────────
 async function sendPaymentRejectedEmail(user, reg, reason) {
+  const name = (reg && reg.registrantName) || user.fullName;
   const html = wrap(`
-    <h2>Dear ${user.fullName},</h2>
+    <h2>Dear ${name},</h2>
     <p>Unfortunately, we were <b>unable to verify your recent payment</b> for the <b>${reg.domain}</b> internship.</p>
     <div class="kv" style="border-color:#dc2626;">
       <div class="kv-row"><span class="lbl">Certificate ID</span><span class="val">${reg.certId}</span></div>
@@ -248,9 +250,10 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
 
 // ── 6. Certificate Revocation ─────────────────────────────────────────────────
 async function sendRevocationEmail(user, reg, reason) {
+  const name = (reg && reg.registrantName) || user.fullName;
   const html = wrap(`
     <h2>Important: Certificate Revoked</h2>
-    <p>Dear ${user.fullName}, we regret to inform you that your internship certificate has been <b style="color:#dc2626;">revoked</b>.</p>
+    <p>Dear ${name}, we regret to inform you that your internship certificate has been <b style="color:#dc2626;">revoked</b>.</p>
     <div class="kv">
       <div class="kv-row"><span class="lbl">Certificate ID</span><span class="val">${reg.certId}</span></div>
       <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>

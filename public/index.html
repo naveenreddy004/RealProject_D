@@ -94,6 +94,12 @@ a{color:inherit;text-decoration:none;}
 .hero{padding:148px 32px 100px;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;}
 .hero-inner{max-width:1280px;margin:0 auto;width:100%;display:grid;grid-template-columns:1.15fr 1fr;gap:70px;align-items:center;position:relative;z-index:2;}
 @media (max-width:1000px){.hero-inner{grid-template-columns:1fr;}}
+@media (max-width:680px){
+  .hero{padding:100px 20px 60px;}
+  .hero-vis{display:none;}
+  .orb-1,.orb-2,.orb-3{display:none;}
+  .hero-stats{grid-template-columns:repeat(3,1fr);max-width:100%;}
+}
 
 /* Entrance animations */
 .fade-up{opacity:0;transform:translateY(32px);transition:opacity 0.7s ease, transform 0.7s ease;}
@@ -167,10 +173,12 @@ a{color:inherit;text-decoration:none;}
 .section.alt{background:linear-gradient(180deg,var(--soft) 0%,#eef2f9 100%);position:relative;}
 .section.alt::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);}
 .section-inner{max-width:1280px;margin:0 auto;}
+@media (max-width:680px){.section{padding:60px 20px;}}
 .sec-head{text-align:center;max-width:680px;margin:0 auto 60px;}
 .sec-head .eyebrow{margin-bottom:16px;}
 .sec-head h2{font-family:'Sora',sans-serif;font-size:44px;font-weight:800;color:var(--midnight);letter-spacing:-1.2px;line-height:1.12;}
 .sec-head p{font-size:16.5px;color:var(--mut);margin-top:16px;line-height:1.7;}
+@media (max-width:680px){.sec-head h2{font-size:28px;letter-spacing:-.6px;}.sec-head p{font-size:14.5px;}}
 
 /* ── DOMAIN CARDS ── */
 .dom-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
@@ -235,6 +243,7 @@ a{color:inherit;text-decoration:none;}
 .footer::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--steel),#8bb8e8,var(--steel));}
 .foot-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:48px;}
 @media (max-width:760px){.foot-inner{grid-template-columns:1fr 1fr;}}
+@media (max-width:480px){.foot-inner{grid-template-columns:1fr;}}
 .foot-brand{display:flex;align-items:center;gap:12px;}
 .foot-brand-mark{width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
 .foot-brand-mark img{width:42px;height:42px;object-fit:contain;}

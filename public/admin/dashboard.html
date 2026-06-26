@@ -256,6 +256,23 @@
         .ref-btn:hover{opacity:.85;}
 
         @media(max-width:900px){.main{width:100%;}.stats-grid{grid-template-columns:1fr 1fr;}.charts-grid{grid-template-columns:1fr;}.recent-grid{grid-template-columns:1fr;}.content{padding:16px;}}
+        @media(max-width:480px){
+          .stats-grid{grid-template-columns:1fr;}
+          .content{padding:12px;}
+          .topbar{padding:0 16px;}
+          .topbar-left h1{font-size:16px;}
+          .tbl-head{flex-direction:column;align-items:flex-start;}
+          .tbl-filters{width:100%;}
+          .fi-input{width:100%;}
+          .rev-filters{flex-direction:column;}
+          .review-grid{grid-template-columns:1fr;}
+          .rd-actions{flex-direction:column;}
+          .btn-approve,.btn-reject-pay{width:100%;}
+          .modal{padding:20px 16px;}
+          .modal-btns{flex-direction:column;}
+          table{font-size:12px;}
+          td,th{padding:8px 10px;}
+        }
     </style>
 </head>
 <body>
@@ -266,7 +283,7 @@
 <div class="mobile-topbar">
   <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
   <div class="m-brand">av<span>RoN</span> Tech <span style="font-size:10px;color:#7186a0;letter-spacing:.1em;">ADMIN</span></div>
-  <button class="ham-btn" onclick="logout()" aria-label="Logout" style="font-size:13px;font-weight:700;color:#fda4af;">OUT</button>
+  <button class="ham-btn" onclick="openBroadcastModal()" aria-label="Post Update" style="font-size:14px;">📢</button>
 </div>
 
 <!-- ── Sidebar (outside grid so fixed positioning works on mobile) ── -->
@@ -756,8 +773,8 @@ function closeSidebar(){
         // Recent regs
         document.getElementById('recent-regs').innerHTML = (s.recent||[]).map(r=>`
           <div class="rc-item">
-            <div class="rc-av">${(r.user?.fullName||'?').slice(0,2).toUpperCase()}</div>
-            <div><div class="rc-nm">${r.user?.fullName||'—'}</div><div class="rc-sub">${r.domain} · ${fmt(r.createdAt)}</div></div>
+            <div class="rc-av">${(r.registrantName||r.user?.fullName||'?').slice(0,2).toUpperCase()}</div>
+            <div><div class="rc-nm">${r.registrantName||r.user?.fullName||'—'}</div><div class="rc-sub">${r.domain} · ${fmt(r.createdAt)}</div></div>
             <span class="badge b-${r.status}" style="margin-left:auto;font-size:10px;">${r.status.replace(/_/g,' ')}</span>
           </div>`).join('') || '<div style="color:var(--mut);padding:12px 0;font-size:13px;">No recent registrations</div>';
         // Pending payments quick view
@@ -767,7 +784,7 @@ function closeSidebar(){
           document.getElementById('recent-pays').innerHTML = (pd.data||[]).map(r=>`
             <div class="rc-item">
               <div class="rc-av">💳</div>
-              <div><div class="rc-nm">${r.user?.fullName||'—'}</div><div class="rc-sub">UTR: <span style="font-family:'JetBrains Mono',monospace;color:var(--steel);">${r.payment?.utrNumber||'—'}</span> · ₹${r.payment?.amount||199}</div></div>
+              <div><div class="rc-nm">${r.registrantName||r.user?.fullName||'—'}</div><div class="rc-sub">UTR: <span style="font-family:'JetBrains Mono',monospace;color:var(--steel);">${r.payment?.utrNumber||'—'}</span> · ₹${r.payment?.amount||199}</div></div>
               <button class="act ok" onclick="qVerify('${r._id}')" style="font-size:10px;padding:4px 8px;margin-left:auto;">✅</button>
             </div>`).join('');
         } else {
@@ -846,9 +863,9 @@ function closeSidebar(){
         if(!rows.length){listEl.innerHTML='<div class="review-empty">No payment records found.</div>';document.getElementById('review-detail').innerHTML='<div class="review-empty" style="padding:80px 22px;">No records to display.</div>';return;}
         listEl.innerHTML=rows.map(r=>`
           <div class="rw-item ${selPayId===r._id?'sel':''}" data-id="${r._id}" onclick="selPay('${r._id}')">
-            <div class="rw-av">${(r.user?.fullName||'?').slice(0,2).toUpperCase()}</div>
+            <div class="rw-av">${(r.registrantName||r.user?.fullName||'?').slice(0,2).toUpperCase()}</div>
             <div style="flex:1;min-width:0;">
-              <div class="rw-nm">${r.user?.fullName||'—'}</div>
+              <div class="rw-nm">${r.registrantName||r.user?.fullName||'—'}</div>
               <div class="rw-info">${r.domain} · ₹${r.payment?.amount||199}</div>
               <div class="rw-utr">UTR ${r.payment?.utrNumber||'—'}</div>
               <div class="rw-when">${fmt(r.payment?.submittedAt)}</div>
@@ -867,7 +884,7 @@ function closeSidebar(){
       if(!r){document.getElementById('review-detail').innerHTML='<div class="review-empty">Not found.</div>';return;}
       const ssUrl=r.payment?.screenshotPath?`/uploads/${r.payment.screenshotPath}`:null;
       document.getElementById('review-detail').innerHTML=`
-        <div class="rd-title">${r.user?.fullName||'—'}</div>
+        <div class="rd-title">${r.registrantName||r.user?.fullName||'—'}</div>
         <div class="rd-sub">${r.user?.email||''} · ${r.user?.mobile||''}</div>
         <div class="rd-block">
           <div class="rd-row"><span class="lbl">Cert ID</span><span class="val mono">${r.certId}</span></div>
@@ -928,7 +945,7 @@ function closeSidebar(){
         document.getElementById('reg-tbody').innerHTML=rows.length?rows.map((r,i)=>`
           <tr>
             <td>${i+1}</td>
-            <td><strong>${r.user?.fullName||'—'}</strong><br><span style="font-size:10.5px;color:var(--mut);">${r.user?.mobile||''}</span></td>
+            <td><strong>${r.registrantName||r.user?.fullName||'—'}</strong><br><span style="font-size:10.5px;color:var(--mut);">${r.user?.mobile||''}</span></td>
             <td style="font-size:12px;">${r.user?.email||'—'}</td>
             <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.domain}">${r.domain}</td>
             <td>${r.duration||'—'}</td>
@@ -964,7 +981,7 @@ function closeSidebar(){
           <tr>
             <td>${canSel&&['active','completed'].includes(r.status)?`<input type="checkbox" class="chk cert-chk" data-id="${r._id}" onchange="togSel('${r._id}',this)">`:''}</td>
             <td>${i+1}</td>
-            <td><strong>${r.user?.fullName||'—'}</strong><br><span style="font-size:10.5px;color:var(--mut);">${r.user?.email||'—'}</span></td>
+            <td><strong>${r.registrantName||r.user?.fullName||'—'}</strong><br><span style="font-size:10.5px;color:var(--mut);">${r.user?.email||'—'}</span></td>
             <td style="font-size:12px;max-width:140px;">${r.domain}</td>
             <td style="font-size:11px;">${fmt(r.startDate)} → ${fmt(r.endDate)}</td>
             <td style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--steel);">${r.certId}</td>
@@ -1076,7 +1093,7 @@ function closeSidebar(){
       if(!d.success)return;
       const reg=d.data;
       document.getElementById('modal-body').innerHTML=`
-        <div class="modal-row"><span class="lbl">Name</span><span class="val">${reg.user?.fullName||'—'}</span></div>
+        <div class="modal-row"><span class="lbl">Name</span><span class="val">${reg.registrantName||reg.user?.fullName||'—'}</span></div>
         <div class="modal-row"><span class="lbl">Email</span><span class="val">${reg.user?.email||'—'}</span></div>
         <div class="modal-row"><span class="lbl">Mobile</span><span class="val">${reg.user?.mobile||'—'}</span></div>
         <div class="modal-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>

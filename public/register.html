@@ -56,6 +56,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);line-h
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px 36px;box-shadow:0 4px 20px rgba(11,25,44,.04);}
 .card h2{font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--midnight);letter-spacing:-.4px;}
 .card .sub{font-size:14px;color:var(--mut);margin-top:4px;margin-bottom:24px;}
+@media (max-width:520px){
+  .card{padding:22px 18px;}
+  .card h2{font-size:20px;}
+  .wrap{padding:28px 14px 60px;}
+  .head h1{font-size:26px;}
+  .modal-card{margin:0 8px;}
+  .modal-head h3{font-size:18px;}
+}
 
 .step{display:none;}
 .step.active{display:block;animation:fadeIn .3s ease-out;}
