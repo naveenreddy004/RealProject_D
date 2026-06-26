@@ -273,14 +273,13 @@
         .toast.err{background:var(--danger);}
 
         /* ── Scrolling broadcast banner ── */
-        .broadcast-bar{background:var(--midnight);color:#fff;height:36px;overflow:hidden;position:relative;display:none;}
+        .broadcast-bar{background:#111827;color:#fff;height:32px;overflow:hidden;position:relative;display:none;border-bottom:1px solid #1f2937;}
         .broadcast-bar.show{display:block;}
-        .broadcast-bar::before{content:'📢 ANNOUNCEMENTS';position:absolute;left:0;top:0;height:100%;background:var(--steel);color:var(--midnight);font-size:11px;font-weight:800;letter-spacing:.1em;padding:0 14px;display:flex;align-items:center;z-index:2;white-space:nowrap;}
-        .broadcast-track{display:flex;align-items:center;height:100%;padding-left:160px;animation:scroll-left 30s linear infinite;}
+        .broadcast-track{display:flex;align-items:center;height:100%;white-space:nowrap;animation:scroll-left 35s linear infinite;}
         .broadcast-track:hover{animation-play-state:paused;}
-        .broadcast-msg{font-size:13px;white-space:nowrap;padding:0 60px;color:#cdd9eb;}
-        .broadcast-msg span{color:var(--steel);font-weight:700;margin-right:8px;}
-        @keyframes scroll-left{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+        .broadcast-msg{font-size:12.5px;white-space:nowrap;padding:0 80px;color:#e5e7eb;}
+        .broadcast-msg b{color:#60a5fa;margin-right:6px;}
+        @keyframes scroll-left{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
 
         /* Loading */
         .loading{padding:80px 20px;text-align:center;color:var(--mut);font-size:14px;}
@@ -312,7 +311,7 @@
         <div class="sb-av" id="sb-av">—</div>
         <div class="sb-name" id="sb-name">Loading...</div>
         <div class="sb-email" id="sb-email">—</div>
-        <div class="sb-cert-chip" id="sb-cert">—</div>
+        <div id="sb-internship-count" style="font-size:11px;color:#9eb2c8;margin-top:4px;"></div>
     </div>
 
     <nav class="sb-nav">
@@ -432,12 +431,14 @@
             <section class="tab-section" id="sec-certificates">
                 <div class="page-head">
                     <div>
-                        <h1>My Certificate</h1>
-                        <p>This is a demo preview of the certificate format. Your final certificate unlocks once admin approves your payment.</p>
+                        <h1>My Certificates</h1>
+                        <p>All your internship certificates, offer letters and receipts in one place.</p>
                     </div>
                 </div>
 
-                <div class="cert-frame">
+                <!-- Demo preview card always shown -->
+                <div class="cert-frame" style="margin-bottom:18px;">
+                    <div style="font-size:11px;font-weight:700;color:var(--steel);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">Sample Certificate Format</div>
                     <div class="cert-wrap">
                         <div class="cert-preview" id="certPreview" data-testid="cert-preview" onclick="openCertLightbox()" title="Click to enlarge">
                             <div class="cp-logo">av<span>RoN</span> Tech</div>
@@ -446,35 +447,15 @@
                             <div class="cp-presents">This is to certify that</div>
                             <div class="cp-name" id="cp-name">Sample Student</div>
                             <div class="cp-for">has successfully completed the</div>
-                            <div class="cp-domain" id="cp-domain">Full Stack Web Development Internship</div>
+                            <div class="cp-domain" id="cp-domain">Internship Program</div>
                             <div class="cp-cid" id="cp-cid">CERT-ID: DEMO-0000-XXXX</div>
                             <div class="cp-zoom-hint">⤢ Click to enlarge</div>
                         </div>
                     </div>
-
-                    <div class="cert-actions" style="justify-content:center;">
-                        <button class="btn btn-primary" id="dlBtn" onclick="downloadCertificate()" disabled data-testid="cert-download-btn">
-                            <span id="dl-txt">🔒 Download locked</span>
-                            <span class="spin" id="dl-spin" style="display:none;"></span>
-                        </button>
-                        <button class="btn btn-outline" id="dlOfferBtn" onclick="downloadOfferLetter()" disabled data-testid="offer-download-btn" style="display:none;">
-                            📄 Offer Letter
-                        </button>
-                        <button class="btn btn-outline" id="dlReceiptBtn" onclick="downloadReceipt()" data-testid="receipt-download-btn" style="display:none;">
-                            🧾 Receipt
-                        </button>
-                        <button class="btn btn-li" id="shareBtn" onclick="shareLinkedIn()" disabled data-testid="cert-share-btn">Share on LinkedIn</button>
-                        <button class="btn btn-outline" id="verifyBtn" onclick="verifyOnline()" disabled data-testid="cert-verify-btn">Verify Online</button>
-                    </div>
-
-                    <div class="cert-locked-note" id="lockNote">
-                        <div class="lic">🔒</div>
-                        <div>
-                            <b>This is a demo preview</b><br>
-                            <span style="color:#9a6005;">The certificate shown above is a sample template. Your personalised certificate will be issued once admin approves your payment. You'll also receive it as an email attachment.</span>
-                        </div>
-                    </div>
                 </div>
+
+                <!-- All registrations with download buttons -->
+                <div id="certsContainer"></div>
             </section>
 
             <!-- ── TAB: NOTIFICATIONS ────────────────────────────────────── -->
@@ -697,101 +678,96 @@
       pending:            {ic:'…', t:'Pending', d:'Awaiting next step.', badge:'Pending'},
     };
 
+    let allRegistrations = [];
+
     async function loadDashboard(){
       try{
         const res = await fetch('/api/student/dashboard', {headers:{'Authorization':'Bearer '+token}});
         if(res.status === 401){logout();return;}
         const data = await res.json();
-        if(!data.success || !data.registration){
+        if(!data.success){
           document.getElementById('loadingScreen').textContent = 'No active registration found.';
           return;
         }
-        regData = data.registration;
+
+        allRegistrations = data.registrations || (data.registration ? [data.registration] : []);
+        regData = data.registration || (allRegistrations[0] || null);
         const user = data.user;
 
         // Sidebar profile
         document.getElementById('sb-av').textContent = (user.fullName||'?').slice(0,2).toUpperCase();
         document.getElementById('sb-name').textContent = user.fullName;
         document.getElementById('sb-email').textContent = user.email;
-        document.getElementById('sb-cert').textContent = regData.certId;
+        const countEl = document.getElementById('sb-internship-count');
+        if(countEl) countEl.textContent = allRegistrations.length > 0 ? allRegistrations.length + ' internship' + (allRegistrations.length > 1 ? 's' : '') : '';
         document.getElementById('firstName').textContent = (user.fullName||'').split(' ')[0] || 'there';
 
-        // Stats
-        document.getElementById('s-domain').textContent = regData.domain;
-        document.getElementById('s-duration').textContent = regData.duration || '—';
-        document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
-        document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
-        document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+        if(regData){
+          // Stats — show most recent
+          document.getElementById('s-domain').textContent = regData.domain;
+          document.getElementById('s-duration').textContent = regData.duration || '—';
+          document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
+          document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
+          document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
 
-        // Status banner
-        const meta = STATUS[regData.status] || STATUS.pending;
-        document.getElementById('status-ic').textContent = meta.ic;
-        document.getElementById('status-title').textContent = meta.t;
-        document.getElementById('status-desc').textContent = meta.d;
-        document.getElementById('status-badge').textContent = meta.badge;
-
-        // Payment card
-        const needsPay = regData.status === 'payment_pending';
-        const reviewing = regData.status === 'payment_submitted';
-        document.getElementById('payCard').style.display = needsPay ? 'block' : 'none';
-        document.getElementById('payReviewCard').style.display = reviewing ? 'block' : 'none';
-        if(reviewing && regData.payment){
-          document.getElementById('r-utr').textContent = regData.payment.utrNumber || '—';
-          document.getElementById('r-amt').textContent = regData.payment.amount || '—';
-          document.getElementById('r-when').textContent = regData.payment.submittedAt ? fmtDate(regData.payment.submittedAt) : '—';
-        }
-        if(needsPay){
-          const r = await fetch('/api/upi-qr?amount=' + (regData.amount||199));
-          const d = await r.json();
-          if(d.success){
-            document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
-            document.getElementById('upi-id').textContent = d.upiId;
-            document.getElementById('upi-amt').textContent = regData.amount || d.amount;
+          // Status banner — check revoked first
+          let meta;
+          if(regData.revoked){
+            meta = {ic:'⛔', t:'Certificate Revoked', d:'Your certificate has been revoked. Please contact support for more information.', badge:'Revoked'};
+          } else {
+            meta = STATUS[regData.status] || STATUS.pending;
           }
+          document.getElementById('status-ic').textContent = meta.ic;
+          document.getElementById('status-title').textContent = meta.t;
+          document.getElementById('status-desc').textContent = meta.d;
+          document.getElementById('status-badge').textContent = meta.badge;
+          if(regData.revoked){
+            document.querySelector('.status-banner').style.background = '#7f1d1d';
+          }
+
+          // Payment card
+          const needsPay = regData.status === 'payment_pending';
+          const reviewing = regData.status === 'payment_submitted';
+          document.getElementById('payCard').style.display = needsPay ? 'block' : 'none';
+          document.getElementById('payReviewCard').style.display = reviewing ? 'block' : 'none';
+          if(reviewing && regData.payment){
+            document.getElementById('r-utr').textContent = regData.payment.utrNumber || '—';
+            document.getElementById('r-amt').textContent = regData.payment.amount || '—';
+            document.getElementById('r-when').textContent = regData.payment.submittedAt ? fmtDate(regData.payment.submittedAt) : '—';
+          }
+          if(needsPay){
+            const r = await fetch('/api/upi-qr?amount=' + (regData.amount||199));
+            const d = await r.json();
+            if(d.success){
+              document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
+              document.getElementById('upi-id').textContent = d.upiId;
+              document.getElementById('upi-amt').textContent = regData.amount || d.amount;
+            }
+          }
+
+          // Profile tab
+          document.getElementById('pr-name').textContent = user.fullName;
+          document.getElementById('pr-email').textContent = user.email;
+          document.getElementById('pr-mobile').textContent = user.mobile || '—';
+          document.getElementById('pr-college').textContent = user.college || '—';
+          document.getElementById('pr-course').textContent = user.course || '—';
+          document.getElementById('pr-certid').textContent = allRegistrations.length + ' registration(s)';
+          document.getElementById('pri-domain').textContent = regData.domain;
+          document.getElementById('pri-duration').textContent = regData.duration || '—';
+          document.getElementById('pri-period').textContent = fmtDate(regData.startDate)+' – '+fmtDate(regData.endDate);
+          document.getElementById('pri-pkg').textContent = regData.package;
+          document.getElementById('pri-status').textContent = regData.revoked ? 'Revoked' : ((STATUS[regData.status]||{}).t || regData.status);
+
+          await loadCurriculum();
         }
 
-        // Profile tab
-        document.getElementById('pr-name').textContent = user.fullName;
-        document.getElementById('pr-email').textContent = user.email;
-        document.getElementById('pr-mobile').textContent = user.mobile || '—';
-        document.getElementById('pr-college').textContent = user.college || '—';
-        document.getElementById('pr-course').textContent = user.course || '—';
-        document.getElementById('pr-certid').textContent = regData.certId;
-        document.getElementById('pri-domain').textContent = regData.domain;
-        document.getElementById('pri-duration').textContent = regData.duration || '—';
-        document.getElementById('pri-period').textContent = fmtDate(regData.startDate)+' – '+fmtDate(regData.endDate);
-        document.getElementById('pri-pkg').textContent = regData.package;
-        document.getElementById('pri-status').textContent = (STATUS[regData.status]||{}).t || regData.status;
+        // Render all certificates
+        renderAllCertificates();
 
-        // Cert preview stays as DEMO — generic info only, never personalised.
-        // Real certificate is only accessible via the Download button (PDF from MongoDB)
-        // once admin sets status to certificate_sent. This prevents screenshots of
-        // the preview being mistaken for a real certificate.
-
-        // Unlock cert if issued
-        const issued  = regData.status === 'certificate_sent';
-        const hasOffer   = ['active','completed','certificate_sent'].includes(regData.status);
-        const hasPaid = !!(regData.payment && regData.payment.utrNumber);
-        document.getElementById('dlBtn').disabled    = !issued;
-        document.getElementById('shareBtn').disabled = !issued;
-        document.getElementById('verifyBtn').disabled = !issued;
-        document.getElementById('dl-txt').textContent = issued ? '📥 Download Certificate' : '🔒 Download locked';
-        document.getElementById('lockNote').style.display = issued ? 'none' : 'flex';
-        // Show offer letter once payment approved
-        const offerBtn = document.getElementById('dlOfferBtn');
-        offerBtn.style.display = hasOffer ? 'inline-flex' : 'none';
-        offerBtn.disabled = false;
-        // Show receipt once payment submitted
-        const receiptBtn = document.getElementById('dlReceiptBtn');
-        receiptBtn.style.display = hasPaid ? 'inline-flex' : 'none';
-
-        // Init new dashboard features
+        // Init notifications and broadcasts
         renderNotifications();
         renderTickets();
         loadBroadcastBanner();
-
-        // Load curriculum
-        await loadCurriculum();
 
         document.getElementById('loadingScreen').style.display = 'none';
         document.getElementById('content').style.display = 'block';
@@ -802,6 +778,78 @@
     }
 
     function fmtDate(d){if(!d)return '—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+    // ── Render all certificates ────────────────────────────────────────────────
+    function renderAllCertificates(){
+      const container = document.getElementById('certsContainer');
+      if(!container) return;
+      container.innerHTML = '';
+      if(!allRegistrations.length){
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--mut);">No registrations yet.</div>';
+        return;
+      }
+      allRegistrations.forEach(reg => {
+        const issued = reg.status === 'certificate_sent' && !reg.revoked;
+        const revoked = reg.revoked;
+        const hasOffer = ['active','completed','certificate_sent'].includes(reg.status);
+        const hasPaid = !!(reg.payment && reg.payment.utrNumber);
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 26px;margin-bottom:18px;';
+        if(revoked) card.style.borderColor = '#fca5a5';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+            <div>
+              <div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--midnight);">${escapeHtml(reg.domain)}</div>
+              <div style="font-size:12px;color:var(--mut);margin-top:3px;">${fmtDate(reg.startDate)} – ${fmtDate(reg.endDate)} · ${reg.duration||'—'}</div>
+              <div style="font-family:monospace;font-size:11px;color:var(--steel);margin-top:4px;">${reg.certId}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              ${revoked ? '<span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">REVOKED</span>' :
+                issued ? '<span style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">ISSUED ✓</span>' :
+                `<span style="background:var(--soft2);color:var(--mut);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">${(STATUS[reg.status]||{badge:'Pending'}).badge}</span>`}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${issued ? `<button class="btn btn-primary" onclick="downloadCertById('${reg._id}','${reg.certId}')" style="padding:9px 16px;font-size:13px;">📥 Certificate</button>` : ''}
+            ${hasOffer ? `<button class="btn btn-outline" onclick="downloadOfferById('${reg._id}','${reg.certId}')" style="padding:9px 16px;font-size:13px;">📄 Offer Letter</button>` : ''}
+            ${hasPaid ? `<button class="btn btn-outline" onclick="downloadReceiptById('${reg._id}','${reg.certId}')" style="padding:9px 16px;font-size:13px;">🧾 Receipt</button>` : ''}
+            ${issued ? `<button class="btn btn-outline" onclick="verifyById('${reg.certId}')" style="padding:9px 16px;font-size:13px;">🔍 Verify</button>` : ''}
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+
+    async function downloadCertById(regId, certId){
+      try{
+        const res = await fetch(`/api/student/certificate/${regId}`, {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d=await res.json();showToast(d.message||'Failed',true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`Certificate_${certId}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      }catch{showToast('Could not download', true);}
+    }
+    async function downloadOfferById(regId, certId){
+      try{
+        const res = await fetch(`/api/student/offer-letter/${regId}`, {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d=await res.json();showToast(d.message||'Failed',true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`OfferLetter_${certId}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      }catch{showToast('Could not download', true);}
+    }
+    async function downloadReceiptById(regId, certId){
+      try{
+        const res = await fetch(`/api/student/receipt/${regId}`, {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok){const d=await res.json();showToast(d.message||'Failed',true);return;}
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`Receipt_${certId}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      }catch{showToast('Could not download receipt', true);}
+    }
+    function verifyById(certId){ window.open('/verify?id='+certId, '_blank'); }
 
     async function loadCurriculum(){
       try{
@@ -1061,10 +1109,15 @@
         if(!d.success || !d.data || !d.data.length) return;
         const bar = document.getElementById('broadcastBar');
         const track = document.getElementById('broadcastTrack');
-        // Duplicate messages for seamless loop
-        const msgs = d.data.map(b => `<span class="broadcast-msg"><span>avRoN Tech:</span>${escapeHtml(b.details?.message||'')}</span>`).join('');
-        track.innerHTML = msgs + msgs; // duplicate for seamless scroll
+        const msgs = d.data.map(b => `<span class="broadcast-msg">📢 <b>avRoN Tech:</b>${escapeHtml(b.details?.message||'')}</span>`).join('');
+        track.innerHTML = msgs;
         bar.classList.add('show');
+        // Auto-hide after 3 minutes
+        setTimeout(() => {
+          bar.style.transition = 'opacity 1s ease';
+          bar.style.opacity = '0';
+          setTimeout(() => bar.classList.remove('show'), 1000);
+        }, 3 * 60 * 1000);
       }catch(e){}
     }    function markAllNotifsRead(){
       setReadIds(allNotifs.map(n=>n.id));

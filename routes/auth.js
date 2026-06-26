@@ -35,14 +35,7 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
       await user.save();
     }
 
-    // Check if already has an active registration (allow new one if previous is completed/certificate_sent/rejected)
-    const existing = await Registration.findOne({
-      user: user._id,
-      status: { $nin: ['rejected', 'completed', 'certificate_sent'] }
-    });
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'You already have an active registration. Please login to your portal to track it.' });
-    }
+    // No restriction on multiple registrations — allow any email to register anytime
 
     // Generate collision-proof cert ID using crypto random bytes
     const crypto = require('crypto');

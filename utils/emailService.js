@@ -181,7 +181,7 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
       <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>
       <div class="kv-row"><span class="lbl">Duration</span><span class="val">${fmt(reg.startDate)} – ${fmt(reg.endDate)}</span></div>
       <div class="kv-row"><span class="lbl">Certificate ID</span><span class="val">${reg.certId}</span></div>
-      <div class="kv-row"><span class="lbl">Stipend</span><span class="val">Performance-based Perks / Unpaid</span></div>
+      <div class="kv-row"><span class="lbl">Stipend</span><span class="val">Unpaid / Learning-based</span></div>
     </div>
     <p>Please find your official Offer Letter attached. Log in to your dashboard to begin your internship tasks.</p>
     <div class="steps">
@@ -246,6 +246,25 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
   console.log(`✉️ Payment rejection notice sent to ${user.email}`);
 }
 
+// ── 6. Certificate Revocation ─────────────────────────────────────────────────
+async function sendRevocationEmail(user, reg, reason) {
+  const html = wrap(`
+    <h2>Important: Certificate Revoked</h2>
+    <p>Dear ${user.fullName}, we regret to inform you that your internship certificate has been <b style="color:#dc2626;">revoked</b>.</p>
+    <div class="kv">
+      <div class="kv-row"><span class="lbl">Certificate ID</span><span class="val">${reg.certId}</span></div>
+      <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>
+      <div class="kv-row"><span class="lbl">Revoked On</span><span class="val">${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span></div>
+      ${reason ? `<div class="kv-row"><span class="lbl">Reason</span><span class="val" style="color:#dc2626;">${reason}</span></div>` : ''}
+    </div>
+    <p>If you believe this is a mistake or have any questions, please contact us immediately at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a>.</p>
+    <hr class="divider">
+    <div class="signoff">Regards,<br><b>avRoN Tech Team</b></div>
+  `);
+  await sendMail({ to: user.email, subject: `Certificate Revoked — ${reg.certId} | avRoN Tech`, html });
+  console.log(`✉️ Revocation email sent to ${user.email}`);
+}
+
 // ── 5. Support Ticket notification ───────────────────────────────────────────
 async function sendTicketEmail(user, ticket) {
   const html = wrap(`
@@ -297,6 +316,7 @@ module.exports = {
   sendPaymentRejectedEmail,
   sendOTPEmail,
   sendTicketEmail,
+  sendRevocationEmail,
   sendCertificateEmail: noop,
   sendPortalInviteEmail: noop,
   sendPaymentReceivedEmail: noop,

@@ -573,6 +573,14 @@ router.post('/revoke/:id', async (req, res) => {
     reg.revokedReason = (req.body && req.body.reason) || 'Revoked by admin';
     await reg.save();
 
+    // Send revocation email to student
+    if (reg.user && reg.user.email) {
+      const { sendRevocationEmail } = require('../utils/emailService');
+      setImmediate(() => {
+        sendRevocationEmail(reg.user, reg, reg.revokedReason).catch(e => console.error('Revocation email error:', e.message));
+      });
+    }
+
     logActivity({
       action: 'revoke_certificate',
       targetId: reg._id,

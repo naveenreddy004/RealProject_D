@@ -28,23 +28,24 @@ const uploadPay = multer({
 // ── GET MY DASHBOARD ──────────────────────────────────────────────────────────
 router.get('/dashboard', authStudent, async (req, res) => {
   try {
-    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
-    if (!reg) return res.json({ success: true, registration: null, user: req.user });
+    // Return all registrations sorted newest first
+    const regs = await Registration.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const reg = regs[0] || null; // most recent for primary display
 
-    const totalTasks = reg.tasks.length;
-    const doneTasks = reg.tasks.filter(t => t.completed).length;
-    // Guard against division by zero when tasks array is empty
+    const totalTasks = reg ? reg.tasks.length : 0;
+    const doneTasks = reg ? reg.tasks.filter(t => t.completed).length : 0;
     const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
     res.json({
       success: true,
       user: req.user,
       registration: reg,
+      registrations: regs, // all registrations
       progress,
       upiDetails: {
         upiId: process.env.UPI_ID || 'avron@upi',
         name: process.env.UPI_NAME || 'avRoN Technologies',
-        amount: reg.amount,
+        amount: reg ? reg.amount : 199,
       }
     });
   } catch (err) {
@@ -194,7 +195,30 @@ router.post('/mark-complete', authStudent, async (req, res) => {
   });
 });
 
-// ── DOWNLOAD CERTIFICATE PDF (gated on admin approval) ───────────────────────
+// ── DOWNLOAD CERTIFICATE PDF by registration ID ───────────────────────────────
+router.get('/certificate/:regId', authStudent, async (req, res) => {
+  try {
+    const reg = await Registration.findOne({ _id: req.params.regId, user: req.user._id });
+    if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+    if (reg.revoked) return res.status(403).json({ success: false, message: 'Certificate revoked.' });
+    if (reg.status !== 'certificate_sent') {
+      return res.status(400).json({ success: false, message: 'Certificate not yet issued.' });
+    }
+    let pdfBuf = reg.certificatePdf;
+    if (!pdfBuf || pdfBuf.length === 0) {
+      pdfBuf = await generateCertificatePDF(req.user, reg);
+      await Registration.findByIdAndUpdate(reg._id, { certificatePdf: pdfBuf });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Certificate_${reg.certId}.pdf"`);
+    res.setHeader('Content-Length', pdfBuf.length);
+    res.send(pdfBuf);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not download certificate.' });
+  }
+});
+
+// ── DOWNLOAD CERTIFICATE PDF (most recent) ────────────────────────────────────
 router.get('/certificate', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ user: req.user._id });
@@ -221,7 +245,48 @@ router.get('/certificate', authStudent, async (req, res) => {
   }
 });
 
-// ── GET OFFER LETTER (gated on certificate_sent status) ──────────────────────
+// ── GET OFFER LETTER by registration ID ──────────────────────────────────────
+router.get('/offer-letter/:regId', authStudent, async (req, res) => {
+  try {
+    const reg = await Registration.findOne({ _id: req.params.regId, user: req.user._id });
+    if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+    if (!['certificate_sent', 'active', 'completed'].includes(reg.status)) {
+      return res.status(400).json({ success: false, message: 'Offer letter not yet available.' });
+    }
+    let pdfBuf = reg.offerLetterPdf;
+    if (!pdfBuf || pdfBuf.length === 0) {
+      pdfBuf = await generateOfferLetterPDF(req.user, reg);
+      await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: pdfBuf });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="OfferLetter_${reg.certId}.pdf"`);
+    res.setHeader('Content-Length', pdfBuf.length);
+    res.send(pdfBuf);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not download offer letter.' });
+  }
+});
+
+// ── GET RECEIPT by registration ID ────────────────────────────────────────────
+router.get('/receipt/:regId', authStudent, async (req, res) => {
+  try {
+    const reg = await Registration.findOne({ _id: req.params.regId, user: req.user._id });
+    if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
+    let pdfBuf = reg.receiptPdf;
+    if (!pdfBuf || pdfBuf.length === 0) {
+      pdfBuf = await generateReceiptPDF(req.user, reg);
+      await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Receipt_${reg.certId}.pdf"`);
+    res.setHeader('Content-Length', pdfBuf.length);
+    res.send(pdfBuf);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Receipt not found.' });
+  }
+});
+
+// ── GET OFFER LETTER (most recent, legacy) ───────────────────────────────────
 router.get('/offer-letter', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ user: req.user._id });
