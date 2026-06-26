@@ -32,9 +32,27 @@
         .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
         @media (max-width:900px){.app{grid-template-columns:1fr;}}
 
+        /* ── Mobile top bar (hamburger) ──────────────────────────────────────────── */
+        .mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:200;height:56px;background:var(--midnight);border-bottom:1px solid #1a2c4a;align-items:center;justify-content:space-between;padding:0 16px;}
+        @media (max-width:900px){.mobile-topbar{display:flex;}}
+        .mobile-topbar .m-brand{display:flex;align-items:center;gap:9px;font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#fff;}
+        .mobile-topbar .m-brand span{color:var(--steel);}
+        .ham-btn{background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;padding:6px;line-height:1;display:flex;align-items:center;justify-content:center;}
+        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149;backdrop-filter:blur(2px);}
+        .sidebar-overlay.show{display:block;}
+
         /* Sidebar */
         .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
-        @media (max-width:900px){.sidebar{position:relative;height:auto;}}
+        @media (max-width:900px){
+          .sidebar{
+            position:fixed;top:0;left:-280px;width:280px;height:100vh;z-index:150;
+            transition:left .28s cubic-bezier(0.4,0,0.2,1);
+            box-shadow:4px 0 24px rgba(0,0,0,.3);
+            overflow-y:auto;
+          }
+          .sidebar.open{left:0;}
+          .main{padding-top:72px;}
+        }
         .sb-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px;border-bottom:1px solid #1a2c4a;margin-bottom:18px;}
         .sb-brand-mark{width:34px;height:34px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border-radius:6px;}
         .sb-brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:#fff;letter-spacing:-.3px;}
@@ -264,6 +282,15 @@
     </style>
 </head>
 <body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ── Mobile top bar ─────────────────────────────────────────────── -->
+<div class="mobile-topbar">
+  <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+  <div class="m-brand">av<span>RoN</span> Tech</div>
+  <button class="ham-btn" onclick="logout()" aria-label="Logout" style="font-size:16px;">⊗</button>
+</div>
 
 <div class="app">
 
@@ -627,11 +654,22 @@
     function openModal(id){document.getElementById(id).classList.add('show');}
     function closeModal(id){document.getElementById(id).classList.remove('show');}
     function logout(){localStorage.removeItem('cp_token');localStorage.removeItem('cp_user');location.href='/portal';}
+
+    // ── Mobile sidebar ────────────────────────────────────────────────────────
+    function toggleSidebar(){
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+    function closeSidebar(){
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('show');
+    }
     function showTab(name, btn){
       document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
       document.getElementById('sec-'+name).classList.add('active');
       document.querySelectorAll('.sb-link').forEach(l=>l.classList.remove('active'));
       if(btn) btn.classList.add('active');
+      closeSidebar();
       window.scrollTo({top:0,behavior:'smooth'});
     }
 
