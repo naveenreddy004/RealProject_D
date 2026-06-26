@@ -51,10 +51,27 @@ function gmailTransporter() {
 
 // ── Unified send function ─────────────────────────────────────────────────────
 async function sendMail({ to, subject, html, attachments = [] }) {
+  // 1. Resend HTTP API (RESEND_API_KEY) — works on Render, no SMTP ports needed
   if (process.env.RESEND_API_KEY) {
     return sendViaResend(to, subject, html, attachments);
   }
-  // Local dev — Gmail SMTP
+
+  // 2. Brevo SMTP (BREVO_SMTP_KEY) — sends to any email, no domain needed, 300/day free
+  if (process.env.BREVO_SMTP_KEY) {
+    const transport = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.BREVO_SMTP_USER,
+        pass: process.env.BREVO_SMTP_KEY,
+      },
+    });
+    const from = process.env.EMAIL_FROM || `"avRoN Tech" <${process.env.BREVO_SMTP_USER}>`;
+    return transport.sendMail({ from, to, subject, html, attachments });
+  }
+
+  // 3. Local dev fallback — Gmail SMTP
   const from = `"avRoN Tech" <${process.env.EMAIL_USER}>`;
   return gmailTransporter().sendMail({ from, to, subject, html, attachments });
 }
