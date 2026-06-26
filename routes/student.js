@@ -335,11 +335,17 @@ router.get('/receipt', authStudent, async (req, res) => {
 // ── CURRICULUM for the student's domain ──────────────────────────────────────
 router.get('/curriculum', authStudent, async (req, res) => {
   try {
-    const reg = await Registration.findOne({ user: req.user._id });
-    if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+    // Allow fetching by specific domain via header (for multi-internship support)
+    const requestedDomain = req.headers['x-domain'];
+    let domain = requestedDomain;
+    if (!domain) {
+      const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+      if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+      domain = reg.domain;
+    }
     const { getCurriculum } = require('../utils/curricula');
-    const data = getCurriculum(reg.domain);
-    res.json({ success: true, domain: reg.domain, curriculum: data });
+    const data = getCurriculum(domain);
+    res.json({ success: true, domain, curriculum: data });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Could not load curriculum.' });
   }

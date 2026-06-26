@@ -418,11 +418,12 @@
             <section class="tab-section" id="sec-internships">
                 <div class="page-head">
                     <div>
-                        <h1 id="curr-page-title">My Internship</h1>
+                        <h1>My Internships</h1>
                         <p>Your day-by-day curriculum and weekly deliverables.</p>
                     </div>
                 </div>
-
+                <!-- Switcher tabs when multiple registrations -->
+                <div id="currSwitcher" style="display:none;margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap;"></div>
                 <div id="currHead"></div>
                 <div id="currBody"></div>
             </section>
@@ -851,18 +852,58 @@
     }
     function verifyById(certId){ window.open('/verify?id='+certId, '_blank'); }
 
+    let allCurricula = {}; // domain → curriculum data
+    let activeCurrDomain = null;
+
     async function loadCurriculum(){
-      try{
-        const res = await fetch('/api/student/curriculum', {headers:{'Authorization':'Bearer '+token}});
-        const d = await res.json();
-        if(!d.success) return;
-        curriculum = d.curriculum;
-        document.getElementById('curr-page-title').textContent = regData.domain;
+      if(!allRegistrations.length) return;
+      const switcher = document.getElementById('currSwitcher');
+      switcher.innerHTML = '';
+
+      // Fetch curriculum for each unique domain
+      const domains = [...new Set(allRegistrations.map(r => r.domain))];
+      for(const domain of domains){
+        try{
+          const res = await fetch('/api/student/curriculum', {
+            headers:{'Authorization':'Bearer '+token, 'x-domain': domain}
+          });
+          const d = await res.json();
+          if(d.success) allCurricula[domain] = d.curriculum;
+        }catch(e){}
+      }
+
+      // Build switcher buttons if more than one domain
+      if(domains.length > 1){
+        switcher.style.display = 'flex';
+        domains.forEach(domain => {
+          const btn = document.createElement('button');
+          btn.textContent = domain;
+          btn.style.cssText = 'padding:8px 16px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--midnight);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;';
+          btn.onclick = () => {
+            activeCurrDomain = domain;
+            switcher.querySelectorAll('button').forEach(b => {
+              b.style.background = '#fff';
+              b.style.color = 'var(--midnight)';
+              b.style.borderColor = 'var(--line)';
+            });
+            btn.style.background = 'var(--midnight)';
+            btn.style.color = '#fff';
+            btn.style.borderColor = 'var(--midnight)';
+            renderCurriculum();
+          };
+          switcher.appendChild(btn);
+        });
+        // Auto-click first
+        switcher.querySelectorAll('button')[0]?.click();
+      } else {
+        switcher.style.display = 'none';
+        activeCurrDomain = domains[0];
         renderCurriculum();
-      }catch(e){console.error(e);}
+      }
     }
 
     function renderCurriculum(){
+      const curriculum = allCurricula[activeCurrDomain];
       const head = document.getElementById('currHead');
       const body = document.getElementById('currBody');
       if(!curriculum || !curriculum.available){
@@ -871,7 +912,7 @@
           <div class="coming-soon">
             <div class="ic">🛠</div>
             <h3>Working on more courses</h3>
-            <p>${(curriculum && curriculum.message) || "We're polishing this curriculum — your roadmap will be available here shortly. Our team will notify you the moment it's ready."}</p>
+            <p>${(curriculum && curriculum.message) || "We're polishing this curriculum — your roadmap will be available here shortly."}</p>
           </div>`;
         return;
       }
