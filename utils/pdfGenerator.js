@@ -25,6 +25,11 @@ function streamToBuffer(doc) {
 
 // ─── Certificate PDF ──────────────────────────────────────────────────────────
 async function generateCertificatePDF(user, reg) {
+  // Use registrantName if stored (handles case where same email used for multiple people)
+  const certName    = reg.registrantName    || user.fullName;
+  const certCollege = reg.registrantCollege || user.college;
+  const certCourse  = reg.registrantCourse  || user.course;
+
   const verifyUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify?id=${reg.certId}`;
 
   const qrBuffer = await QRCode.toBuffer(verifyUrl, {
@@ -69,9 +74,9 @@ async function generateCertificatePDF(user, reg) {
 
   // Body
   doc.font('Helvetica').fontSize(12).fillColor('#666666').text('This is to certify that', 0, 124, { align: 'center' });
-  doc.font('Helvetica-Bold').fontSize(34).fillColor('#0b2e22').text(user.fullName, 0, 144, { align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(34).fillColor('#0b2e22').text(certName, 0, 144, { align: 'center' });
 
-  const nw = doc.widthOfString(user.fullName, { font: 'Helvetica-Bold', fontSize: 34 });
+  const nw = doc.widthOfString(certName, { font: 'Helvetica-Bold', fontSize: 34 });
   const nx = (W - nw) / 2;
   doc.moveTo(nx, 187).lineTo(nx + nw, 187).lineWidth(1.5).strokeColor('#1a5c46').stroke();
 
@@ -80,9 +85,9 @@ async function generateCertificatePDF(user, reg) {
   doc.font('Helvetica').fontSize(12).fillColor('#555555').text(`from  ${fmt(reg.startDate)}  to  ${fmt(reg.endDate)}`, 0, 244, { align: 'center' });
   doc.font('Helvetica-Bold').fontSize(13).fillColor('#0b2e22').text('under the guidance of avRoN Technologies', 0, 264, { align: 'center' });
 
-  if (user.college) {
+  if (certCollege) {
     doc.font('Helvetica').fontSize(10).fillColor('#888888')
-      .text(`${user.college}${user.course ? '  ·  ' + user.course : ''}`, 0, 284, { align: 'center' });
+      .text(`${certCollege}${certCourse ? '  ·  ' + certCourse : ''}`, 0, 284, { align: 'center' });
   }
 
   // Cert ID box
@@ -131,9 +136,9 @@ async function generateReceiptPDF(user, reg) {
   doc.moveTo(40, 118).lineTo(W - 40, 118).lineWidth(1).strokeColor('#c3e6d8').stroke();
 
   const rows = [
-    ['Student Name', user.fullName],
+    ['Student Name', reg.registrantName || user.fullName],
     ['Email', user.email],
-    ['College', user.college || '—'],
+    ['College', reg.registrantCollege || user.college || '—'],
     ['Domain', reg.domain],
     ['Package', reg.package],
     ['Amount Paid', `₹${reg.payment.amount}`],
@@ -163,6 +168,9 @@ async function generateReceiptPDF(user, reg) {
 
 // ─── Offer Letter PDF ─────────────────────────────────────────────────────────
 async function generateOfferLetterPDF(user, reg) {
+  const certName    = reg.registrantName    || user.fullName;
+  const certCollege = reg.registrantCollege || user.college;
+  const certCourse  = reg.registrantCourse  || user.course;
   const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true });
   const bufferPromise = streamToBuffer(doc);
 
@@ -187,7 +195,7 @@ async function generateOfferLetterPDF(user, reg) {
   doc.font('Helvetica-Bold').fontSize(20).fillColor('#0B192C').text('OFFICIAL OFFER LETTER', 48, y, { align: 'center', width: W - 96 });
 
   y += 38;
-  doc.font('Helvetica').fontSize(11.5).fillColor('#1a1a1a').text(`Dear ${user.fullName},`, 48, y);
+  doc.font('Helvetica').fontSize(11.5).fillColor('#1a1a1a').text(`Dear ${certName},`, 48, y);
 
   y += 22;
   doc.text(
@@ -201,7 +209,7 @@ async function generateOfferLetterPDF(user, reg) {
 
   doc.font('Helvetica-Bold').fontSize(12).fillColor('#0B192C').text('Program Details', 64, y + 14);
   const rows = [
-    ['Intern Name',    user.fullName],
+    ['Intern Name',    certName],
     ['Email',          user.email],
     ['Domain',         reg.domain],
     ['Duration',       `${fmt(reg.startDate)} – ${fmt(reg.endDate)}  (${reg.duration || ''})`],

@@ -20,6 +20,12 @@ const registrationSchema = new mongoose.Schema({
   package:    { type: String, default: 'Certificate Program' },
   amount:     { type: Number, default: 199 },
 
+  // Registrant details — stored at registration time so certificate is always correct
+  // even if the same email is used for multiple people
+  registrantName:    { type: String, default: null },
+  registrantCollege: { type: String, default: null },
+  registrantCourse:  { type: String, default: null },
+
   // Status flow: pending → payment_pending → payment_submitted → payment_verified → active → completed → certificate_sent → rejected
   status: {
     type: String,

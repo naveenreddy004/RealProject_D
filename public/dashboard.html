@@ -355,7 +355,8 @@
                     </div>
                 </div>
 
-                <div class="status-banner">
+                <!-- Single internship status banner -->
+                <div class="status-banner" id="singleBanner">
                     <div class="sb-ic" id="status-ic">…</div>
                     <div class="sb-txt">
                         <h3 id="status-title" data-testid="status-title">—</h3>
@@ -363,6 +364,9 @@
                     </div>
                     <div class="sb-badge" id="status-badge">—</div>
                 </div>
+
+                <!-- All internships overview (shown when 2+ registrations) -->
+                <div id="allStatusCards" style="display:none;margin-bottom:18px;"></div>
 
                 <div class="stats">
                     <div class="stat"><div class="lbl">Domain</div><div class="val" id="s-domain">—</div></div>
@@ -724,6 +728,28 @@
           document.getElementById('status-badge').textContent = meta.badge;
           if(regData.revoked){
             document.querySelector('.status-banner').style.background = '#7f1d1d';
+          }
+
+          // If multiple registrations — show all as cards, hide single banner
+          if(allRegistrations.length > 1){
+            document.getElementById('singleBanner').style.display = 'none';
+            const allCards = document.getElementById('allStatusCards');
+            allCards.style.display = 'grid';
+            allCards.style.gridTemplateColumns = 'repeat(auto-fit,minmax(280px,1fr))';
+            allCards.style.gap = '12px';
+            allCards.innerHTML = allRegistrations.map(reg => {
+              let m;
+              if(reg.revoked) m = {ic:'⛔', t:'Certificate Revoked', badge:'Revoked', color:'#7f1d1d'};
+              else m = STATUS[reg.status] || STATUS.pending;
+              return `<div style="background:${m.color||'var(--midnight)'};color:#fff;border-radius:12px;padding:18px 22px;display:flex;gap:14px;align-items:center;">
+                <div style="flex:0 0 40px;height:40px;border-radius:8px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${m.ic}</div>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:14px;">${escapeHtml(reg.domain)}</div>
+                  <div style="font-size:12px;color:#9eb2c8;margin-top:2px;">${m.t}</div>
+                </div>
+                <div style="background:rgba(96,139,193,.25);color:var(--steel);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;">${m.badge}</div>
+              </div>`;
+            }).join('');
           }
 
           // Payment card

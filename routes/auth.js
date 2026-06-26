@@ -45,7 +45,12 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
       startDate: new Date(startDate), endDate: new Date(endDate),
       package: pkg || 'Basic Package',
       amount: Number(req.body.amount) || 199,
-      status: 'payment_pending'
+      status: 'payment_pending',
+      // Store registrant's actual name/college/course from the form
+      // so certificate is correct even when the same email is reused
+      registrantName:    fullName.trim(),
+      registrantCollege: req.body.college || null,
+      registrantCourse:  req.body.course  || null,
     });
     reg.initTasks();
     await reg.save();
