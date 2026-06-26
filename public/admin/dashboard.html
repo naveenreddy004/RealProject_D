@@ -37,10 +37,12 @@
         .sidebar-overlay.show{display:block;}
 
         /* ── SIDEBAR ── */
-        .sidebar{background:var(--night);color:#fff;padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);}
+        .sidebar{background:var(--night);color:#fff;padding:0;position:fixed;top:0;left:0;width:248px;height:100vh;overflow-y:auto;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06);z-index:1050;}
         @media(max-width:960px){
-          .sidebar{position:fixed;top:0;left:-270px;width:270px;height:100vh;z-index:1050;transition:left .28s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 24px rgba(0,0,0,.4);}
+          .sidebar{left:-270px;width:270px;transition:left .28s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 24px rgba(0,0,0,.4);}
           .sidebar.open{left:0;}
+          .sidebar-placeholder{display:none !important;}
+          .app{grid-template-columns:1fr !important;}
           .main{padding-top:56px;}
           .topbar{top:56px;}
         }
@@ -261,42 +263,45 @@
 
 <!-- ── Mobile top bar ── -->
 <div class="mobile-topbar">
-  <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+  <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
   <div class="m-brand">av<span>RoN</span> Tech <span style="font-size:10px;color:#7186a0;letter-spacing:.1em;">ADMIN</span></div>
-  <button class="ham-btn" onclick="logout()" aria-label="Logout" title="Logout" style="font-size:16px;">🚪</button>
+  <button class="ham-btn" onclick="logout()" aria-label="Logout" style="font-size:13px;font-weight:700;color:#fda4af;">OUT</button>
 </div>
 
-<div class="app">
-    <!-- ══ SIDEBAR ══ -->
-    <aside class="sidebar">
-        <div class="sb-brand">
-            <div class="sb-brand-mark">aR</div>
-            <div>
-                <div class="sb-name">av<span>RoN</span> Tech</div>
-                <div class="sb-sub">avRoNTech.in</div>
-            </div>
+<!-- ── Sidebar (outside grid so fixed positioning works on mobile) ── -->
+<aside class="sidebar" id="adminSidebar">
+    <div class="sb-brand">
+        <div class="sb-brand-mark">aR</div>
+        <div>
+            <div class="sb-name">av<span>RoN</span> Tech</div>
+            <div class="sb-sub">avRoNTech.in</div>
         </div>
-        <div class="sb-user">
-            <strong>Admin Console</strong>
-            Signed in as Administrator
-        </div>
-        <span class="tag-admin">Admin Panel</span>
-        <div class="sb-nav">
-            <div class="sb-sec">Dashboard</div>
-            <button class="sb-link active" onclick="gv('overview',this)"><span class="ico">📊</span> Overview</button>
-            <button class="sb-link" onclick="gv('revenue',this)"><span class="ico">💰</span> Revenue</button>
-            <button class="sb-link" onclick="gv('payments',this)"><span class="ico">💳</span> Payments <span class="sb-badge" id="pay-badge" style="display:none;">0</span></button>
-            <div class="sb-sec">Management</div>
-            <button class="sb-link" onclick="gv('registrations',this)"><span class="ico">📋</span> All Registrations</button>
-            <button class="sb-link" onclick="gv('certificates',this)"><span class="ico">🏆</span> Certificates</button>
-            <button class="sb-link" onclick="gv('users',this)"><span class="ico">👥</span> Students</button>
-            <div class="sb-sec">System</div>
-            <button class="sb-link" onclick="gv('activity',this)"><span class="ico">📜</span> Activity Log</button>
-        </div>
-        <div class="sb-foot">
-            <button class="sb-link danger" onclick="logout()"><span class="ico">🚪</span> Logout</button>
-        </div>
-    </aside>
+    </div>
+    <div class="sb-user">
+        <strong id="sb-admin-name">Admin Console</strong>
+        <span id="sb-admin-email">Signed in as Administrator</span>
+    </div>
+    <span class="tag-admin">Admin Panel</span>
+    <div class="sb-nav">
+        <div class="sb-sec">Dashboard</div>
+        <button class="sb-link active" onclick="gv('overview',this)"><span class="ico">📊</span> Overview</button>
+        <button class="sb-link" onclick="gv('revenue',this)"><span class="ico">💰</span> Revenue</button>
+        <button class="sb-link" onclick="gv('payments',this)"><span class="ico">💳</span> Payments <span class="sb-badge" id="pay-badge" style="display:none;">0</span></button>
+        <div class="sb-sec">Management</div>
+        <button class="sb-link" onclick="gv('registrations',this)"><span class="ico">📋</span> All Registrations</button>
+        <button class="sb-link" onclick="gv('certificates',this)"><span class="ico">🏆</span> Certificates</button>
+        <button class="sb-link" onclick="gv('users',this)"><span class="ico">👥</span> Students</button>
+        <div class="sb-sec">System</div>
+        <button class="sb-link" onclick="gv('activity',this)"><span class="ico">📜</span> Activity Log</button>
+    </div>
+    <div class="sb-foot">
+        <button class="sb-link danger" onclick="logout()"><span class="ico">⊗</span> Logout</button>
+    </div>
+</aside>
+
+<div class="app" style="grid-template-columns:248px 1fr;">
+    <!-- sidebar placeholder keeps desktop grid layout; sidebar itself is position:fixed on mobile -->
+    <div class="sidebar-placeholder" style="width:248px;"></div>
 
     <!-- ══ MAIN ══ -->
     <div id="loginOverlay" style="position:fixed;inset:0;background:#0B192C;z-index:999;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;">
@@ -650,11 +655,11 @@ function logout(){
 }
 
 function toggleSidebar(){
-  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('adminSidebar').classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('show');
 }
 function closeSidebar(){
-  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('adminSidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
 
