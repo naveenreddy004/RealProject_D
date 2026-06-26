@@ -2,35 +2,61 @@
  * avRoN Tech — Transactional Emails
  *
  * Provider priority:
- *   1. Resend (RESEND_API_KEY set)  — works on Render free tier, 3000/month free
- *   2. Gmail SMTP fallback          — local development only
+ *   1. Resend HTTP API (RESEND_API_KEY set) — works on Render free tier (uses HTTPS, not SMTP)
+ *   2. Gmail SMTP fallback                  — local development only
  */
 const nodemailer = require('nodemailer');
 
-function transporter() {
-  if (process.env.RESEND_API_KEY) {
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'resend',
-        pass: process.env.RESEND_API_KEY,
-      },
-    });
+// ── Resend HTTP API sender (no SMTP, pure HTTPS — works on all platforms) ─────
+async function sendViaResend(to, subject, html, attachments = []) {
+  const body = {
+    from: process.env.EMAIL_FROM || 'avRoN Tech <onboarding@resend.dev>',
+    to: [to],
+    subject,
+    html,
+  };
+
+  if (attachments.length > 0) {
+    body.attachments = attachments.map(a => ({
+      filename: a.filename,
+      content: Buffer.isBuffer(a.content)
+        ? a.content.toString('base64')
+        : Buffer.from(a.content).toString('base64'),
+    }));
   }
-  // Local dev fallback
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Resend API error: ${data.message || JSON.stringify(data)}`);
+  }
+  return data;
+}
+
+// ── Gmail SMTP transporter (local dev fallback) ───────────────────────────────
+function gmailTransporter() {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
 }
 
-function fromAddress() {
+// ── Unified send function ─────────────────────────────────────────────────────
+async function sendMail({ to, subject, html, attachments = [] }) {
   if (process.env.RESEND_API_KEY) {
-    return process.env.EMAIL_FROM || `"${BRAND}" <onboarding@resend.dev>`;
+    return sendViaResend(to, subject, html, attachments);
   }
-  return `"${BRAND}" <${process.env.EMAIL_USER}>`;
+  // Local dev — Gmail SMTP
+  const from = `"avRoN Tech" <${process.env.EMAIL_USER}>`;
+  return gmailTransporter().sendMail({ from, to, subject, html, attachments });
 }
 
 const BRAND = 'avRoN Tech';
@@ -111,12 +137,7 @@ async function sendConfirmationEmail(user, reg) {
     <hr class="divider">
     <div class="signoff">Best regards,<br><b>The ${BRAND} Team</b><br><a href="https://${DOMAIN}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a></div>
   `);
-  await transporter().sendMail({
-    from: fromAddress(),
-    to: user.email,
-    subject: `Internship Registration Confirmed! - ${BRAND}`,
-    html,
-  });
+  await sendMail({ to: user.email, subject: `Internship Registration Confirmed! - ${BRAND}`, html });
   console.log(`✉️ Confirmation sent to ${user.email}`);
 }
 
@@ -144,21 +165,12 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
     <hr class="divider">
     <div class="signoff">Warm regards,<br><b>Corporate Onboarding Team</b><br>${BRAND} (<a href="https://${DOMAIN}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a>)</div>
   `);
-  const attachments = [];
-  if (pdfBuffer && pdfBuffer.length > 0) {
-    attachments.push({
-      filename: `avRoN_Tech_Offer_Letter_${reg.certId}.pdf`,
-      content: pdfBuffer,
-      contentType: 'application/pdf',
-    });
-  }
-  await transporter().sendMail({
-    from: fromAddress(),
-    to: user.email,
-    subject: `Official Internship Offer Letter & Onboarding Details - ${BRAND}`,
-    html,
-    attachments,
-  });
+  const attachments = (pdfBuffer && pdfBuffer.length > 0) ? [{
+    filename: `avRoN_Tech_Offer_Letter_${reg.certId}.pdf`,
+    content: pdfBuffer,
+    contentType: 'application/pdf',
+  }] : [];
+  await sendMail({ to: user.email, subject: `Official Internship Offer Letter & Onboarding Details - ${BRAND}`, html, attachments });
   console.log(`✉️ Offer letter sent to ${user.email}`);
 }
 
@@ -173,12 +185,7 @@ async function sendOTPEmail(user, otp) {
     </div>
     <p class="muted">If you didn't request this code, you can safely ignore this email.</p>
   `);
-  await transporter().sendMail({
-    from: fromAddress(),
-    to: user.email,
-    subject: `Your ${BRAND} login code: ${otp}`,
-    html,
-  });
+  await sendMail({ to: user.email, subject: `Your ${BRAND} login code: ${otp}`, html });
   console.log(`✉️ OTP sent to ${user.email}`);
 }
 
@@ -204,12 +211,7 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
     <hr class="divider">
     <div class="signoff">Regards,<br><b>The ${BRAND} Team</b></div>
   `);
-  await transporter().sendMail({
-    from: fromAddress(),
-    to: user.email,
-    subject: `Action Required: Payment Resubmission Needed — ${BRAND}`,
-    html,
-  });
+  await sendMail({ to: user.email, subject: `Action Required: Payment Resubmission Needed — ${BRAND}`, html });
   console.log(`✉️ Payment rejection notice sent to ${user.email}`);
 }
 

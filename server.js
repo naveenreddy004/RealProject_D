@@ -86,51 +86,47 @@ app.get('/api/test-email', async (req, res) => {
   if (!to) return res.status(400).json({ success: false, message: 'Pass ?to=youremail@gmail.com&secret=...' });
 
   try {
-    const nodemailer = require('nodemailer');
-    let transport;
     if (process.env.RESEND_API_KEY) {
-      transport = nodemailer.createTransport({
-        host: 'smtp.resend.com',
-        port: 465,
-        secure: true,
-        auth: { user: 'resend', pass: process.env.RESEND_API_KEY },
+      // Use Resend HTTP API directly — no SMTP ports needed
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || 'avRoN Tech <onboarding@resend.dev>',
+          to: [to],
+          subject: 'avRoN Tech — Email Test ✅',
+          html: '<h2>Email is working!</h2><p>Sent via Resend HTTP API from Render.</p>',
+        }),
       });
-    } else {
-      transport = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || JSON.stringify(data));
+      return res.json({ success: true, message: `Test email sent to ${to}`, provider: 'Resend HTTP API', id: data.id });
     }
 
-    // Verify connection first
+    // Fallback: Gmail SMTP (local dev)
+    const nodemailer = require('nodemailer');
+    const transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    });
     await transport.verify();
-
-    const from = process.env.EMAIL_FROM ||
-      (process.env.RESEND_API_KEY ? '"avRoN Tech" <onboarding@resend.dev>' : `"avRoN Tech" <${process.env.EMAIL_USER}>`);
-
     await transport.sendMail({
-      from,
+      from: `"avRoN Tech" <${process.env.EMAIL_USER}>`,
       to,
       subject: 'avRoN Tech — Email Test ✅',
-      text: `Email is working! Provider: ${process.env.RESEND_API_KEY ? 'Resend' : 'Gmail'}. Sent at: ${new Date().toISOString()}`,
+      text: `Email is working! Sent at: ${new Date().toISOString()}`,
     });
-
-    res.json({
-      success: true,
-      message: `Test email sent to ${to}`,
-      provider: process.env.RESEND_API_KEY ? 'Resend' : 'Gmail',
-      from,
-    });
+    res.json({ success: true, message: `Test email sent to ${to}`, provider: 'Gmail SMTP' });
   } catch (err) {
     console.error('Test email error:', err);
     res.status(500).json({
       success: false,
       error: err.message,
-      code: err.code,
-      provider: process.env.RESEND_API_KEY ? 'Resend' : 'Gmail',
+      provider: process.env.RESEND_API_KEY ? 'Resend HTTP API' : 'Gmail SMTP',
       resend_key_set: !!process.env.RESEND_API_KEY,
-      gmail_user_set: !!process.env.EMAIL_USER,
-      gmail_pass_set: !!process.env.EMAIL_PASS,
     });
   }
 });
