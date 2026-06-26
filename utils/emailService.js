@@ -91,7 +91,7 @@ async function sendMail({ to, subject, html, attachments = [] }) {
 
 const BRAND = 'avRoN Tech';
 const DOMAIN = 'avRoNTech.in';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'official@avrontech.in';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com';
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 

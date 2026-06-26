@@ -389,12 +389,161 @@ const CYBER_SECURITY = {
   ],
 };
 
+// ─── Java Developer ───────────────────────────────────────────────────────────
+const JAVA_DEV = {
+  domain: 'Java Developer',
+  title: 'Internship Program: Java Developer (Core Java & Backend)',
+  total_days: 45,
+  tagline: 'A 45-day hands-on roadmap covering Core Java fundamentals, OOP, Collections, JDBC, and a capstone backend project.',
+  phases: [
+    {
+      day_range: 'Day 1 – 9',
+      title: 'Java Fundamentals',
+      topics: [
+        'Java syntax, data types, variables and operators',
+        'Control flow — if/else, switch, for, while, do-while',
+        'Arrays and Strings — manipulation and common methods',
+        'Input/Output with Scanner and System.out',
+        'JDK setup, compiling and running Java programs',
+      ],
+      deliverable: 'Build a console-based Calculator and a Number Guessing Game using core Java syntax, loops, and conditions.',
+    },
+    {
+      day_range: 'Day 10 – 18',
+      title: 'Object-Oriented Programming',
+      topics: [
+        'Classes, objects, constructors and the this keyword',
+        'Encapsulation — getters, setters, access modifiers',
+        'Inheritance — extends, method overriding, super keyword',
+        'Polymorphism — compile-time and runtime',
+        'Abstract classes and interfaces',
+        'Static members and inner classes',
+      ],
+      deliverable: 'Design a Bank Account Management System using OOP principles — Account, SavingsAccount, CurrentAccount classes with full encapsulation and inheritance.',
+    },
+    {
+      day_range: 'Day 19 – 27',
+      title: 'Collections, Exceptions & File I/O',
+      topics: [
+        'Collections framework — ArrayList, LinkedList, HashMap, HashSet, TreeMap',
+        'Iterators and enhanced for loop',
+        'Exception handling — try/catch/finally, checked vs unchecked',
+        'Custom exceptions',
+        'File I/O — FileReader, FileWriter, BufferedReader, BufferedWriter',
+        'Java 8 — Lambda expressions and Stream API basics',
+      ],
+      deliverable: 'Build a Student Records System that stores, searches and filters student data using Collections and persists records to a file using File I/O.',
+    },
+    {
+      day_range: 'Day 28 – 36',
+      title: 'JDBC & Database Integration',
+      topics: [
+        'SQL fundamentals — DDL, DML, joins, aggregate functions',
+        'MySQL setup and basic queries',
+        'JDBC — DriverManager, Connection, PreparedStatement, ResultSet',
+        'CRUD operations via JDBC',
+        'Connection pooling concepts',
+        'Basic MVC pattern for console apps',
+      ],
+      deliverable: 'Build a JDBC-backed Inventory Management System with full CRUD — add, view, update, delete products stored in a MySQL database.',
+    },
+    {
+      day_range: 'Day 37 – 45',
+      title: 'Capstone Project',
+      topics: [
+        'Design and build a full console-based application',
+        'Apply OOP, Collections, File I/O and JDBC together',
+        'Error handling and input validation',
+        'Code organisation and package structure',
+        'Final testing and documentation',
+      ],
+      deliverable: 'Build and submit a Library Management System or Employee Payroll System — full CRUD with MySQL, OOP design, exception handling, and a project README.',
+    },
+  ],
+};
+
+// ─── Python Developer ─────────────────────────────────────────────────────────
+const PYTHON_DEV = {
+  domain: 'Python Developer',
+  title: 'Internship Program: Python Developer (Core Python & Backend)',
+  total_days: 45,
+  tagline: 'A 45-day practical roadmap from Python basics to building real backend applications with Flask and MySQL.',
+  phases: [
+    {
+      day_range: 'Day 1 – 9',
+      title: 'Python Fundamentals',
+      topics: [
+        'Python syntax, variables, data types and operators',
+        'Control flow — if/elif/else, for, while loops',
+        'Functions — parameters, return values, default args',
+        'Strings — slicing, formatting, common methods',
+        'Lists, tuples and basic input/output',
+        'Installing Python, pip and VS Code setup',
+      ],
+      deliverable: 'Build a console-based Temperature Converter, a simple Calculator, and a Word Counter using Python fundamentals.',
+    },
+    {
+      day_range: 'Day 10 – 18',
+      title: 'Data Structures & OOP',
+      topics: [
+        'Lists, tuples, sets and dictionaries — deep dive',
+        'List comprehensions and dictionary comprehensions',
+        'OOP — classes, objects, __init__, self',
+        'Inheritance, method overriding and super()',
+        'Encapsulation and property decorators',
+        'Exception handling — try/except/finally, custom exceptions',
+      ],
+      deliverable: 'Build a Student Grade Tracker using OOP — Student class, list of students, grade calculation, and proper exception handling for invalid inputs.',
+    },
+    {
+      day_range: 'Day 19 – 27',
+      title: 'File I/O, Modules & Libraries',
+      topics: [
+        'File reading and writing — open(), read(), write(), context managers',
+        'CSV and JSON file handling',
+        'Python standard library — os, sys, datetime, random, math',
+        'Creating and importing custom modules',
+        'Virtual environments and pip package management',
+        'Introduction to requests library for HTTP',
+      ],
+      deliverable: 'Build an Expense Tracker that reads/writes transactions to a CSV file, calculates totals by category, and exports a summary report.',
+    },
+    {
+      day_range: 'Day 28 – 36',
+      title: 'Flask & Database Integration',
+      topics: [
+        'SQL fundamentals — DDL, DML, SELECT, joins',
+        'MySQL setup and basic queries',
+        'Flask — routes, templates (Jinja2), request, response',
+        'SQLAlchemy ORM basics — models, sessions, CRUD',
+        'Building REST endpoints with Flask',
+        'Testing APIs with Postman',
+      ],
+      deliverable: 'Build a Flask-based Task Manager REST API with CRUD operations, SQLAlchemy models connected to MySQL, and Postman test collection.',
+    },
+    {
+      day_range: 'Day 37 – 45',
+      title: 'Capstone Project',
+      topics: [
+        'Build a complete Python backend application',
+        'Combine OOP, file I/O, Flask and database',
+        'User authentication basics (session or token)',
+        'Input validation and error handling',
+        'Final testing, deployment to Render, and documentation',
+      ],
+      deliverable: 'Build and deploy a Notes App or Blog API using Flask + MySQL — full CRUD, deployed live on Render, with a GitHub repository and project README.',
+    },
+  ],
+};
+
 const CURRICULA = {
   'Web Development': WEB_DEV,
   'Java Full Stack Developer': JAVA_FULL_STACK,
   'Python Full Stack Developer': PYTHON_FULL_STACK,
   'Data Science & AI Intern': DATA_SCIENCE_AI,
   'Cyber Security Intern': CYBER_SECURITY,
+  'Java Developer': JAVA_DEV,
+  'Python Developer': PYTHON_DEV,
 };
 
 /**
