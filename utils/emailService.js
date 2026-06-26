@@ -245,12 +245,55 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
   console.log(`✉️ Payment rejection notice sent to ${user.email}`);
 }
 
-const noop = async () => {};
+// ── 5. Support Ticket notification ───────────────────────────────────────────
+async function sendTicketEmail(user, ticket) {
+  const html = wrap(`
+    <h2>New Support Ticket — ${ticket.id}</h2>
+    <div class="kv">
+      <div class="kv-row"><span class="lbl">Ticket ID</span><span class="val">${ticket.id}</span></div>
+      <div class="kv-row"><span class="lbl">Student</span><span class="val">${user.fullName}</span></div>
+      <div class="kv-row"><span class="lbl">Email</span><span class="val">${user.email}</span></div>
+      <div class="kv-row"><span class="lbl">Category</span><span class="val">${ticket.category}</span></div>
+      <div class="kv-row"><span class="lbl">Priority</span><span class="val">${ticket.priority}</span></div>
+      <div class="kv-row"><span class="lbl">Subject</span><span class="val">${ticket.subject}</span></div>
+    </div>
+    <p><b>Message:</b></p>
+    <div style="background:#f7f9fc;border-left:3px solid #608BC1;padding:14px 18px;border-radius:0 6px 6px 0;font-size:14px;color:#1a1a1a;line-height:1.7;white-space:pre-wrap;">${ticket.message}</div>
+    <hr class="divider">
+    <p class="muted">Reply directly to <b>${user.email}</b> to respond to this student.</p>
+  `);
+  // Send to support inbox
+  await sendMail({
+    to: process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com',
+    subject: `[${ticket.priority}] Support Ticket ${ticket.id} — ${ticket.subject}`,
+    html,
+  });
+  // Also confirm to student
+  const confirmHtml = wrap(`
+    <h2>We received your ticket</h2>
+    <p>Hi ${user.fullName}, your support ticket has been submitted successfully. Our team will get back to you within 24 hours.</p>
+    <div class="kv">
+      <div class="kv-row"><span class="lbl">Ticket ID</span><span class="val">${ticket.id}</span></div>
+      <div class="kv-row"><span class="lbl">Subject</span><span class="val">${ticket.subject}</span></div>
+      <div class="kv-row"><span class="lbl">Priority</span><span class="val">${ticket.priority}</span></div>
+    </div>
+    <p class="muted">For urgent issues you can also email us directly at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
+    <hr class="divider">
+    <div class="signoff">Regards,<br><b>avRoN Tech Support Team</b></div>
+  `);
+  await sendMail({
+    to: user.email,
+    subject: `Ticket Received: ${ticket.subject} [${ticket.id}]`,
+    html: confirmHtml,
+  });
+  console.log(`✉️ Ticket ${ticket.id} emailed to support and confirmed to ${user.email}`);
+}
 module.exports = {
   sendConfirmationEmail,
   sendOfferLetterEmail,
   sendPaymentRejectedEmail,
   sendOTPEmail,
+  sendTicketEmail,
   sendCertificateEmail: noop,
   sendPortalInviteEmail: noop,
   sendPaymentReceivedEmail: noop,

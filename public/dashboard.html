@@ -1005,24 +1005,34 @@
     function getTickets(){try{return JSON.parse(localStorage.getItem(tKey())||'[]');}catch{return [];}}
     function setTickets(arr){localStorage.setItem(tKey(), JSON.stringify(arr));}
     function newTicketId(){return 'TKT-' + Date.now().toString(36).toUpperCase().slice(-6) + '-' + Math.floor(Math.random()*900+100);}
-    function submitTicket(){
+    async function submitTicket(){
       const subject = document.getElementById('tk-subject').value.trim();
       const message = document.getElementById('tk-message').value.trim();
       const category = document.getElementById('tk-category').value;
       const priority = document.getElementById('tk-priority').value;
       if(subject.length < 4){showToast('Please enter a subject (min 4 chars).', true);return;}
       if(message.length < 10){showToast('Please describe the issue (min 10 chars).', true);return;}
+
+      const ticketId = newTicketId();
+
+      // Save locally
       const tickets = getTickets();
-      tickets.unshift({
-        id: newTicketId(), subject, message, category, priority,
-        status: 'open', createdAt: Date.now()
-      });
+      tickets.unshift({ id: ticketId, subject, message, category, priority, status: 'open', createdAt: Date.now() });
       setTickets(tickets);
       document.getElementById('tk-subject').value = '';
       document.getElementById('tk-message').value = '';
       document.getElementById('tk-priority').value = 'Normal';
       renderTickets();
       showToast('Ticket submitted ✓ Our team will reach out shortly.');
+
+      // Also send to backend so admin gets email
+      try {
+        await fetch('/api/student/ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ subject, message, category, priority, ticketId }),
+        });
+      } catch(e) { /* non-critical — ticket is saved locally regardless */ }
     }
     function renderTickets(){
       const tickets = getTickets();

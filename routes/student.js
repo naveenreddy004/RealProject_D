@@ -318,4 +318,28 @@ router.get('/verify/:certId', async (req, res) => {
   }
 });
 
+// ── SUBMIT SUPPORT TICKET ─────────────────────────────────────────────────────
+router.post('/ticket', authStudent, async (req, res) => {
+  try {
+    const { subject, message, category, priority, ticketId } = req.body;
+    if (!subject || subject.trim().length < 4) return res.status(400).json({ success: false, message: 'Subject too short.' });
+    if (!message || message.trim().length < 10) return res.status(400).json({ success: false, message: 'Message too short.' });
+
+    const { sendTicketEmail } = require('../utils/emailService');
+    setImmediate(() => {
+      sendTicketEmail(req.user, {
+        id: ticketId || ('TKT-' + Date.now().toString(36).toUpperCase().slice(-6)),
+        subject: subject.trim(),
+        message: message.trim(),
+        category: category || 'General',
+        priority: priority || 'Normal',
+      }).catch(e => console.error('Ticket email error:', e.message));
+    });
+
+    res.json({ success: true, message: 'Ticket submitted. We will get back to you within 24 hours.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to submit ticket.' });
+  }
+});
+
 module.exports = router;
