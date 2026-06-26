@@ -884,6 +884,8 @@
           }).join('')}
         </div>`;
     }
+
+    async function downloadCertById(regId, certId){
       try{
         const res = await fetch(`/api/student/certificate/${regId}`, {headers:{'Authorization':'Bearer '+token}});
         if(!res.ok){const d=await res.json();showToast(d.message||'Failed',true);return;}
