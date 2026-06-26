@@ -30,27 +30,23 @@
 
         /* ── Layout ──────────────────────────────────────────────────────────────── */
         .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
-        @media (max-width:900px){.app{grid-template-columns:1fr;}}
+        @media (max-width:900px){.app{grid-template-columns:1fr !important;}}
 
         /* ── Mobile top bar (hamburger) ──────────────────────────────────────────── */
-        .mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:200;height:56px;background:var(--midnight);border-bottom:1px solid #1a2c4a;align-items:center;justify-content:space-between;padding:0 16px;}
+        .mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:1100;height:56px;background:var(--midnight);border-bottom:1px solid #1a2c4a;align-items:center;justify-content:space-between;padding:0 16px;}
         @media (max-width:900px){.mobile-topbar{display:flex;}}
         .mobile-topbar .m-brand{display:flex;align-items:center;gap:9px;font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#fff;}
         .mobile-topbar .m-brand span{color:var(--steel);}
         .ham-btn{background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;padding:6px;line-height:1;display:flex;align-items:center;justify-content:center;}
-        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149;backdrop-filter:blur(2px);}
+        .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1049;backdrop-filter:blur(2px);}
         .sidebar-overlay.show{display:block;}
 
         /* Sidebar */
-        .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+        .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:fixed;top:0;left:0;width:260px;height:100vh;overflow-y:auto;z-index:1050;}
         @media (max-width:900px){
-          .sidebar{
-            position:fixed;top:0;left:-280px;width:280px;height:100vh;z-index:150;
-            transition:left .28s cubic-bezier(0.4,0,0.2,1);
-            box-shadow:4px 0 24px rgba(0,0,0,.3);
-            overflow-y:auto;
-          }
+          .sidebar{left:-280px;width:280px;transition:left .28s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 24px rgba(0,0,0,.3);}
           .sidebar.open{left:0;}
+          .sidebar-placeholder{display:none !important;}
           .main{padding-top:72px;}
         }
         .sb-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px;border-bottom:1px solid #1a2c4a;margin-bottom:18px;}
@@ -292,41 +288,44 @@
   <button class="ham-btn" onclick="logout()" aria-label="Logout" style="font-size:16px;">⊗</button>
 </div>
 
-<div class="app">
-
-    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
-    <aside class="sidebar">
-        <div class="sb-brand">
-            <div class="sb-brand-mark">aR</div>
-            <div>
-                <div class="sb-brand-name">av<span>RoN</span> Tech</div>
-                <div class="sb-brand-sub">avRoNTech.in</div>
-            </div>
+<!-- ── Sidebar (fixed, outside grid so it works on mobile) ── -->
+<aside class="sidebar">
+    <div class="sb-brand">
+        <div class="sb-brand-mark">aR</div>
+        <div>
+            <div class="sb-brand-name">av<span>RoN</span> Tech</div>
+            <div class="sb-brand-sub">avRoNTech.in</div>
         </div>
+    </div>
 
-        <div class="sb-profile">
-            <div class="sb-av" id="sb-av">—</div>
-            <div class="sb-name" id="sb-name">Loading...</div>
-            <div class="sb-email" id="sb-email">—</div>
-            <div class="sb-cert-chip" id="sb-cert">—</div>
-        </div>
+    <div class="sb-profile">
+        <div class="sb-av" id="sb-av">—</div>
+        <div class="sb-name" id="sb-name">Loading...</div>
+        <div class="sb-email" id="sb-email">—</div>
+        <div class="sb-cert-chip" id="sb-cert">—</div>
+    </div>
 
-        <nav class="sb-nav">
-            <div class="sb-nav-section">Workspace</div>
-            <button data-testid="tab-dashboard" class="sb-link active" onclick="showTab('dashboard',this)"><span class="ico">▣</span> Dashboard</button>
-            <button data-testid="tab-internships" class="sb-link" onclick="showTab('internships',this)"><span class="ico">⌗</span> My Internships</button>
-            <button data-testid="tab-certificates" class="sb-link" onclick="showTab('certificates',this)"><span class="ico">◇</span> Certificates</button>
-            <button data-testid="tab-notifications" class="sb-link" onclick="showTab('notifications',this)"><span class="ico">⌕</span> Notifications<span class="badge-n" id="notif-badge" style="display:none;">0</span></button>
-            <button data-testid="tab-support" class="sb-link" onclick="showTab('support',this)"><span class="ico">⚒</span> Support &amp; Help Desk</button>
-            <button data-testid="tab-profile" class="sb-link" onclick="showTab('profile',this)"><span class="ico">◉</span> Profile</button>
-        </nav>
+    <nav class="sb-nav">
+        <div class="sb-nav-section">Workspace</div>
+        <button data-testid="tab-dashboard" class="sb-link active" onclick="showTab('dashboard',this)"><span class="ico">▣</span> Dashboard</button>
+        <button data-testid="tab-internships" class="sb-link" onclick="showTab('internships',this)"><span class="ico">⌗</span> My Internships</button>
+        <button data-testid="tab-certificates" class="sb-link" onclick="showTab('certificates',this)"><span class="ico">◇</span> Certificates</button>
+        <button data-testid="tab-notifications" class="sb-link" onclick="showTab('notifications',this)"><span class="ico">⌕</span> Notifications<span class="badge-n" id="notif-badge" style="display:none;">0</span></button>
+        <button data-testid="tab-support" class="sb-link" onclick="showTab('support',this)"><span class="ico">⚒</span> Support &amp; Help Desk</button>
+        <button data-testid="tab-profile" class="sb-link" onclick="showTab('profile',this)"><span class="ico">◉</span> Profile</button>
+    </nav>
 
-        <div class="sb-foot">
-            <button class="sb-link" data-testid="change-pw-btn" onclick="openModal('pwModal')"><span class="ico">⊙</span> Change Password</button>
-            <a href="/" class="sb-link"><span class="ico">↻</span> Main Site</a>
-            <button data-testid="logout-btn" class="sb-link danger" onclick="logout()"><span class="ico">⊗</span> Logout</button>
-        </div>
-    </aside>
+    <div class="sb-foot">
+        <button class="sb-link" data-testid="change-pw-btn" onclick="openModal('pwModal')"><span class="ico">⊙</span> Change Password</button>
+        <a href="/" class="sb-link"><span class="ico">↻</span> Main Site</a>
+        <button data-testid="logout-btn" class="sb-link danger" onclick="logout()"><span class="ico">⊗</span> Logout</button>
+    </div>
+</aside>
+
+<div class="app" style="grid-template-columns:260px 1fr;">
+
+    <!-- sidebar placeholder keeps desktop grid layout -->
+    <div class="sidebar-placeholder" style="width:260px;flex-shrink:0;"></div>
 
     <!-- ── Main content ────────────────────────────────────────────────── -->
     <main class="main">
