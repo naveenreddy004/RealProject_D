@@ -170,8 +170,12 @@ router.get('/me', authStudent, async (req, res) => {
 router.post('/change-password', authStudent, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters.' });
+    }
     const user = await User.findById(req.user._id);
     if (user.password) {
+      if (!currentPassword) return res.status(400).json({ success: false, message: 'Current password is required.' });
       const match = await user.comparePassword(currentPassword);
       if (!match) return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
     }

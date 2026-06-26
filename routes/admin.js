@@ -144,6 +144,8 @@ const approvePayment = async (req, res) => {
     reg.payment.verifiedAt = new Date();
     reg.payment.verifiedBy = req.admin ? req.admin.email : 'admin';
     reg.payment.approved = true;
+    // Sync payment.amount from top-level amount so revenue stats are accurate
+    if (!reg.payment.amount) reg.payment.amount = reg.amount;
 
     // Complete all tasks
     reg.tasks.forEach(task => {

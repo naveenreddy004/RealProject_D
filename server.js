@@ -263,7 +263,6 @@ app.use((err, req, res, next) => {
 async function seedAdmin() {
   const User = require('./models/User');
 
-  // Hard fail if critical env vars are missing — never use fallback secrets in prod
   if (!process.env.JWT_SECRET) {
     logger.error('❌ JWT_SECRET is not set. Refusing to start.');
     process.exit(1);
@@ -282,7 +281,13 @@ async function seedAdmin() {
 
   let admin = await User.findOne({ email });
   if (admin) {
-    if (!admin.isAdmin) { admin.isAdmin = true; await admin.save(); logger.info('Promoted existing user to admin'); }
+    let changed = false;
+    if (!admin.isAdmin)  { admin.isAdmin  = true; changed = true; }
+    if (!admin.isActive) { admin.isActive = true; changed = true; }
+    // Always sync the password from env so rotating ADMIN_PASSWORD works
+    admin.password = password;   // pre-save hook will re-hash it
+    await admin.save();
+    if (changed) logger.info('🔐 Existing user promoted/updated to admin');
     return;
   }
   admin = new User({ fullName: 'Admin', email, password, isAdmin: true });

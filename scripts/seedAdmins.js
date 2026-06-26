@@ -12,7 +12,7 @@ const User = require('../models/User');
 // ── Define your 4 admin accounts here ────────────────────────────────────────
 // IMPORTANT: Change these passwords! Each admin should change their own password after first login.
 const ADMINS = [
-  { fullName: 'Admin One',   email: 'admin1@yourdomain.com', password: 'ChangeMe@123' },
+  { fullName: 'Admin One',   email: 'naveenreddyduvvuru6@gmail.com', password: 'Naveen@123.' },
   { fullName: 'Admin Two',   email: 'admin2@yourdomain.com', password: 'ChangeMe@456' },
   { fullName: 'Admin Three', email: 'admin3@yourdomain.com', password: 'ChangeMe@789' },
   { fullName: 'Admin Four',  email: 'admin4@yourdomain.com', password: 'ChangeMe@321' },
@@ -33,7 +33,10 @@ async function seedAdmins() {
         await user.save();
         console.log(`🔼 Promoted existing user to admin: ${email}`);
       } else {
-        console.log(`⚠️  Already an admin (skipped): ${email}`);
+        // Already admin — update password in case it changed
+        user.password = adminData.password;
+        await user.save();
+        console.log(`🔄 Admin password updated: ${email}`);
       }
     } else {
       user = new User({

@@ -161,12 +161,12 @@ router.post('/submit-payment', authStudent, uploadPay.single('paymentScreenshot'
 // ── COMPLETE TASK ──────────────────────────────────────────────────────────────
 router.post('/complete-task', authStudent, async (req, res) => {
   try {
-    const { taskIndex } = req.body;
+    const taskIndex = parseInt(req.body.taskIndex, 10);
     const reg = await Registration.findOne({ user: req.user._id });
     if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
     if (reg.status !== 'active') return res.status(400).json({ success: false, message: 'Internship not yet active.' });
 
-    if (taskIndex >= 0 && taskIndex < reg.tasks.length) {
+    if (!isNaN(taskIndex) && taskIndex >= 0 && taskIndex < reg.tasks.length) {
       reg.tasks[taskIndex].completed = true;
       reg.tasks[taskIndex].completedAt = new Date();
     }
