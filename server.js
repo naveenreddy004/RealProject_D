@@ -87,39 +87,38 @@ app.get('/api/test-email', async (req, res) => {
 
   try {
     if (process.env.RESEND_API_KEY) {
-      // Use Resend HTTP API directly — no SMTP ports needed
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: process.env.EMAIL_FROM || 'avRoN Tech <onboarding@resend.dev>',
-          to: [to],
-          subject: 'avRoN Tech — Email Test ✅',
-          html: '<h2>Email is working!</h2><p>Sent via Resend HTTP API from Render.</p>',
-        }),
+        headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: process.env.EMAIL_FROM || 'avRoN Tech <onboarding@resend.dev>', to: [to], subject: 'avRoN Tech — Email Test ✅', html: '<h2>Working via Resend!</h2>' }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || JSON.stringify(data));
-      return res.json({ success: true, message: `Test email sent to ${to}`, provider: 'Resend HTTP API', id: data.id });
+      return res.json({ success: true, message: `Sent to ${to}`, provider: 'Resend HTTP API', id: data.id });
     }
 
-    // Fallback: Gmail SMTP (local dev)
+    if (process.env.BREVO_SMTP_KEY) {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': process.env.BREVO_SMTP_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: 'avRoN Tech', email: process.env.BREVO_SMTP_USER },
+          to: [{ email: to }],
+          subject: 'avRoN Tech — Email Test ✅',
+          htmlContent: '<h2>Working via Brevo!</h2><p>Emails are now working on Render.</p>',
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(`Brevo: ${data.message || JSON.stringify(data)}`);
+      return res.json({ success: true, message: `Sent to ${to}`, provider: 'Brevo HTTP API', id: data.messageId });
+    }
+
+    // Local dev fallback — Gmail SMTP
     const nodemailer = require('nodemailer');
-    const transport = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
+    const transport = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS } });
     await transport.verify();
-    await transport.sendMail({
-      from: `"avRoN Tech" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: 'avRoN Tech — Email Test ✅',
-      text: `Email is working! Sent at: ${new Date().toISOString()}`,
-    });
-    res.json({ success: true, message: `Test email sent to ${to}`, provider: 'Gmail SMTP' });
+    await transport.sendMail({ from: `"avRoN Tech" <${process.env.EMAIL_USER}>`, to, subject: 'avRoN Tech — Email Test ✅', text: 'Working!' });
+    res.json({ success: true, message: `Sent to ${to}`, provider: 'Gmail SMTP' });
   } catch (err) {
     console.error('Test email error:', err);
     res.status(500).json({

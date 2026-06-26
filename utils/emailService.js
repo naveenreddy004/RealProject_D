@@ -56,19 +56,32 @@ async function sendMail({ to, subject, html, attachments = [] }) {
     return sendViaResend(to, subject, html, attachments);
   }
 
-  // 2. Brevo SMTP (BREVO_SMTP_KEY) — sends to any email, no domain needed, 300/day free
+  // 2. Brevo HTTP API (BREVO_SMTP_KEY) — sends to any email, no domain needed, 300/day free
   if (process.env.BREVO_SMTP_KEY) {
-    const transport = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_KEY,
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': process.env.BREVO_SMTP_KEY,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        sender: { name: 'avRoN Tech', email: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_USER },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        ...(attachments.length > 0 && {
+          attachment: attachments.map(a => ({
+            name: a.filename,
+            content: Buffer.isBuffer(a.content)
+              ? a.content.toString('base64')
+              : Buffer.from(a.content).toString('base64'),
+          })),
+        }),
+      }),
     });
-    const from = process.env.EMAIL_FROM || `"avRoN Tech" <${process.env.BREVO_SMTP_USER}>`;
-    return transport.sendMail({ from, to, subject, html, attachments });
+    const data = await response.json();
+    if (!response.ok) throw new Error(`Brevo API error: ${data.message || JSON.stringify(data)}`);
+    return data;
   }
 
   // 3. Local dev fallback — Gmail SMTP
