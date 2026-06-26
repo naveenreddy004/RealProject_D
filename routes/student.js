@@ -335,14 +335,22 @@ router.get('/receipt', authStudent, async (req, res) => {
 // ── CURRICULUM for the student's domain ──────────────────────────────────────
 router.get('/curriculum', authStudent, async (req, res) => {
   try {
-    // Allow fetching by specific domain via header (for multi-internship support)
     const requestedDomain = req.headers['x-domain'];
     let domain = requestedDomain;
+
     if (!domain) {
       const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
       if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
+      if (reg.revoked) return res.status(403).json({ success: false, message: 'Curriculum access suspended. Certificate revoked.' });
       domain = reg.domain;
+    } else {
+      // Check if the registration for this domain is revoked
+      const reg = await Registration.findOne({ user: req.user._id, domain }).sort({ createdAt: -1 });
+      if (reg && reg.revoked) {
+        return res.status(403).json({ success: false, message: 'Curriculum access suspended. Certificate revoked.' });
+      }
     }
+
     const { getCurriculum } = require('../utils/curricula');
     const data = getCurriculum(domain);
     res.json({ success: true, domain, curriculum: data });

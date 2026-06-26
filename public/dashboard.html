@@ -860,8 +860,21 @@
       const switcher = document.getElementById('currSwitcher');
       switcher.innerHTML = '';
 
-      // Fetch curriculum for each unique domain
-      const domains = [...new Set(allRegistrations.map(r => r.domain))];
+      // Only show active (non-revoked) registrations in curriculum
+      const activeRegs = allRegistrations.filter(r => !r.revoked);
+      if(!activeRegs.length){
+        document.getElementById('currHead').innerHTML = '';
+        document.getElementById('currBody').innerHTML = `
+          <div class="coming-soon" style="border-color:#fca5a5;">
+            <div class="ic">⛔</div>
+            <h3 style="color:#dc2626;">Curriculum Access Revoked</h3>
+            <p>Access to your internship curriculum has been suspended as your certificate was revoked. Please contact <b>support.avrontech@gmail.com</b> for more information.</p>
+          </div>`;
+        return;
+      }
+
+      // Fetch curriculum for each unique active domain
+      const domains = [...new Set(activeRegs.map(r => r.domain))];
       for(const domain of domains){
         try{
           const res = await fetch('/api/student/curriculum', {
