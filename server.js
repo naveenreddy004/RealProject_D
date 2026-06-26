@@ -242,6 +242,18 @@ app.get('/api/upi-qr', async (req, res) => {
   }
 });
 
+// ── Public broadcasts endpoint (no auth — used by student portal banner) ──────
+app.get('/api/broadcasts', async (req, res) => {
+  try {
+    const ActivityLog = require('./models/ActivityLog');
+    const broadcasts = await ActivityLog.find({ action: 'broadcast' })
+      .sort({ createdAt: -1 }).limit(5).select('details createdAt adminLabel');
+    res.json({ success: true, data: broadcasts });
+  } catch (err) {
+    res.status(500).json({ success: false, data: [] });
+  }
+});
+
 // ── Page routes (Multi-Page Application) ──────────────────────────────────────
 app.get('/',                (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/register',        (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));

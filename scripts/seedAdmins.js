@@ -1,16 +1,8 @@
-/**
- * One-time script to seed multiple admin accounts.
- * Run once after deployment:  node scripts/seedAdmins.js
- *
- * Each admin will be prompted to change their password on first login
- * (they can use the admin panel or you can set permanent passwords below).
- */
+
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
-// ── Define your 4 admin accounts here ────────────────────────────────────────
-// IMPORTANT: Change these passwords! Each admin should change their own password after first login.
 const ADMINS = [
   { fullName: 'Admin One',   email: 'naveenreddyduvvuru6@gmail.com', password: 'Naveen@1234' },
   { fullName: 'Admin Two',   email: 'admin2@yourdomain.com', password: 'ChangeMe@456' },

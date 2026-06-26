@@ -668,4 +668,40 @@ router.get('/export-registrations', async (req, res) => {
   }
 });
 
+// ── ADMIN: POST BROADCAST UPDATE ─────────────────────────────────────────────
+router.post('/broadcast', async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message || message.trim().length < 5) {
+      return res.status(400).json({ success: false, message: 'Broadcast message too short.' });
+    }
+    // Store broadcast in a simple collection-less approach — use ActivityLog with action='broadcast'
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({
+      action: 'broadcast',
+      adminLabel: req.admin?.email || 'Admin',
+      targetType: 'all_users',
+      targetLabel: 'Broadcast',
+      details: { message: message.trim() },
+      ip: req.ip,
+    });
+    await logActivity({ action: 'broadcast', targetLabel: 'All Users', details: { message: message.trim() }, req });
+    res.json({ success: true, message: 'Broadcast posted successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── PUBLIC: GET LATEST BROADCASTS (for scrolling banner + notifications) ──────
+router.get('/broadcasts', async (req, res) => {
+  try {
+    const ActivityLog = require('../models/ActivityLog');
+    const broadcasts = await ActivityLog.find({ action: 'broadcast' })
+      .sort({ createdAt: -1 }).limit(10);
+    res.json({ success: true, data: broadcasts });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

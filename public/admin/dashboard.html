@@ -69,6 +69,7 @@
         /* ── MAIN ── */
         .main{min-height:100vh;display:flex;flex-direction:column;}
         .topbar{background:#fff;border-bottom:1px solid var(--line);padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 8px rgba(0,0,0,.04);}
+        @media(max-width:960px){.topbar{display:none;}}/* hide inner topbar on mobile — mobile-topbar replaces it */
         .topbar-left h1{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--night);letter-spacing:-.4px;}
         .topbar-left p{font-size:12px;color:var(--mut);margin-top:1px;}
         .topbar-right{display:flex;gap:10px;align-items:center;}
@@ -368,6 +369,7 @@
             </div>
             <div class="topbar-right">
                 <span class="chip">🔒 Admin</span>
+                <button class="btn-sm outline" onclick="openBroadcastModal()">📢 Post Update</button>
                 <button class="btn-sm outline" onclick="loadCurrent()">↻ Refresh</button>
             </div>
         </div>
@@ -542,6 +544,20 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- ── Broadcast Modal ── -->
+<div class="modal-overlay" id="broadcastModal">
+  <div class="modal" style="max-width:480px;">
+    <h3>📢 Post Announcement</h3>
+    <p style="font-size:13px;color:var(--mut);margin-bottom:18px;">This message will appear as a scrolling banner on all student dashboards and in their notification centre.</p>
+    <textarea id="broadcastMsg" placeholder="Type your announcement here... (e.g. Certificates for June batch are now ready!)" style="width:100%;min-height:100px;padding:12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;outline:none;"></textarea>
+    <div style="font-size:11.5px;color:var(--mut);margin-top:6px;" id="broadcastCharCount">0 / 200 characters</div>
+    <div class="modal-btns">
+      <button class="btn-mod secondary" onclick="closeBroadcastModal()">Cancel</button>
+      <button class="btn-mod ok" onclick="postBroadcast()">📢 Post to All Students</button>
+    </div>
+  </div>
+</div>
+
 <script>
     let AK = localStorage.getItem('avr_admin_token') || '';
     let charts = {};
@@ -652,6 +668,42 @@ function logout(){
   localStorage.removeItem('avr_admin_user');
   AK='';
   location.href='/admin/login';
+}
+
+function openBroadcastModal(){
+  document.getElementById('broadcastModal').classList.add('open');
+  document.getElementById('broadcastMsg').value = '';
+  document.getElementById('broadcastCharCount').textContent = '0 / 200 characters';
+  setTimeout(()=>document.getElementById('broadcastMsg').focus(), 100);
+}
+function closeBroadcastModal(){
+  document.getElementById('broadcastModal').classList.remove('open');
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const ta = document.getElementById('broadcastMsg');
+  if(ta) ta.addEventListener('input', ()=>{
+    const len = ta.value.length;
+    document.getElementById('broadcastCharCount').textContent = len + ' / 200 characters';
+    if(len > 200) ta.value = ta.value.slice(0, 200);
+  });
+});
+async function postBroadcast(){
+  const msg = document.getElementById('broadcastMsg').value.trim();
+  if(!msg || msg.length < 5){ toast('Message too short.', true); return; }
+  try{
+    const r = await fetch('/api/admin/broadcast', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+AK,'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg })
+    });
+    const d = await r.json();
+    if(d.success){
+      closeBroadcastModal();
+      toast('📢 Announcement posted to all students!');
+    } else {
+      toast(d.message || 'Failed to post.', true);
+    }
+  }catch(e){ toast('Network error.', true); }
 }
 
 function toggleSidebar(){

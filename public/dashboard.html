@@ -272,6 +272,16 @@
         .toast.show{transform:translateX(0);}
         .toast.err{background:var(--danger);}
 
+        /* ── Scrolling broadcast banner ── */
+        .broadcast-bar{background:var(--midnight);color:#fff;height:36px;overflow:hidden;position:relative;display:none;}
+        .broadcast-bar.show{display:block;}
+        .broadcast-bar::before{content:'📢 ANNOUNCEMENTS';position:absolute;left:0;top:0;height:100%;background:var(--steel);color:var(--midnight);font-size:11px;font-weight:800;letter-spacing:.1em;padding:0 14px;display:flex;align-items:center;z-index:2;white-space:nowrap;}
+        .broadcast-track{display:flex;align-items:center;height:100%;padding-left:160px;animation:scroll-left 30s linear infinite;}
+        .broadcast-track:hover{animation-play-state:paused;}
+        .broadcast-msg{font-size:13px;white-space:nowrap;padding:0 60px;color:#cdd9eb;}
+        .broadcast-msg span{color:var(--steel);font-weight:700;margin-right:8px;}
+        @keyframes scroll-left{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
         /* Loading */
         .loading{padding:80px 20px;text-align:center;color:var(--mut);font-size:14px;}
         .loading::before{content:'';display:block;width:40px;height:40px;border:3px solid var(--line);border-top-color:var(--steel);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 14px;}
@@ -329,6 +339,10 @@
 
     <!-- ── Main content ────────────────────────────────────────────────── -->
     <main class="main">
+        <!-- Scrolling broadcast banner -->
+        <div class="broadcast-bar" id="broadcastBar">
+          <div class="broadcast-track" id="broadcastTrack"></div>
+        </div>
         <div id="loadingScreen" class="loading">Loading your dashboard…</div>
 
         <div id="content" style="display:none;">
@@ -496,20 +510,20 @@
                     <h2>Reach us directly</h2>
                     <div class="sub">Choose any channel — we usually respond within 24 hours on business days.</div>
                     <div class="help-channels">
-                        <a class="help-chan" href="mailto:support@avrontech.in" data-testid="help-email">
+                        <a class="help-chan" href="mailto:support.avrontech@gmail.com" data-testid="help-email">
                             <div class="ic">✉</div>
                             <b>Email</b>
-                            <span>support@avrontech.in</span>
+                            <span>support.avrontech@gmail.com</span>
                         </a>
-                        <a class="help-chan" href="tel:+918008886270" data-testid="help-phone">
+                        <a class="help-chan" href="#" data-testid="help-phone">
                             <div class="ic">☎</div>
                             <b>Phone</b>
-                            <span>+91 80088 86270</span>
+                            <span>+91 XXXXXXXXXX</span>
                         </a>
-                        <a class="help-chan" href="https://wa.me/918008886270" target="_blank" data-testid="help-whatsapp">
+                        <a class="help-chan" href="#" target="_blank" data-testid="help-whatsapp">
                             <div class="ic">◐</div>
                             <b>WhatsApp</b>
-                            <span>Chat with us instantly</span>
+                            <span>Coming soon</span>
                         </a>
                         <a class="help-chan" href="#" onclick="showTab('support',null);document.getElementById('tk-subject').focus();return false;" data-testid="help-ticket-cta">
                             <div class="ic">⚒</div>
@@ -774,6 +788,7 @@
         // Init new dashboard features
         renderNotifications();
         renderTickets();
+        loadBroadcastBanner();
 
         // Load curriculum
         await loadCurriculum();
@@ -949,14 +964,7 @@
     }
     document.addEventListener('keydown', e => { if(e.key === 'Escape') closeCertLightbox(null, true); });
 
-    // ── Notifications & Announcements (client-side) ───────────────────────────────
-    const SEED_NOTIFS = [
-      {id:'n-welcome', type:'success', title:'Welcome to avRoN Tech!', msg:'Your dashboard is ready. Explore your curriculum, certificate preview, and reach out to support anytime from the Help Desk tab.', ts: Date.now() - 1000*60*15},
-      {id:'n-cert-demo', type:'info', title:'Certificate format updated', msg:'The certificate preview now shows a demo template. Your personalised certificate will be issued after payment approval.', ts: Date.now() - 1000*60*60*3},
-      {id:'n-support', type:'event', title:'New: Direct Support & Help Desk', msg:'You can now raise tickets directly from the Support tab. Choose category, priority and track responses without leaving the dashboard.', ts: Date.now() - 1000*60*60*6},
-      {id:'n-cohort', type:'warn', title:'Submit weekly deliverables on time', msg:'Reminder — phase deliverables drive your final evaluation. Open the My Internships tab to view what is due this week.', ts: Date.now() - 1000*60*60*24},
-      {id:'n-payment', type:'info', title:'UPI payments verified within hours', msg:'After you submit your UTR and screenshot, admin usually approves within a few hours during business days.', ts: Date.now() - 1000*60*60*48},
-    ];
+    // ── Notifications & Announcements (dynamic) ───────────────────────────────
     function nKey(){return 'cp_notif_read_' + ((regData && regData.certId) || 'anon');}
     function getReadIds(){try{return JSON.parse(localStorage.getItem(nKey())||'[]');}catch{return [];}}
     function setReadIds(arr){localStorage.setItem(nKey(), JSON.stringify(arr));}
@@ -967,20 +975,69 @@
       if(s<86400) return Math.floor(s/3600)+'h ago';
       return Math.floor(s/86400)+'d ago';
     }
-    function renderNotifications(){
+
+    // Build dynamic notifications based on actual registration status
+    function buildNotifications(){
+      const notifs = [];
+      if(regData){
+        notifs.push({id:'n-welcome', type:'success', title:'Welcome to avRoN Tech!', msg:`Hi! Your registration for ${regData.domain} is confirmed. Complete your payment to activate your internship.`, ts: new Date(regData.createdAt||Date.now()).getTime()});
+        if(regData.status === 'certificate_sent'){
+          notifs.push({id:'n-cert-ready', type:'success', title:'Certificate issued!', msg:`Your ${regData.domain} certificate is ready. Go to the Certificates tab to download it and share on LinkedIn.`, ts: Date.now() - 1000*60*10});
+        }
+        if(regData.status === 'payment_submitted'){
+          notifs.push({id:'n-pay-review', type:'warn', title:'Payment under review', msg:'Our admin team is verifying your payment. You will receive an Offer Letter email once approved.', ts: Date.now() - 1000*60*30});
+        }
+        if(regData.revoked){
+          notifs.push({id:'n-revoked', type:'danger', title:'Certificate revoked', msg:`Your certificate for ${regData.domain} has been revoked. Please contact support at support.avrontech@gmail.com for more information.`, ts: Date.now() - 1000*60*5});
+        }
+      }
+      return notifs;
+    }
+
+    let allNotifs = [];
+
+    async function renderNotifications(){
+      // Build base notifs from registration state
+      allNotifs = buildNotifications();
+
+      // Fetch admin broadcasts and add to notifications
+      try{
+        const r = await fetch('/api/broadcasts');
+        const d = await r.json();
+        if(d.success && d.data){
+          d.data.forEach(b => {
+            allNotifs.push({
+              id: 'broadcast-' + b._id,
+              type: 'event',
+              title: '📢 Announcement from avRoN Tech',
+              msg: b.details?.message || '',
+              ts: new Date(b.createdAt).getTime(),
+            });
+          });
+        }
+        // Sort by newest first
+        allNotifs.sort((a,b) => b.ts - a.ts);
+      }catch(e){}
+
       const read = new Set(getReadIds());
       const list = document.getElementById('notifList');
-      const unread = SEED_NOTIFS.filter(n => !read.has(n.id)).length;
+      const unread = allNotifs.filter(n => !read.has(n.id)).length;
       document.getElementById('notif-unread-count').textContent = unread;
-      document.getElementById('notif-total-count').textContent = SEED_NOTIFS.length;
+      document.getElementById('notif-total-count').textContent = allNotifs.length;
       const badge = document.getElementById('notif-badge');
       if(unread > 0){badge.style.display='inline-block';badge.textContent = unread;}
       else badge.style.display = 'none';
 
-      list.innerHTML = SEED_NOTIFS.map(n => {
+      if(!allNotifs.length){
+        list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--mut);font-size:13.5px;">No notifications yet. Check back after your internship is active.</div>';
+        return;
+      }
+
+      list.innerHTML = allNotifs.map(n => {
         const isUnread = !read.has(n.id);
-        return `<div class="notif ${isUnread?'unread':''} type-${n.type}" data-id="${n.id}" onclick="markNotifRead('${n.id}')" data-testid="notif-item-${n.id}">
-          <div class="notif-ic">${n.type==='success'?'✓':n.type==='warn'?'!':n.type==='event'?'★':'i'}</div>
+        const ic = n.type==='success'?'✓':n.type==='warn'?'⚠':n.type==='event'?'📢':n.type==='danger'?'⛔':'ℹ';
+        return `<div class="notif ${isUnread?'unread':''} type-${n.type}" data-id="${n.id}" onclick="markNotifRead('${n.id}')" data-testid="notif-item-${n.id}" style="cursor:pointer;">
+          <div class="notif-ic">${ic}</div>
           <div class="notif-body">
             <div class="notif-title">${n.title}</div>
             <div class="notif-msg">${n.msg}</div>
@@ -990,12 +1047,27 @@
         </div>`;
       }).join('');
     }
+
     function markNotifRead(id){
       const read = new Set(getReadIds()); read.add(id);
       setReadIds([...read]); renderNotifications();
     }
-    function markAllNotifsRead(){
-      setReadIds(SEED_NOTIFS.map(n=>n.id));
+
+    // ── Broadcast banner ──────────────────────────────────────────────────────
+    async function loadBroadcastBanner(){
+      try{
+        const r = await fetch('/api/broadcasts');
+        const d = await r.json();
+        if(!d.success || !d.data || !d.data.length) return;
+        const bar = document.getElementById('broadcastBar');
+        const track = document.getElementById('broadcastTrack');
+        // Duplicate messages for seamless loop
+        const msgs = d.data.map(b => `<span class="broadcast-msg"><span>avRoN Tech:</span>${escapeHtml(b.details?.message||'')}</span>`).join('');
+        track.innerHTML = msgs + msgs; // duplicate for seamless scroll
+        bar.classList.add('show');
+      }catch(e){}
+    }    function markAllNotifsRead(){
+      setReadIds(allNotifs.map(n=>n.id));
       renderNotifications();
       showToast('All notifications marked as read');
     }

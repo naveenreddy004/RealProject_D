@@ -97,37 +97,38 @@ const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit',
 
 // ── Common HTML scaffolding ───────────────────────────────────────────────────
 const wrap = (innerHTML) => `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><style>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;}
-.email-wrap{max-width:640px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(11,25,44,.08);border:1px solid #e6ebf2;}
-.header{background:#0B192C;padding:32px 36px;color:#fff;border-bottom:4px solid #608BC1;}
+body{background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:24px 16px;}
+.email-wrap{max-width:600px;margin:0 auto;}
+.header{background:linear-gradient(135deg,#0B192C 0%,#0e2138 100%);padding:28px 32px;border-radius:12px 12px 0 0;border-bottom:3px solid #608BC1;}
 .brand-row{display:flex;align-items:center;gap:12px;}
-.brand-mark{width:42px;height:42px;background:#608BC1;color:#0B192C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:0.5px;border-radius:6px;}
-.brand-text{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+.brand-mark{width:38px;height:38px;background:#608BC1;color:#0B192C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border-radius:8px;flex-shrink:0;}
+.brand-text{font-size:19px;font-weight:700;color:#fff;letter-spacing:-.3px;}
 .brand-text span{color:#608BC1;}
-.brand-domain{font-size:11px;color:#608BC1;letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;}
-.body{padding:36px;color:#1a1a1a;line-height:1.7;}
-.body h2{font-size:20px;font-weight:700;color:#0B192C;margin-bottom:16px;letter-spacing:-.3px;}
-.body p{font-size:14.5px;color:#2a2a2a;margin-bottom:14px;}
-.body p.muted{color:#5a6a7e;font-size:13.5px;}
-.kv{background:#f7f9fc;border-left:3px solid #608BC1;padding:18px 22px;margin:22px 0;border-radius:0 4px 4px 0;}
-.kv-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid #e6ebf2;}
+.brand-domain{font-size:10px;color:#7186a0;letter-spacing:0.16em;text-transform:uppercase;margin-top:2px;}
+.body{background:#fff;padding:32px;border-left:1px solid #e6ebf2;border-right:1px solid #e6ebf2;}
+.body h2{font-size:20px;font-weight:700;color:#0B192C;margin-bottom:18px;line-height:1.3;}
+.body p{font-size:15px;color:#374151;margin-bottom:16px;line-height:1.75;}
+.body p.muted{color:#6b7280;font-size:13.5px;}
+.kv{background:#f8fafc;border-radius:10px;padding:0;margin:20px 0;overflow:hidden;border:1px solid #e6ebf2;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid #e6ebf2;}
 .kv-row:last-child{border-bottom:none;}
-.kv-row .lbl{color:#5a6a7e;font-weight:500;}
-.kv-row .val{font-weight:700;color:#0B192C;}
-.steps{background:#f7f9fc;border:1px solid #e6ebf2;border-radius:6px;padding:18px 22px;margin:18px 0;}
-.steps .head{font-size:13px;font-weight:700;color:#0B192C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.kv-row .lbl{color:#6b7280;font-size:13.5px;font-weight:500;}
+.kv-row .val{font-weight:700;color:#0B192C;font-size:14px;text-align:right;}
+.steps{background:#f8fafc;border-radius:10px;padding:20px 22px;margin:20px 0;border:1px solid #e6ebf2;}
+.steps .head{font-size:11px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
 .steps ol{padding-left:20px;}
-.steps ol li{font-size:14px;color:#2a2a2a;margin-bottom:8px;line-height:1.6;}
-.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:13px 28px;border-radius:5px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.02em;}
-.signoff{font-size:14px;color:#1a1a1a;margin-top:22px;line-height:1.7;}
+.steps ol li{font-size:14px;color:#374151;margin-bottom:10px;line-height:1.65;}
+.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.02em;margin-top:8px;}
+.cta:hover{background:#0e2138;}
+.signoff{font-size:14.5px;color:#374151;margin-top:24px;line-height:1.8;padding-top:20px;border-top:1px solid #f0f4f8;}
 .signoff b{color:#0B192C;}
-hr.divider{border:none;border-top:1px solid #e6ebf2;margin:22px 0 14px;}
-.footer{background:#0B192C;padding:22px 36px;color:#9eb2c8;font-size:11.5px;text-align:center;line-height:1.7;letter-spacing:0.02em;}
-.footer a{color:#608BC1;text-decoration:none;margin:0 6px;}
-.footer .pipe{color:#3a4d66;margin:0 4px;}
-.footer .small{font-size:10.5px;margin-top:8px;color:#7186a0;display:block;}
+hr.divider{border:none;border-top:1px solid #e6ebf2;margin:24px 0;}
+.footer{background:#0B192C;padding:20px 32px;border-radius:0 0 12px 12px;color:#7186a0;font-size:11.5px;text-align:center;line-height:1.8;}
+.footer a{color:#608BC1;text-decoration:none;margin:0 5px;}
+.footer .pipe{color:#2a3a52;margin:0 3px;}
+.footer .small{font-size:10.5px;margin-top:6px;color:#4a5568;display:block;}
 </style></head><body>
 <div class="email-wrap">
   <div class="header">
@@ -145,7 +146,7 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:22px 0 14px;}
       <a href="https://${DOMAIN}">Home</a><span class="pipe">|</span>
       <a href="https://${DOMAIN}/about">About Us</a><span class="pipe">|</span>
       <a href="https://${DOMAIN}/privacy">Privacy Policy</a><span class="pipe">|</span>
-      <a href="https://${DOMAIN}/contact">Contact Us</a>
+      <a href="https://${DOMAIN}/contact">Contact</a>
     </div>
     <span class="small">You received this email because you registered for an internship at ${DOMAIN}</span>
     <span class="small">Copyright © 2026 ${BRAND}. All rights reserved.</span>
