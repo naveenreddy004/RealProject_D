@@ -150,31 +150,6 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
     <span class="small">© 2026 ${BRAND}. You received this because you registered for an internship.</span>
   </div>
 </div></body></html>`;
-.footer .pipe{color:#2a3a52;margin:0 3px;}
-.footer .small{font-size:10.5px;margin-top:6px;color:#4a5568;display:block;}
-</style></head><body>
-<div class="email-wrap">
-  <div class="header">
-    <div class="brand-row">
-      <div class="brand-mark">aR</div>
-      <div>
-        <div class="brand-text">av<span>RoN</span> Tech</div>
-        <div class="brand-domain">${DOMAIN}</div>
-      </div>
-    </div>
-  </div>
-  <div class="body">${innerHTML}</div>
-  <div class="footer">
-    <div>
-      <a href="https://${DOMAIN}">Home</a><span class="pipe">|</span>
-      <a href="https://${DOMAIN}/about">About Us</a><span class="pipe">|</span>
-      <a href="https://${DOMAIN}/privacy">Privacy Policy</a><span class="pipe">|</span>
-      <a href="https://${DOMAIN}/contact">Contact</a>
-    </div>
-    <span class="small">You received this email because you registered for an internship at ${DOMAIN}</span>
-    <span class="small">Copyright © 2026 ${BRAND}. All rights reserved.</span>
-  </div>
-</div></body></html>`;
 
 // ── 1. Registration confirmation ──────────────────────────────────────────────
 async function sendConfirmationEmail(user, reg) {
