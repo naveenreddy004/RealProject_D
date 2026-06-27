@@ -71,8 +71,10 @@
 
         /* Main */
         .main{padding:28px 36px 60px;max-width:1080px;margin:0 auto;width:100%;}
-        @media (max-width:900px){.main{padding:24px 20px 40px;}}
+        @media (max-width:900px){.main{padding:16px 14px 40px;}}
+        @media (max-width:480px){.main{padding:12px 10px 32px;}}
         .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+        @media (max-width:480px){.page-head h1{font-size:22px;}.page-head p{font-size:13px;}}
         .page-head h1{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;color:var(--midnight);letter-spacing:-.7px;line-height:1.15;}
         .page-head p{font-size:14px;color:var(--mut);margin-top:4px;}
 
@@ -89,6 +91,7 @@
         .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:18px;}
         .card h2{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--midnight);letter-spacing:-.3px;}
         .card .sub{font-size:13px;color:var(--mut);margin-top:4px;margin-bottom:14px;}
+        @media (max-width:480px){.card{padding:16px 14px;}.card h2{font-size:16px;}}
 
         /* Stats */
         .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
@@ -108,6 +111,7 @@
 
         .phase{background:#fff;border:1px solid var(--line);border-radius:10px;padding:0;margin-bottom:14px;overflow:hidden;}
         .phase-head{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid transparent;transition:all .15s;}
+        @media (max-width:480px){.phase-head{padding:12px 14px;}.phase-title{font-size:13.5px;}.curr-head{padding:18px 16px;}}
         .phase-head:hover{background:var(--soft);}
         .phase.open .phase-head{border-bottom-color:var(--line);background:var(--soft);}
         .phase-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--steel);font-weight:700;letter-spacing:.5px;}
@@ -213,6 +217,7 @@
         .fi-sel:focus,.fi-ta:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
 
         .cert-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;}
+        @media (max-width:480px){.cert-actions{gap:8px;}.cert-actions .btn{font-size:12px;padding:8px 12px;}}
         .cert-locked-note{background:#fef3c7;border:1px solid #fcd34d;color:#854d0e;border-radius:8px;padding:14px 18px;font-size:13.5px;display:flex;gap:11px;align-items:flex-start;margin-top:18px;}
         .cert-locked-note .lic{font-size:18px;line-height:1;}
 
@@ -251,6 +256,7 @@
         .modal.show{display:flex;animation:fadeIn .2s;}
         @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
         .modal-card{background:#fff;border-radius:12px;max-width:440px;width:100%;overflow:hidden;}
+        @media (max-width:480px){.modal-card{border-radius:10px;}.modal-foot{flex-direction:column;}}
         .modal-head{padding:22px 26px;border-bottom:1px solid var(--line);}
         .modal-head h3{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--midnight);}
         .modal-head p{font-size:13px;color:var(--mut);margin-top:4px;}
@@ -272,6 +278,16 @@
         .toast{position:fixed;top:24px;right:24px;background:var(--midnight);color:#fff;padding:13px 20px;border-radius:9px;font-size:13.5px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.2);transform:translateX(120%);transition:transform .3s;z-index:10000;max-width:340px;}
         .toast.show{transform:translateX(0);}
         .toast.err{background:var(--danger);}
+        @media (max-width:480px){
+          .toast{top:auto;bottom:20px;right:12px;left:12px;max-width:100%;transform:translateY(120%);}
+          .toast.show{transform:translateY(0);}
+          .status-banner{padding:16px 14px;gap:12px;}
+          .sb-ic{flex:0 0 38px;height:38px;}
+          .sb-txt h3{font-size:14px;}
+          .sb-txt p{font-size:12px;}
+          .stat .val{font-size:17px;}
+          .page-head h1{font-size:20px;}
+        }
 
         /* ── Scrolling broadcast banner ── */
         .broadcast-bar{background:#111827;color:#fff;height:32px;overflow:hidden;position:relative;display:none;border-bottom:1px solid #1f2937;}
