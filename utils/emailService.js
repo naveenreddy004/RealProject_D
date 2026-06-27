@@ -95,48 +95,57 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com'
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
+// ── Logo as base64 (loaded once at module level) ──────────────────────────────
+let _logoB64 = '';
+try {
+  const _fs = require('fs');
+  const _path = require('path');
+  const _lp = _path.join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  if (_fs.existsSync(_lp)) _logoB64 = _fs.readFileSync(_lp).toString('base64');
+} catch (_) {}
+
+const logoImgTag = _logoB64
+  ? `<img src="data:image/png;base64,${_logoB64}" alt="avRoN Technologies" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;" />`
+  : `<div style="width:48px;height:48px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
+
 // ── Common HTML scaffolding ───────────────────────────────────────────────────
 const wrap = (innerHTML) => `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .email-wrap{max-width:580px;margin:0 auto;}
-.header{background:linear-gradient(135deg,#0B192C 0%,#0e2138 100%);padding:20px 28px;border-radius:10px 10px 0 0;border-bottom:3px solid #608BC1;}
-.brand-row{display:flex;align-items:center;gap:10px;}
-.brand-mark{width:34px;height:34px;background:#608BC1;color:#0B192C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;border-radius:7px;flex-shrink:0;}
-.brand-text{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px;}
-.brand-text span{color:#608BC1;}
-.brand-domain{font-size:9px;color:#7186a0;letter-spacing:0.16em;text-transform:uppercase;margin-top:1px;}
-.body{background:#fff;padding:22px 26px;border-left:1px solid #e6ebf2;border-right:1px solid #e6ebf2;}
-.body h2{font-size:18px;font-weight:700;color:#0B192C;margin-bottom:4px;line-height:1.3;}
+.header{background:#0e7c6e;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;}
+.brand-text .big{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.1;}
+.brand-text .sub{font-size:10px;color:#c8f0ec;margin-top:2px;letter-spacing:0.08em;}
+.body{background:#f0fbf9;padding:22px 26px;border-left:1px solid #b2e0d8;border-right:1px solid #b2e0d8;}
+.body h2{font-size:18px;font-weight:700;color:#0f2e2b;margin-bottom:4px;line-height:1.3;}
 .body p{font-size:14px;color:#374151;margin-bottom:10px;line-height:1.6;}
 .body p.muted{color:#6b7280;font-size:12.5px;}
-.kv{background:#f8fafc;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #e6ebf2;}
-.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #e6ebf2;}
+.kv{background:#e4f5f1;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #b2e0d8;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #c8ede8;}
 .kv-row:last-child{border-bottom:none;}
-.kv-row .lbl{color:#6b7280;font-size:12.5px;font-weight:500;}
-.kv-row .val{font-weight:700;color:#0B192C;font-size:13px;text-align:right;}
-.steps{background:#f8fafc;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #e6ebf2;}
-.steps .head{font-size:10px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+.kv-row:nth-child(even){background:#f0fbf9;}
+.kv-row .lbl{color:#0e7c6e;font-size:12.5px;font-weight:600;}
+.kv-row .val{font-weight:700;color:#0f2e2b;font-size:13px;text-align:right;}
+.steps{background:#e4f5f1;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #b2e0d8;}
+.steps .head{font-size:10px;font-weight:800;color:#0e7c6e;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
 .steps ol{padding-left:18px;}
 .steps ol li{font-size:13px;color:#374151;margin-bottom:6px;line-height:1.5;}
-.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
-.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #f0f4f8;}
-.signoff b{color:#0B192C;}
-hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
-.footer{background:#0B192C;padding:14px 26px;border-radius:0 0 10px 10px;color:#7186a0;font-size:11px;text-align:center;line-height:1.7;}
-.footer a{color:#608BC1;text-decoration:none;margin:0 4px;}
-.footer .pipe{color:#2a3a52;margin:0 2px;}
-.footer .small{font-size:10px;margin-top:4px;color:#4a5568;display:block;}
+.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
+.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #c8ede8;}
+.signoff b{color:#0f2e2b;}
+hr.divider{border:none;border-top:1px solid #c8ede8;margin:14px 0;}
+.footer{background:#0f2e2b;padding:14px 26px;border-radius:0 0 10px 10px;color:#7ab8b0;font-size:11px;text-align:center;line-height:1.7;}
+.footer a{color:#c8f0ec;text-decoration:none;margin:0 4px;}
+.footer .pipe{color:#1a4a44;margin:0 2px;}
+.footer .small{font-size:10px;margin-top:4px;color:#4a8a82;display:block;}
 </style></head><body>
 <div class="email-wrap">
   <div class="header">
-    <div class="brand-row">
-      <div class="brand-mark">aR</div>
-      <div>
-        <div class="brand-text">av<span>RoN</span> Tech</div>
-        <div class="brand-domain">${DOMAIN}</div>
-      </div>
+    ${logoImgTag}
+    <div class="brand-text">
+      <div class="big">avRoN Technologies</div>
+      <div class="sub">${DOMAIN} &nbsp;·&nbsp; UDYAM-AP-23-0089163</div>
     </div>
   </div>
   <div class="body">${innerHTML}</div>
@@ -147,7 +156,7 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
       <a href="https://${DOMAIN}/privacy">Privacy</a><span class="pipe">|</span>
       <a href="mailto:${SUPPORT_EMAIL}">Support</a>
     </div>
-    <span class="small">© 2026 ${BRAND}. You received this because you registered for an internship.</span>
+    <span class="small">© 2026 avRoN Technologies. You received this because you registered for an internship.</span>
   </div>
 </div></body></html>`;
 
@@ -155,48 +164,94 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
 async function sendConfirmationEmail(user, reg) {
   const name = (reg && reg.registrantName) || user.fullName;
   const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
-  const html = wrap(`
-    <h2 style="color:#0B192C;font-size:22px;margin-bottom:6px;">Registration Confirmed! 🎉</h2>
-    <p style="color:#608BC1;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Internship Program</p>
 
-    <p>Dear <b>${name}</b>,</p>
-    <p>Congratulations! Your application for the <b>${reg.domain}</b> internship program at <b>${BRAND}</b> has been received successfully. We are reviewing your details and will get back to you shortly.</p>
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+.wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
+.header{background:#0e7c6e;padding:20px 28px;text-align:center;}
+.header-inner{display:inline-flex;align-items:center;gap:12px;}
+.brand-name .big{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;line-height:1;}
+.brand-name .small{font-size:11px;color:#c8f0ec;margin-top:2px;}
+.body{background:#f0fbf9;padding:32px 32px 24px;}
+.title{font-size:24px;font-weight:800;color:#0f2e2b;margin-bottom:6px;}
+.subtitle{font-size:14px;color:#374151;margin-bottom:20px;line-height:1.6;}
+.highlight-box{background:#fff;border-left:4px solid #0e7c6e;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;}
+.highlight-box p{font-size:13.5px;color:#374151;margin-bottom:6px;line-height:1.6;}
+.highlight-box p:last-child{margin-bottom:0;}
+.highlight-box b{color:#0e7c6e;}
+.divider{border:none;border-top:1px solid #c8ede8;margin:20px 0;}
+.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:12px 30px;border-radius:7px;text-decoration:none;font-size:14px;font-weight:700;}
+.footer{background:#0f2e2b;padding:20px 28px;text-align:center;color:#7ab8b0;font-size:11px;line-height:2;}
+.footer a{color:#c8f0ec;text-decoration:none;margin:0 8px;}
+.social{margin:8px 0;}
+.social a{display:inline-block;margin:0 6px;color:#c8f0ec;font-size:18px;text-decoration:none;}
+</style></head><body>
+<div class="wrap">
 
-    <div class="kv">
-      <div class="kv-row"><span class="lbl">👤 Candidate Name</span><span class="val">${name}</span></div>
-      <div class="kv-row"><span class="lbl">💻 Domain</span><span class="val">${reg.domain}</span></div>
-      <div class="kv-row"><span class="lbl">📅 Duration</span><span class="val">${reg.duration || '—'}</span></div>
-      <div class="kv-row"><span class="lbl">🗓 Start Date</span><span class="val">${fmt(reg.startDate)}</span></div>
-      <div class="kv-row"><span class="lbl">📦 Package</span><span class="val">${reg.package || '—'}</span></div>
-      <div class="kv-row"><span class="lbl">🆔 Certificate ID</span><span class="val" style="font-family:monospace;color:#608BC1;">${reg.certId}</span></div>
+  <!-- Header with logo + brand -->
+  <div class="header">
+    <div class="header-inner">
+      ${logoImgTag}
+      <div class="brand-name">
+        <div class="big">avRoN Technologies</div>
+        <div class="small">avRoNTech.in &nbsp;·&nbsp; support.avrontech@gmail.com</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <div class="title">Internship Registration Confirmed! 🎉</div>
+    <p class="subtitle">Dear <b>${name}</b>,<br>
+    Thank you for applying for the <b>${reg.domain}</b> internship program at <b>avRoN Technologies</b>!</p>
+
+    <!-- Highlight box -->
+    <div class="highlight-box">
+      <p>🗓 <b>Duration:</b> ${fmt(reg.startDate)} to ${fmt(reg.endDate)}</p>
+      <p>🆔 <b>Certificate ID:</b> <span style="font-family:monospace;color:#0e7c6e;">${reg.certId}</span></p>
+      <p>⏳ <b>Offer Letter Timeline:</b> within a few hours</p>
     </div>
 
-    <p>Our admin team will verify your payment and send your <b>Official Offer Letter</b> within a few hours. You'll receive another email with your login credentials and internship roadmap.</p>
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">Our team is reviewing your application. You will receive your offer letter shortly with further instructions on how to begin your internship journey.</p>
 
-    <div style="text-align:center;margin:24px 0;">
-      <a href="${BASE}/portal" class="cta">🔐 Login to Your Portal →</a>
-    </div>
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:20px;">If you have any questions, feel free to reach out to our support team at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0e7c6e;">${SUPPORT_EMAIL}</a>.</p>
 
-    <div class="steps">
-      <div class="head">📋 What Happens Next</div>
-      <ol>
-        <li>Admin reviews and verifies your payment</li>
-        <li>You receive your <b>Official Offer Letter</b> by email</li>
-        <li>Login to your portal and access your day-by-day roadmap</li>
-        <li>Complete all tasks and receive your QR-verified Certificate</li>
-      </ol>
-    </div>
-
-    <p class="muted">For any queries, contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
     <hr class="divider">
-    <div class="signoff">
-      With Best Regards,<br>
-      <b>The ${BRAND} Team</b><br>
-      <a href="${BASE}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a> &nbsp;|&nbsp;
-      <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;text-decoration:none;">${SUPPORT_EMAIL}</a>
+
+    <p style="font-size:14px;color:#374151;margin-bottom:4px;">Thank you for choosing <b>avRoN Technologies</b>!</p>
+    <p style="font-size:14px;color:#374151;margin-bottom:20px;">Best regards,<br><b>The avRoN Technologies Team</b></p>
+
+    <div style="text-align:center;">
+      <a href="${BASE}/portal" class="cta">Get Started →</a>
     </div>
-  `);
-  await sendMail({ to: user.email, subject: `✅ Registration Confirmed — ${reg.domain} Internship | ${BRAND}`, html });
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>
+      <a href="${BASE}">Home</a>
+      <a href="${BASE}/about">About Us</a>
+      <a href="${BASE}/privacy">Privacy Policy</a>
+      <a href="mailto:${SUPPORT_EMAIL}">Contact Us</a>
+    </div>
+    <div class="social">
+      <a href="#" title="Facebook">&#9646;</a>
+      <a href="#" title="LinkedIn">in</a>
+      <a href="#" title="Instagram">&#9675;</a>
+    </div>
+    <div style="font-size:10px;color:#4a8a82;margin-top:4px;">
+      You received this email because you registered for an internship at avRoNTech.in<br>
+      © 2026 avRoN Technologies. All rights reserved. &nbsp;·&nbsp; UDYAM-AP-23-0089163
+    </div>
+  </div>
+
+</div>
+</body></html>`;
+
+  await sendMail({ to: user.email, subject: `✅ Registration Confirmed — ${reg.domain} Internship | avRoN Technologies`, html });
   console.log(`✉️ Confirmation sent to ${user.email}`);
 }
 
@@ -204,54 +259,81 @@ async function sendConfirmationEmail(user, reg) {
 async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   const name = (reg && reg.registrantName) || user.fullName;
   const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
-  const html = wrap(`
-    <h2 style="color:#0B192C;font-size:22px;margin-bottom:6px;">Official Offer Letter 🎓</h2>
-    <p style="color:#608BC1;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Corporate Internship Division</p>
 
-    <p>Dear <b>${name}</b>,</p>
-    <p>We are delighted to formally welcome you to the <b>${BRAND}</b> Internship Program. After reviewing your application, we are pleased to offer you a <b>Virtual Internship Position</b>. Congratulations on your selection!</p>
+  // Logo as base64 for email embedding
+  const fs = require('fs');
+  const path = require('path');
+  const logoPath = path.join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  let logoTag = '';
+  try {
+    if (fs.existsSync(logoPath)) {
+      const logoB64 = fs.readFileSync(logoPath).toString('base64');
+      logoTag = `<img src="data:image/png;base64,${logoB64}" alt="avRoN Technologies" style="width:60px;height:60px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" />`;
+    }
+  } catch (_) {}
 
-    <div class="kv">
-      <div class="kv-row"><span class="lbl">👤 Intern Name</span><span class="val">${name}</span></div>
-      <div class="kv-row"><span class="lbl">📧 Email</span><span class="val">${user.email}</span></div>
-      <div class="kv-row"><span class="lbl">💻 Domain</span><span class="val">${reg.domain}</span></div>
-      <div class="kv-row"><span class="lbl">📅 Internship Period</span><span class="val">${fmt(reg.startDate)} – ${fmt(reg.endDate)}</span></div>
-      <div class="kv-row"><span class="lbl">⏱ Duration</span><span class="val">${reg.duration || '—'}</span></div>
-      <div class="kv-row"><span class="lbl">📦 Package</span><span class="val">${reg.package || '—'}</span></div>
-      <div class="kv-row"><span class="lbl">🆔 Certificate ID</span><span class="val" style="font-family:monospace;color:#608BC1;">${reg.certId}</span></div>
-      <div class="kv-row"><span class="lbl">💰 Stipend</span><span class="val">Unpaid / Learning-based</span></div>
-      <div class="kv-row"><span class="lbl">🏢 Issuing Organization</span><span class="val">${BRAND}</span></div>
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+.wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
+.header{background:#0e7c6e;padding:22px 28px;display:flex;align-items:center;gap:14px;}
+.brand-name{color:#fff;}
+.brand-name .big{font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1;}
+.brand-name .small{font-size:11px;color:#c8f0ec;margin-top:2px;letter-spacing:0.05em;}
+.body{background:#f0fbf9;padding:28px 32px;}
+.body p{font-size:14px;color:#374151;line-height:1.7;margin-bottom:12px;}
+.detail-row{display:flex;padding:10px 14px;border-bottom:1px solid #c8ede8;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row:nth-child(even){background:#e0f5f1;}
+.detail-row:nth-child(odd){background:#f0fbf9;}
+.detail-lbl{font-size:13px;font-weight:700;color:#0e7c6e;width:120px;flex-shrink:0;}
+.detail-val{font-size:13px;color:#1a1a1a;}
+.table-wrap{border:1px solid #b2e0d8;border-radius:8px;overflow:hidden;margin:18px 0;}
+.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:12px 28px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;margin:8px 0;}
+.footer{background:#0f2e2b;padding:16px 28px;text-align:center;color:#7ab8b0;font-size:11px;line-height:1.8;}
+.footer a{color:#c8f0ec;text-decoration:none;}
+</style></head><body>
+<div class="wrap">
+  <div class="header">
+    ${logoTag}
+    <div class="brand-name">
+      <div class="big">avRoN Technologies</div>
+      <div class="small">avRoNTech.in &nbsp;·&nbsp; support.avrontech@gmail.com</div>
+    </div>
+  </div>
+  <div class="body">
+    <p>Dear <b>${name},</b></p>
+    <p>We are pleased to offer you an internship at <b>avRoN Technologies</b>. Here are the details:</p>
+
+    <div class="table-wrap">
+      <div class="detail-row"><span class="detail-lbl">Domain</span><span class="detail-val">${reg.domain}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Duration</span><span class="detail-val">${fmt(reg.startDate)} to ${fmt(reg.endDate)}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Stipend</span><span class="detail-val">₹ 0.00</span></div>
+      <div class="detail-row"><span class="detail-lbl">Certificate ID</span><span class="detail-val" style="font-family:monospace;color:#0e7c6e;">${reg.certId}</span></div>
     </div>
 
-    <p>Your <b>Official Offer Letter PDF</b> is attached to this email. Please keep it for your records — it serves as proof of enrollment in the ${BRAND} internship program.</p>
+    <p>Please review the attached offer letter PDF.</p>
+
+    <p>Feel free to contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0e7c6e;">${SUPPORT_EMAIL}</a> if you have any questions.</p>
+
+    <p>We look forward to your positive response!</p>
 
     <div style="text-align:center;margin:24px 0;">
-      <a href="${BASE}/dashboard" class="cta">🚀 Access Your Dashboard →</a>
+      <a href="${BASE}/dashboard" class="cta">Get Started →</a>
     </div>
 
-    <div class="steps">
-      <div class="head">📋 Your Onboarding Steps</div>
-      <ol>
-        <li>Login to your portal at <a href="${BASE}/portal" style="color:#608BC1;">${DOMAIN}/portal</a></li>
-        <li>Go to <b>"My Internships"</b> tab to view your full curriculum roadmap</li>
-        <li>Complete all weekly deliverables as per the program schedule</li>
-        <li>Once all tasks are done, admin will issue your QR-verified Certificate</li>
-      </ol>
-    </div>
+    <p style="font-size:12px;color:#6b7280;">Best,<br><b>Team avRoN Technologies</b></p>
+  </div>
+  <div class="footer">
+    <a href="${BASE}">Home</a> &nbsp;|&nbsp;
+    <a href="mailto:${SUPPORT_EMAIL}">Support</a><br>
+    <span style="font-size:10px;color:#4a8a82;">© 2026 avRoN Technologies. UDYAM-AP-23-0089163</span>
+  </div>
+</div>
+</body></html>`;
 
-    <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 20px;margin:20px 0;">
-      <p style="font-size:13.5px;color:#1e40af;margin:0;">💡 <b>Pro Tip:</b> Share your Offer Letter on LinkedIn to let your network know you've been selected for a professional internship at ${BRAND}!</p>
-    </div>
-
-    <p class="muted">For any queries or support, reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
-    <hr class="divider">
-    <div class="signoff">
-      Warm Regards,<br>
-      <b>Corporate Onboarding Team</b><br>
-      <b>${BRAND}</b> &nbsp;|&nbsp; <a href="${BASE}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a><br>
-      <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;text-decoration:none;">${SUPPORT_EMAIL}</a>
-    </div>
-  `);
   const attachments = (pdfBuffer && pdfBuffer.length > 0) ? [{
     filename: `avRoN_Tech_Offer_Letter_${reg.certId}.pdf`,
     content: pdfBuffer,

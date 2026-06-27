@@ -175,87 +175,134 @@ async function generateOfferLetterPDF(user, reg) {
   const bufferPromise = streamToBuffer(doc);
 
   const W = doc.page.width, H = doc.page.height;
+  const TEAL  = '#0e7c6e';
+  const DARK  = '#0f2e2b';
+  const LIGHT = '#f4fbfa';
+  const GRAY  = '#555555';
 
-  // Letterhead
-  doc.rect(0, 0, W, 110).fill('#0B192C');
-  doc.rect(0, 110, W, 4).fill('#608BC1');
+  // ── Background
+  doc.rect(0, 0, W, H).fill('#ffffff');
 
-  doc.rect(48, 36, 44, 44).fill('#608BC1');
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#0B192C').text('aR', 56, 50);
+  // ── Top teal header bar
+  doc.rect(0, 0, W, 100).fill(TEAL);
 
-  doc.font('Helvetica-Bold').fontSize(22).fillColor('#fff').text('avRoN Tech', 110, 38);
-  doc.font('Helvetica').fontSize(10).fillColor('#9eb2c8').text('avRoNTech.in', 110, 64);
-  doc.font('Helvetica').fontSize(8).fillColor('#608BC1').text('CORPORATE INTERNSHIP DIVISION', 110, 80, { characterSpacing: 1.6 });
+  // ── Logo image (phoenix) — top left
+  const logoPath = require('path').join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  const fs = require('fs');
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, 36, 14, { width: 64, height: 64 });
+  }
 
-  let y = 150;
-  doc.font('Helvetica').fontSize(10).fillColor('#5a6a7e').text(`Reference: ${reg.certId}`, 48, y);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}`, W - 240, y);
+  // ── Company name — top left next to logo
+  doc.font('Helvetica-Bold').fontSize(26).fillColor('#ffffff').text('avRoN', 112, 22);
+  const avronW = doc.widthOfString('avRoN', { font: 'Helvetica-Bold', fontSize: 26 });
+  doc.font('Helvetica').fontSize(11).fillColor('#c8f0ec').text('Technologies', 112, 52);
+  doc.font('Helvetica').fontSize(8).fillColor('#a0ddd7').text('avRoNTech.in  ·  support.avrontech@gmail.com', 112, 68);
 
-  y += 36;
-  doc.font('Helvetica-Bold').fontSize(20).fillColor('#0B192C').text('OFFICIAL OFFER LETTER', 48, y, { align: 'center', width: W - 96 });
+  // ── UDYAM badge top right
+  doc.font('Helvetica-Bold').fontSize(7).fillColor('#ffffff')
+    .text('UDYAM REGISTERED', W - 160, 20, { width: 130, align: 'right', characterSpacing: 1 });
+  doc.font('Helvetica').fontSize(7).fillColor('#c8f0ec')
+    .text('UDYAM-AP-23-0089163', W - 160, 32, { width: 130, align: 'right' });
+  doc.font('Helvetica').fontSize(7).fillColor('#a0ddd7')
+    .text('Micro Enterprise · MSME Govt. of India', W - 160, 44, { width: 130, align: 'right' });
 
-  y += 38;
-  doc.font('Helvetica').fontSize(11.5).fillColor('#1a1a1a').text(`Dear ${certName},`, 48, y);
+  // ── Teal bottom accent bar
+  doc.rect(0, H - 28, W, 28).fill(TEAL);
+  doc.font('Helvetica').fontSize(8).fillColor('#c8f0ec')
+    .text('avRoN Technologies  ·  avRoNTech.in  ·  support.avrontech@gmail.com', 0, H - 18, { align: 'center', width: W });
+
+  // ── Left teal side strip
+  doc.rect(0, 100, 6, H - 128).fill(TEAL);
+
+  // ── "INTERNSHIP OFFER LETTER" title
+  doc.font('Helvetica-Bold').fontSize(16).fillColor(DARK)
+    .text('INTERNSHIP OFFER LETTER', 0, 120, { align: 'center', width: W, characterSpacing: 1.5 });
+  doc.moveTo(W / 2 - 120, 142).lineTo(W / 2 + 120, 142).lineWidth(1.5).strokeColor(TEAL).stroke();
+
+  // ── Reference + Date row
+  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(`ID — ${reg.certId}`, 48, 154);
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(dateStr, W - 48, 154, { align: 'right', width: 200 });
+
+  // ── Salutation
+  let y = 178;
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK).text(`Dear ${certName},`, 48, y);
 
   y += 22;
-  doc.text(
-    `We are pleased to formally offer you a virtual internship position at avRoN Tech. After review of your registration parameters, your application has been approved and you are confirmed for the following program:`,
-    48, y, { width: W - 96, align: 'justify', lineGap: 4 },
-  );
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text(
+      `We are pleased to extend an offer for you to join avRoN Technologies as an Intern in the ( ${reg.domain} ) program. We believe that your skills, background, and enthusiasm will be an excellent fit for our team.`,
+      48, y, { width: W - 96, align: 'justify', lineGap: 3 }
+    );
 
-  y += 90;
-  doc.rect(48, y, W - 96, 132).fill('#f7f9fc').stroke('#e6ebf2');
-  doc.rect(48, y, 4, 132).fill('#608BC1');
+  y += 64;
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text(
+      `Your internship is scheduled to commence on ${fmt(reg.startDate)} and will conclude on ${fmt(reg.endDate)}. During your internship you will gain hands-on experience and deepen your understanding of various concepts in a dynamic environment.`,
+      48, y, { width: W - 96, align: 'justify', lineGap: 3 }
+    );
 
-  doc.font('Helvetica-Bold').fontSize(12).fillColor('#0B192C').text('Program Details', 64, y + 14);
-  const rows = [
+  // ── Details table (full width, like ApexPlanet)
+  y += 68;
+  const tableRows = [
     ['Intern Name',    certName],
     ['Email',          user.email],
     ['Domain',         reg.domain],
-    ['Duration',       `${fmt(reg.startDate)} – ${fmt(reg.endDate)}  (${reg.duration || ''})`],
+    ['Duration',       `${fmt(reg.startDate)} to ${fmt(reg.endDate)}`],
+    ['Stipend',        '₹ 0.00 (Learning-based / Unpaid)'],
     ['Certificate ID', reg.certId],
-    ['Stipend',        'Performance-based Perks / Unpaid'],
+    ...(certCollege ? [['College', certCollege + (certCourse ? ` · ${certCourse}` : '')]] : []),
   ];
-  let ry = y + 36;
-  rows.forEach(([k, v]) => {
-    doc.font('Helvetica').fontSize(10).fillColor('#5a6a7e').text(k, 64, ry, { width: 130 });
-    doc.font('Helvetica-Bold').fontSize(10.5).fillColor('#0B192C').text(v, 196, ry, { width: W - 260 });
-    ry += 16;
+
+  const tableX = 48, tableW = W - 96, rowH = 24;
+  tableRows.forEach(([label, value], i) => {
+    const rowY = y + i * rowH;
+    doc.rect(tableX, rowY, tableW, rowH).fill(i % 2 === 0 ? LIGHT : '#ffffff').stroke('#d4eeea');
+    doc.rect(tableX, rowY, 4, rowH).fill(TEAL);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(TEAL).text(label, tableX + 14, rowY + 7);
+    doc.font('Helvetica').fontSize(9.5).fillColor(DARK).text(String(value ?? '—'), tableX + 160, rowY + 7, { width: tableW - 170 });
   });
 
-  y += 152;
-  doc.font('Helvetica-Bold').fontSize(11).fillColor('#0B192C').text('Onboarding Steps', 48, y);
+  y += tableRows.length * rowH + 20;
+
+  // ── Body paragraphs
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text(
+      'We are confident that your dedication and willingness to take on tasks will contribute to a valuable experience for both you and us. As an intern, you will not be a company employee. Therefore, you will not be eligible for the benefits that our regular employees receive.',
+      48, y, { width: W - 96, align: 'justify', lineGap: 3 }
+    );
+
+  y += 60;
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text(
+      `We expect you to comply with our company practices, including those related to conduct and confidentiality. We are confident that your internship with us will be rewarding and wish you all the best as you embark on this exciting opportunity. If you have any questions or require further information, please feel free to reach out to us at support.avrontech@gmail.com.`,
+      48, y, { width: W - 96, align: 'justify', lineGap: 3 }
+    );
+
+  // ── Thank you + signature
+  y += 72;
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK).text('Thank You,', 48, y);
   y += 16;
-  const steps = [
-    '1. Log securely into your dashboard at avRoNTech.in/dashboard.',
-    '2. Open the "My Internships" tab to view your domain roadmap.',
-    '3. Review weekly timelines and submit your task repositories through the portal.',
-    '4. Upon successful completion, your QR-verified certificate will be released.',
-  ];
-  doc.font('Helvetica').fontSize(10.5).fillColor('#1a1a1a');
-  steps.forEach(s => { doc.text(s, 48, y, { width: W - 96, lineGap: 3 }); y += 18; });
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK).text('Team avRoN Technologies', 48, y);
 
+  // ── Signature line
+  y += 36;
+  doc.moveTo(48, y).lineTo(200, y).lineWidth(1).strokeColor('#aaaaaa').stroke();
   y += 6;
-  doc.font('Helvetica').fontSize(10.5).fillColor('#1a1a1a')
-    .text('We highly encourage you to celebrate your placement, share your official selection letter, and tag our corporate engine on LinkedIn at avRoNTech.in.',
-          48, y, { width: W - 96, align: 'justify', lineGap: 3 });
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('Program Coordinator', 48, y);
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('avRoN Technologies', 48, y + 13);
 
-  const fy = H - 150;
-  doc.moveTo(48, fy).lineTo(W - 48, fy).lineWidth(0.5).strokeColor('#e6ebf2').stroke();
-
-  doc.font('Helvetica').fontSize(11).fillColor('#1a1a1a').text('Warm regards,', 48, fy + 12);
-  doc.font('Helvetica-Bold').fontSize(11.5).fillColor('#0B192C').text('Corporate Onboarding Team', 48, fy + 30);
-  doc.font('Helvetica').fontSize(10).fillColor('#5a6a7e').text('avRoN Tech  ·  avRoNTech.in', 48, fy + 46);
-
-  doc.rect(W - 196, fy + 12, 148, 70).lineWidth(1).strokeColor('#608BC1').stroke();
-  doc.font('Helvetica-Bold').fontSize(9).fillColor('#608BC1').text('AUTHORIZED', W - 192, fy + 22, { width: 138, align: 'center', characterSpacing: 2 });
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#0B192C').text('avRoN Tech', W - 192, fy + 38, { width: 138, align: 'center' });
-  doc.font('Helvetica').fontSize(8).fillColor('#5a6a7e').text(new Date().toLocaleDateString('en-IN'), W - 192, fy + 60, { width: 138, align: 'center' });
-
-  doc.rect(0, H - 30, W, 30).fill('#0B192C');
-  doc.font('Helvetica').fontSize(8).fillColor('#9eb2c8')
-    .text(`This is a computer-generated offer letter from avRoN Tech (avRoNTech.in)  ·  Reference: ${reg.certId}`,
-          0, H - 19, { align: 'center', width: W });
+  // ── MSME QR code (right side, bottom area) — use QRCode for UDYAM number
+  try {
+    const msmeQr = await QRCode.toBuffer('https://udyamregistration.gov.in', {
+      width: 70, margin: 1,
+      color: { dark: '#0e7c6e', light: '#ffffff' },
+    });
+    const qrY = y - 20;
+    doc.image(msmeQr, W - 120, qrY, { width: 70, height: 70 });
+    doc.font('Helvetica').fontSize(7).fillColor(GRAY).text('MSME · UDYAM-AP-23-0089163', W - 130, qrY + 72, { width: 90, align: 'center' });
+  } catch (_) {}
 
   doc.end();
   return bufferPromise;
