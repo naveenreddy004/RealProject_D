@@ -124,11 +124,13 @@ router.post('/razorpay/webhook', async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (secret) {
-      const signature = req.headers['x-razorpay-signature'];
-      const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-      if (signature !== expected) return res.status(400).json({ success: false });
+    if (!secret) {
+      console.error('RAZORPAY_WEBHOOK_SECRET is not set — rejecting webhook.');
+      return res.status(400).json({ success: false, message: 'Webhook secret not configured.' });
     }
+    const signature = req.headers['x-razorpay-signature'];
+    const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    if (signature !== expected) return res.status(400).json({ success: false, message: 'Invalid signature.' });
 
     const event = JSON.parse(rawBody.toString());
     if (event.event === 'payment.captured') {
@@ -230,20 +232,22 @@ router.post('/cashfree/webhook', async (req, res) => {
   try {
     // ── Signature verification ──────────────────────────────────────────────
     const webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const ts        = req.headers['x-webhook-timestamp'];
-      const signature = req.headers['x-webhook-signature'];
-      if (!ts || !signature) {
-        return res.status(400).json({ success: false, message: 'Missing webhook headers.' });
-      }
-      const rawBody  = JSON.stringify(req.body);
-      const expected = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(ts + rawBody)
-        .digest('base64');
-      if (signature !== expected) {
-        return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
-      }
+    if (!webhookSecret) {
+      console.error('CASHFREE_WEBHOOK_SECRET is not set — rejecting webhook.');
+      return res.status(400).json({ success: false, message: 'Webhook secret not configured.' });
+    }
+    const ts        = req.headers['x-webhook-timestamp'];
+    const signature = req.headers['x-webhook-signature'];
+    if (!ts || !signature) {
+      return res.status(400).json({ success: false, message: 'Missing webhook headers.' });
+    }
+    const rawBody  = JSON.stringify(req.body);
+    const expected = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(ts + rawBody)
+      .digest('base64');
+    if (signature !== expected) {
+      return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
     }
 
     const { data } = req.body;

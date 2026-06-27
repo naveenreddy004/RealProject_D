@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   fullName:     { type: String, required: true, trim: true },
@@ -38,9 +39,9 @@ userSchema.methods.comparePassword = async function(candidate) {
   return bcrypt.compare(candidate, this.password);
 };
 
-// Generate OTP
+// Generate OTP — uses crypto.randomInt (CSPRNG, not Math.random)
 userSchema.methods.generateOTP = function() {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = crypto.randomInt(100000, 1000000).toString();
   this.otp = otp;
   this.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
   return otp;
@@ -49,7 +50,7 @@ userSchema.methods.generateOTP = function() {
 // Verify OTP
 userSchema.methods.verifyOTP = function(inputOtp) {
   if (!this.otp || !this.otpExpiresAt) return { valid: false, reason: 'No OTP found' };
-  if (Date.now() > this.otpExpiresAt) return { valid: false, reason: 'OTP expired' };
+  if (Date.now() > this.otpExpiresAt.getTime()) return { valid: false, reason: 'OTP expired' };
   if (this.otp !== inputOtp) return { valid: false, reason: 'Invalid OTP' };
   this.otp = null;
   this.otpExpiresAt = null;

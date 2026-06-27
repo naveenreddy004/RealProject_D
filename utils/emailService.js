@@ -376,8 +376,8 @@ module.exports = {
   sendTicketEmail,
   sendRevocationEmail,
   sendCertificateEmail: noop,
+  sendPaymentVerifiedEmail: noop,
   sendPortalInviteEmail: noop,
   sendPaymentReceivedEmail: noop,
-  sendPaymentVerifiedEmail: noop,
   sendAdminPaymentAlert: noop,
 };

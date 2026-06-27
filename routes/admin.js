@@ -8,6 +8,14 @@ const { queueEmail } = require('../utils/emailQueue');
 const { generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
 const { logActivity } = require('../utils/activityLogger');
 
+// Normalize MongoDB Binary or Buffer to a plain Buffer
+function toBuffer(val) {
+  if (!val) return null;
+  if (Buffer.isBuffer(val)) return val;
+  if (val.buffer) return Buffer.from(val.buffer); // Mongoose Binary
+  return Buffer.from(val);
+}
+
 // All routes require admin JWT
 router.use(authAdmin);
 
@@ -76,13 +84,14 @@ router.get('/registrations', async (req, res) => {
 
     let query = Registration.find(filter).populate('user', 'fullName email mobile college course');
 
+    let total;
     if (search && !utr) {
       const searchRegex = { $regex: escapeRegex(search), $options: 'i' };
       const users = await User.find({
         $or: [{ fullName: searchRegex }, { email: searchRegex }]
       }).select('_id');
       const userIds = users.map(u => u._id);
-      query = Registration.find({
+      const searchFilter = {
         ...filter,
         $or: [
           { user: { $in: userIds } },
@@ -90,25 +99,9 @@ router.get('/registrations', async (req, res) => {
           { 'payment.utrNumber': searchRegex },
           { domain: searchRegex },
         ]
-      }).populate('user', 'fullName email mobile college course');
-    }
-
-    const countFilter = search && !utr ? {} : filter;
-    let total;
-    if (search && !utr) {
-      const searchRegex = { $regex: escapeRegex(search), $options: 'i' };
-      const users = await User.find({
-        $or: [{ fullName: searchRegex }, { email: searchRegex }]
-      }).select('_id');
-      total = await Registration.countDocuments({
-        ...filter,
-        $or: [
-          { user: { $in: users.map(u => u._id) } },
-          { certId: searchRegex },
-          { 'payment.utrNumber': searchRegex },
-          { domain: searchRegex },
-        ]
-      });
+      };
+      query = Registration.find(searchFilter).populate('user', 'fullName email mobile college course');
+      total = await Registration.countDocuments(searchFilter);
     } else {
       total = await Registration.countDocuments(filter);
     }
@@ -466,7 +459,7 @@ router.get('/certificate/:id', async (req, res) => {
     const reg = await Registration.findById(req.params.id).populate('user');
     if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
 
-    let pdfBuf = reg.certificatePdf;
+    let pdfBuf = toBuffer(reg.certificatePdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
       const { generateCertificatePDF } = require('../utils/pdfGenerator');
@@ -489,7 +482,7 @@ router.get('/receipt/:id', async (req, res) => {
     const reg = await Registration.findById(req.params.id).populate('user');
     if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
 
-    let pdfBuf = reg.receiptPdf;
+    let pdfBuf = toBuffer(reg.receiptPdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
       const { generateReceiptPDF } = require('../utils/pdfGenerator');
@@ -665,8 +658,7 @@ router.post('/broadcast', async (req, res) => {
     if (!message || message.trim().length < 5) {
       return res.status(400).json({ success: false, message: 'Broadcast message too short.' });
     }
-    // Store broadcast in a simple collection-less approach — use ActivityLog with action='broadcast'
-    const ActivityLog = require('../models/ActivityLog');
+    // Store broadcast in ActivityLog with action='broadcast'
     await ActivityLog.create({
       action: 'broadcast',
       adminLabel: req.admin?.email || 'Admin',
@@ -675,7 +667,6 @@ router.post('/broadcast', async (req, res) => {
       details: { message: message.trim() },
       ip: req.ip,
     });
-    await logActivity({ action: 'broadcast', targetLabel: 'All Users', details: { message: message.trim() }, req });
     res.json({ success: true, message: 'Broadcast posted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

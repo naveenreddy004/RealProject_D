@@ -11,7 +11,17 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads/'),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
+const allowedImageTypes = /jpeg|jpg|png|webp/;
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext  = allowedImageTypes.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowedImageTypes.test(file.mimetype);
+    if (ext && mime) return cb(null, true);
+    cb(new Error('Only image files (jpeg, jpg, png, webp) are allowed.'));
+  },
+});
 
 // ── REGISTER (Website 1 form) ─────────────────────────────────────────────────
 router.post('/register', upload.single('profilePhoto'), async (req, res) => {
@@ -19,6 +29,15 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
     const { fullName, email, gender, mobile, domain, duration, college, course, startDate, endDate, location, package: pkg } = req.body;
     if (!fullName || !email || !domain || !startDate || !endDate) {
       return res.status(400).json({ success: false, message: 'Required fields missing.' });
+    }
+
+    const parsedStart = new Date(startDate);
+    const parsedEnd   = new Date(endDate);
+    if (isNaN(parsedStart.getTime()) || isNaN(parsedEnd.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid start or end date.' });
+    }
+    if (parsedEnd <= parsedStart) {
+      return res.status(400).json({ success: false, message: 'End date must be after start date.' });
     }
 
     // Check if user exists
@@ -42,7 +61,7 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
     const certId = 'AT' + crypto.randomBytes(4).toString('hex').toUpperCase();
     const reg = new Registration({
       user: user._id, certId, domain, duration,
-      startDate: new Date(startDate), endDate: new Date(endDate),
+      startDate: parsedStart, endDate: parsedEnd,
       package: pkg || 'Basic Package',
       amount: Number(req.body.amount) || 199,
       status: 'payment_pending',
@@ -166,7 +185,11 @@ router.post('/login', async (req, res) => {
 router.get('/me', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
-    res.json({ success: true, user: req.user, registration: reg });
+    // Strip sensitive OTP fields before sending
+    const user = req.user.toObject ? req.user.toObject() : { ...req.user };
+    delete user.otp;
+    delete user.otpExpiresAt;
+    res.json({ success: true, user, registration: reg });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error fetching profile.' });
   }

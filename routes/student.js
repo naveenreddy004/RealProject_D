@@ -8,6 +8,14 @@ const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
 const { generateReceiptPDF, generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
 
+// Normalize MongoDB Binary or Buffer to a plain Buffer
+function toBuffer(val) {
+  if (!val) return null;
+  if (Buffer.isBuffer(val)) return val;
+  if (val.buffer) return Buffer.from(val.buffer); // Mongoose Binary
+  return Buffer.from(val);
+}
+
 // Multer for payment screenshot
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads/'),
@@ -169,12 +177,18 @@ router.post('/complete-task', authStudent, async (req, res) => {
     if (reg.status !== 'active') return res.status(400).json({ success: false, message: 'Internship not yet active.' });
 
     if (!isNaN(taskIndex) && taskIndex >= 0 && taskIndex < reg.tasks.length) {
-      reg.tasks[taskIndex].completed = true;
-      reg.tasks[taskIndex].completedAt = new Date();
+      const task = reg.tasks[taskIndex];
+      // Students cannot self-complete payment or certificate tasks — these are admin-controlled
+      const adminOnlyTasks = ['Make Payment', 'Receive Certificate'];
+      if (adminOnlyTasks.includes(task.title)) {
+        return res.status(403).json({ success: false, message: `"${task.title}" is completed automatically by our team.` });
+      }
+      task.completed = true;
+      task.completedAt = new Date();
     }
     reg.tasksCompletedCount = reg.tasks.filter(t => t.completed).length;
 
-    // If all required tasks done, mark completed
+    // Only mark completed if all required tasks (excluding admin-only ones) are done
     const allRequired = reg.tasks.filter(t => t.required).every(t => t.completed);
     if (allRequired) reg.status = 'completed';
 
@@ -204,7 +218,7 @@ router.get('/certificate/:regId', authStudent, async (req, res) => {
     if (reg.status !== 'certificate_sent') {
       return res.status(400).json({ success: false, message: 'Certificate not yet issued.' });
     }
-    let pdfBuf = reg.certificatePdf;
+    let pdfBuf = toBuffer(reg.certificatePdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       pdfBuf = await generateCertificatePDF(req.user, reg);
       await Registration.findByIdAndUpdate(reg._id, { certificatePdf: pdfBuf });
@@ -229,7 +243,7 @@ router.get('/certificate', authStudent, async (req, res) => {
     }
 
     // Serve from MongoDB buffer — no file read
-    let pdfBuf = reg.certificatePdf;
+    let pdfBuf = toBuffer(reg.certificatePdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       // Regenerate on-the-fly and persist for next time
       pdfBuf = await generateCertificatePDF(req.user, reg);
@@ -253,7 +267,7 @@ router.get('/offer-letter/:regId', authStudent, async (req, res) => {
     if (!['certificate_sent', 'active', 'completed'].includes(reg.status)) {
       return res.status(400).json({ success: false, message: 'Offer letter not yet available.' });
     }
-    let pdfBuf = reg.offerLetterPdf;
+    let pdfBuf = toBuffer(reg.offerLetterPdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       pdfBuf = await generateOfferLetterPDF(req.user, reg);
       await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: pdfBuf });
@@ -272,7 +286,7 @@ router.get('/receipt/:regId', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ _id: req.params.regId, user: req.user._id });
     if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
-    let pdfBuf = reg.receiptPdf;
+    let pdfBuf = toBuffer(reg.receiptPdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       pdfBuf = await generateReceiptPDF(req.user, reg);
       await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
@@ -295,7 +309,7 @@ router.get('/offer-letter', authStudent, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Offer letter not yet available. Awaiting admin approval.' });
     }
 
-    let pdfBuf = reg.offerLetterPdf;
+    let pdfBuf = toBuffer(reg.offerLetterPdf);
     if (!pdfBuf || pdfBuf.length === 0) {
       pdfBuf = await generateOfferLetterPDF(req.user, reg);
       await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: pdfBuf });
@@ -310,15 +324,13 @@ router.get('/offer-letter', authStudent, async (req, res) => {
   }
 });
 
-
 router.get('/receipt', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ user: req.user._id });
     if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
 
-    let pdfBuf = reg.receiptPdf;
+    let pdfBuf = toBuffer(reg.receiptPdf);
     if (!pdfBuf || pdfBuf.length === 0) {
-      // Regenerate and persist if somehow missing
       pdfBuf = await generateReceiptPDF(req.user, reg);
       await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
     }
@@ -347,12 +359,13 @@ router.get('/curriculum', authStudent, async (req, res) => {
       }
       domain = reg.domain;
     } else {
-      // Check if the registration for this domain is revoked or payment not verified
+      // Must have an active registration for the requested domain
       const reg = await Registration.findOne({ user: req.user._id, domain }).sort({ createdAt: -1 });
-      if (reg && reg.revoked) {
+      if (!reg) return res.status(403).json({ success: false, message: 'No registration found for this domain.' });
+      if (reg.revoked) {
         return res.status(403).json({ success: false, message: 'Curriculum access suspended. Certificate revoked.' });
       }
-      if (reg && !['payment_verified', 'active', 'completed', 'certificate_sent'].includes(reg.status)) {
+      if (!['payment_verified', 'active', 'completed', 'certificate_sent'].includes(reg.status)) {
         return res.status(403).json({ success: false, message: 'Curriculum access is unlocked after payment verification.' });
       }
     }
@@ -410,14 +423,19 @@ router.post('/ticket', authStudent, async (req, res) => {
     if (!subject || subject.trim().length < 4) return res.status(400).json({ success: false, message: 'Subject too short.' });
     if (!message || message.trim().length < 10) return res.status(400).json({ success: false, message: 'Message too short.' });
 
+    // Escape HTML to prevent injection in admin email
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+
     const { sendTicketEmail } = require('../utils/emailService');
     setImmediate(() => {
       sendTicketEmail(req.user, {
         id: ticketId || ('TKT-' + Date.now().toString(36).toUpperCase().slice(-6)),
-        subject: subject.trim(),
-        message: message.trim(),
-        category: category || 'General',
-        priority: priority || 'Normal',
+        subject: escapeHtml(subject.trim()),
+        message: escapeHtml(message.trim()),
+        category: escapeHtml(category || 'General'),
+        priority: escapeHtml(priority || 'Normal'),
       }).catch(e => console.error('Ticket email error:', e.message));
     });
 
