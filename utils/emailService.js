@@ -156,53 +156,110 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:24px 0;}
 // ── 1. Registration confirmation ──────────────────────────────────────────────
 async function sendConfirmationEmail(user, reg) {
   const name = (reg && reg.registrantName) || user.fullName;
+  const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
   const html = wrap(`
-    <h2>Dear ${name},</h2>
-    <p>Thank you for applying for the <b>${reg.domain}</b> internship program at <b>${BRAND}</b>!</p>
+    <h2 style="color:#0B192C;font-size:22px;margin-bottom:6px;">Registration Confirmed! 🎉</h2>
+    <p style="color:#608BC1;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Internship Program</p>
+
+    <p>Dear <b>${name}</b>,</p>
+    <p>Congratulations! Your application for the <b>${reg.domain}</b> internship program at <b>${BRAND}</b> has been received successfully. We are reviewing your details and will get back to you shortly.</p>
+
     <div class="kv">
-      <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>
-      <div class="kv-row"><span class="lbl">Duration</span><span class="val">${reg.duration || '—'}</span></div>
-      <div class="kv-row"><span class="lbl">Offer Letter Timeline</span><span class="val">Within hours</span></div>
+      <div class="kv-row"><span class="lbl">👤 Candidate Name</span><span class="val">${name}</span></div>
+      <div class="kv-row"><span class="lbl">💻 Domain</span><span class="val">${reg.domain}</span></div>
+      <div class="kv-row"><span class="lbl">📅 Duration</span><span class="val">${reg.duration || '—'}</span></div>
+      <div class="kv-row"><span class="lbl">🗓 Start Date</span><span class="val">${fmt(reg.startDate)}</span></div>
+      <div class="kv-row"><span class="lbl">📦 Package</span><span class="val">${reg.package || '—'}</span></div>
+      <div class="kv-row"><span class="lbl">🆔 Certificate ID</span><span class="val" style="font-family:monospace;color:#608BC1;">${reg.certId}</span></div>
     </div>
-    <p>Our team is currently reviewing your registration. You will receive your official onboarding package shortly.</p>
-    <p class="muted">If you have any questions, feel free to reach out to our support team. Thank you for choosing ${BRAND}!</p>
+
+    <p>Our admin team will verify your payment and send your <b>Official Offer Letter</b> within a few hours. You'll receive another email with your login credentials and internship roadmap.</p>
+
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${BASE}/portal" class="cta">🔐 Login to Your Portal →</a>
+    </div>
+
+    <div class="steps">
+      <div class="head">📋 What Happens Next</div>
+      <ol>
+        <li>Admin reviews and verifies your payment</li>
+        <li>You receive your <b>Official Offer Letter</b> by email</li>
+        <li>Login to your portal and access your day-by-day roadmap</li>
+        <li>Complete all tasks and receive your QR-verified Certificate</li>
+      </ol>
+    </div>
+
+    <p class="muted">For any queries, contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
     <hr class="divider">
-    <div class="signoff">Best regards,<br><b>The ${BRAND} Team</b><br><a href="https://${DOMAIN}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a></div>
+    <div class="signoff">
+      With Best Regards,<br>
+      <b>The ${BRAND} Team</b><br>
+      <a href="${BASE}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a> &nbsp;|&nbsp;
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;text-decoration:none;">${SUPPORT_EMAIL}</a>
+    </div>
   `);
-  await sendMail({ to: user.email, subject: `Internship Registration Confirmed! - ${BRAND}`, html });
+  await sendMail({ to: user.email, subject: `✅ Registration Confirmed — ${reg.domain} Internship | ${BRAND}`, html });
   console.log(`✉️ Confirmation sent to ${user.email}`);
 }
 
 // ── 2. Offer Letter ───────────────────────────────────────────────────────────
 async function sendOfferLetterEmail(user, reg, pdfBuffer) {
+  const name = (reg && reg.registrantName) || user.fullName;
+  const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
   const html = wrap(`
-    <h2>Dear ${user.fullName},</h2>
-    <p>We are pleased to offer you a <b>virtual internship position</b> at <b>${BRAND}</b>. Congratulations!</p>
+    <h2 style="color:#0B192C;font-size:22px;margin-bottom:6px;">Official Offer Letter 🎓</h2>
+    <p style="color:#608BC1;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Corporate Internship Division</p>
+
+    <p>Dear <b>${name}</b>,</p>
+    <p>We are delighted to formally welcome you to the <b>${BRAND}</b> Internship Program. After reviewing your application, we are pleased to offer you a <b>Virtual Internship Position</b>. Congratulations on your selection!</p>
+
     <div class="kv">
-      <div class="kv-row"><span class="lbl">Domain</span><span class="val">${reg.domain}</span></div>
-      <div class="kv-row"><span class="lbl">Duration</span><span class="val">${fmt(reg.startDate)} – ${fmt(reg.endDate)}</span></div>
-      <div class="kv-row"><span class="lbl">Certificate ID</span><span class="val">${reg.certId}</span></div>
-      <div class="kv-row"><span class="lbl">Stipend</span><span class="val">Unpaid / Learning-based</span></div>
+      <div class="kv-row"><span class="lbl">👤 Intern Name</span><span class="val">${name}</span></div>
+      <div class="kv-row"><span class="lbl">📧 Email</span><span class="val">${user.email}</span></div>
+      <div class="kv-row"><span class="lbl">💻 Domain</span><span class="val">${reg.domain}</span></div>
+      <div class="kv-row"><span class="lbl">📅 Internship Period</span><span class="val">${fmt(reg.startDate)} – ${fmt(reg.endDate)}</span></div>
+      <div class="kv-row"><span class="lbl">⏱ Duration</span><span class="val">${reg.duration || '—'}</span></div>
+      <div class="kv-row"><span class="lbl">📦 Package</span><span class="val">${reg.package || '—'}</span></div>
+      <div class="kv-row"><span class="lbl">🆔 Certificate ID</span><span class="val" style="font-family:monospace;color:#608BC1;">${reg.certId}</span></div>
+      <div class="kv-row"><span class="lbl">💰 Stipend</span><span class="val">Unpaid / Learning-based</span></div>
+      <div class="kv-row"><span class="lbl">🏢 Issuing Organization</span><span class="val">${BRAND}</span></div>
     </div>
-    <p>Please find your official Offer Letter attached. Log in to your dashboard to begin your internship tasks.</p>
+
+    <p>Your <b>Official Offer Letter PDF</b> is attached to this email. Please keep it for your records — it serves as proof of enrollment in the ${BRAND} internship program.</p>
+
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${BASE}/dashboard" class="cta">🚀 Access Your Dashboard →</a>
+    </div>
+
     <div class="steps">
-      <div class="head">Next Steps</div>
+      <div class="head">📋 Your Onboarding Steps</div>
       <ol>
-        <li>Log in to your dashboard at <b>${DOMAIN}/dashboard</b></li>
-        <li>Open the <b>"My Internships"</b> tab to view your tasks</li>
-        <li>Submit your weekly tasks and track your progress</li>
+        <li>Login to your portal at <a href="${BASE}/portal" style="color:#608BC1;">${DOMAIN}/portal</a></li>
+        <li>Go to <b>"My Internships"</b> tab to view your full curriculum roadmap</li>
+        <li>Complete all weekly deliverables as per the program schedule</li>
+        <li>Once all tasks are done, admin will issue your QR-verified Certificate</li>
       </ol>
     </div>
-    <p class="muted">Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
+
+    <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 20px;margin:20px 0;">
+      <p style="font-size:13.5px;color:#1e40af;margin:0;">💡 <b>Pro Tip:</b> Share your Offer Letter on LinkedIn to let your network know you've been selected for a professional internship at ${BRAND}!</p>
+    </div>
+
+    <p class="muted">For any queries or support, reach us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
     <hr class="divider">
-    <div class="signoff">Warm regards,<br><b>Corporate Onboarding Team</b><br>${BRAND} (<a href="https://${DOMAIN}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a>)</div>
+    <div class="signoff">
+      Warm Regards,<br>
+      <b>Corporate Onboarding Team</b><br>
+      <b>${BRAND}</b> &nbsp;|&nbsp; <a href="${BASE}" style="color:#608BC1;text-decoration:none;">${DOMAIN}</a><br>
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;text-decoration:none;">${SUPPORT_EMAIL}</a>
+    </div>
   `);
   const attachments = (pdfBuffer && pdfBuffer.length > 0) ? [{
     filename: `avRoN_Tech_Offer_Letter_${reg.certId}.pdf`,
     content: pdfBuffer,
     contentType: 'application/pdf',
   }] : [];
-  await sendMail({ to: user.email, subject: `Official Internship Offer Letter & Onboarding Details - ${BRAND}`, html, attachments });
+  await sendMail({ to: user.email, subject: `🎓 Official Offer Letter — ${reg.domain} Internship | ${BRAND}`, html, attachments });
   console.log(`✉️ Offer letter sent to ${user.email}`);
 }
 

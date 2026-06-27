@@ -87,6 +87,6 @@ registrationSchema.methods.initTasks = function() {
 registrationSchema.index({ user: 1 });
 registrationSchema.index({ 'payment.utrNumber': 1 });
 registrationSchema.index({ status: 1 });
-registrationSchema.index({ certId: 1 });   // unique already; explicit for sparse queries
+// Note: certId index is already created by unique:true in the schema definition above
 
 module.exports = mongoose.model('Registration', registrationSchema);
