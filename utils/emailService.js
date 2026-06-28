@@ -101,7 +101,7 @@ let _logoMime = 'image/jpeg';
 try {
   const _fs = require('fs');
   const _path = require('path');
-  const _lp = _path.join(__dirname, '../public/logo.png');
+  const _lp = _path.join(__dirname, '../public/logo.jpg');
   if (_fs.existsSync(_lp)) {
     const buf = _fs.readFileSync(_lp);
     _logoMime = buf.slice(0, 2).toString('hex') === 'ffd8' ? 'image/jpeg' : 'image/png';
