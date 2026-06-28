@@ -1330,31 +1330,49 @@
     }
 
     async function markNotifRead(id){
+      // Update locally FIRST so UI responds instantly
+      const n = allNotifs.find(x => String(x._id) === String(id));
+      if(n) n.read = true;
+      // Re-render immediately with local state
+      const totalUnread = allNotifs.filter(x => !x.read).length;
+      document.getElementById('notif-unread-count').textContent = totalUnread;
+      document.getElementById('notif-total-count').textContent = allNotifs.length;
+      const badge = document.getElementById('notif-badge');
+      if(totalUnread > 0){badge.style.display='inline-block';badge.textContent=totalUnread;}
+      else badge.style.display='none';
+      // Update the clicked item's visual state
+      const el = document.querySelector(`.notif[data-id="${id}"]`);
+      if(el){ el.classList.remove('unread'); const dot = el.querySelector('.notif-dot'); if(dot) dot.remove(); }
+      // Persist to DB in background
       try {
         await fetch('/api/student/notifications/read', {
           method: 'POST',
           headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
           body: JSON.stringify({ id }),
         });
-        // Update locally immediately
-        const n = allNotifs.find(x => x._id === id);
-        if(n) n.read = true;
-        renderNotifications();
       } catch(_) {}
     }
 
     async function markAllNotifsRead(){
+      // Update locally FIRST
+      allNotifs.forEach(n => n.read = true);
+      document.getElementById('notif-unread-count').textContent = '0';
+      document.getElementById('notif-badge').style.display = 'none';
+      document.querySelectorAll('.notif.unread').forEach(el => {
+        el.classList.remove('unread');
+        const dot = el.querySelector('.notif-dot');
+        if(dot) dot.remove();
+      });
+      showToast('All notifications marked as read');
+      // Persist to DB in background
       try {
         await fetch('/api/student/notifications/read', {
           method: 'POST',
           headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
           body: JSON.stringify({ all: true }),
         });
-        allNotifs.forEach(n => n.read = true);
-        renderNotifications();
-        showToast('All notifications marked as read');
       } catch(_) {
-        showToast('Could not mark as read', true);
+        showToast('Could not save — will retry', true);
       }
     }
 
