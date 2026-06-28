@@ -7,7 +7,6 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
 const logger = require('./utils/logger');
 
 const BRAND = 'avRoN Tech';

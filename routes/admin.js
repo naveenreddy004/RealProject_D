@@ -556,7 +556,7 @@ router.post('/revoke/:id', async (req, res) => {
       });
     }
 
-    logActivity({
+    await logActivity({
       action: 'revoke_certificate',
       targetId: reg._id,
       targetLabel: reg.user ? reg.user.fullName : reg.certId,
@@ -578,7 +578,7 @@ router.post('/unrevoke/:id', async (req, res) => {
     reg.revokedAt = null;
     reg.revokedReason = null;
     await reg.save();
-    logActivity({ action: 'unrevoke_certificate', targetId: reg._id, targetLabel: reg.certId, req });
+    await logActivity({ action: 'unrevoke_certificate', targetId: reg._id, targetLabel: reg.certId, req });
     res.json({ success: true, message: `Certificate ${reg.certId} restored.` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

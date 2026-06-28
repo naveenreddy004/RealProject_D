@@ -95,23 +95,27 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com'
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
-// ── Logo as base64 — read fresh each time to always use latest file ───────────
+// ── Logo as base64 — read once at startup, cached for performance ─────────────
+let _logoB64 = '';
+let _logoMime = 'image/jpeg';
+try {
+  const _fs = require('fs');
+  const _path = require('path');
+  const _lp = _path.join(__dirname, '../public/logo.png');
+  if (_fs.existsSync(_lp)) {
+    const buf = _fs.readFileSync(_lp);
+    _logoMime = buf.slice(0, 2).toString('hex') === 'ffd8' ? 'image/jpeg' : 'image/png';
+    _logoB64 = buf.toString('base64');
+  }
+} catch (_) {}
+
 function getLogoTag(size = 48) {
-  try {
-    const _fs = require('fs');
-    const _path = require('path');
-    const _lp = _path.join(__dirname, '../public/logo.png');
-    if (_fs.existsSync(_lp)) {
-      const b64 = _fs.readFileSync(_lp).toString('base64');
-      const magic = _fs.readFileSync(_lp).slice(0,2).toString('hex');
-      const mime = magic === 'ffd8' ? 'image/jpeg' : 'image/png';
-      return `<img src="data:${mime};base64,${b64}" alt="avRoN Technologies" style="width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;" />`;
-    }
-  } catch (_) {}
-  return `<div style="width:48px;height:48px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
+  if (_logoB64) {
+    return `<img src="data:${_logoMime};base64,${_logoB64}" alt="avRoN Technologies" style="width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;" />`;
+  }
+  return `<div style="width:${size}px;height:${size}px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
 }
 
-// Keep backward compat for wrap() which uses logoImgTag
 const logoImgTag = getLogoTag(48);
 
 // ── Common HTML scaffolding ───────────────────────────────────────────────────

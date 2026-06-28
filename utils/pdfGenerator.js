@@ -193,9 +193,8 @@ async function generateOfferLetterPDF(user, reg) {
     doc.image(logoPath, 36, 14, { width: 64, height: 64 });
   }
 
-  // ── Company name — top left next to logo
+  // ── Company name next to logo
   doc.font('Helvetica-Bold').fontSize(26).fillColor('#ffffff').text('avRoN', 112, 22);
-  const avronW = doc.widthOfString('avRoN', { font: 'Helvetica-Bold', fontSize: 26 });
   doc.font('Helvetica').fontSize(11).fillColor('#c8f0ec').text('Technologies', 112, 52);
   doc.font('Helvetica').fontSize(8).fillColor('#a0ddd7').text('avRoNTech.in  ·  support.avrontech@gmail.com', 112, 68);
 
