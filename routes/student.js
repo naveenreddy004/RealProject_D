@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
 const { generateReceiptPDF, generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
@@ -442,6 +443,33 @@ router.post('/ticket', authStudent, async (req, res) => {
     res.json({ success: true, message: 'Ticket submitted. We will get back to you within 24 hours.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to submit ticket.' });
+  }
+});
+
+// ── GET NOTIFICATIONS ─────────────────────────────────────────────────────────
+router.get('/notifications', authStudent, async (req, res) => {
+  try {
+    const notifs = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 }).limit(50);
+    const unread = notifs.filter(n => !n.read).length;
+    res.json({ success: true, data: notifs, unread });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch notifications.' });
+  }
+});
+
+// ── MARK NOTIFICATION(S) AS READ ──────────────────────────────────────────────
+router.post('/notifications/read', authStudent, async (req, res) => {
+  try {
+    const { id, all } = req.body;
+    if (all) {
+      await Notification.updateMany({ user: req.user._id, read: false }, { read: true, readAt: new Date() });
+    } else if (id) {
+      await Notification.findOneAndUpdate({ _id: id, user: req.user._id }, { read: true, readAt: new Date() });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not mark as read.' });
   }
 });
 

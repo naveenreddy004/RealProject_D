@@ -7,6 +7,7 @@ const { authAdmin } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
 const { generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
 const { logActivity } = require('../utils/activityLogger');
+const { pushNotification } = require('../utils/notify');
 
 // Normalize MongoDB Binary or Buffer to a plain Buffer
 function toBuffer(val) {
@@ -164,6 +165,14 @@ const approvePayment = async (req, res) => {
       certId: reg.certId
     });
 
+    // Notify student
+    pushNotification(reg.user._id, {
+      type: 'success',
+      title: '✅ Payment Approved!',
+      message: `Your payment for ${reg.domain} has been verified. Your internship is now active! Check the My Internships tab to view your curriculum.`,
+      regId: reg._id,
+    });
+
     setImmediate(async () => {
       try {
         // Only generate and send OFFER LETTER — not certificate
@@ -239,6 +248,13 @@ router.post('/reject-payment/:id', async (req, res) => {
         queueEmail('paymentRejected', { user: reg.user, reg, reason });
       });
     }
+    // Notify student
+    pushNotification(reg.user._id, {
+      type: 'danger',
+      title: '❌ Payment Not Verified',
+      message: `Your payment for ${reg.domain} could not be verified. Reason: ${reason}. Please resubmit with a valid UTR and screenshot.`,
+      regId: reg._id,
+    });
     res.json({ success: true, message: 'Payment rejected. Student notified and can resubmit.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -292,6 +308,13 @@ router.post('/send-certificate/:id', async (req, res) => {
       targetLabel: reg.user.fullName,
       details: { certId: reg.certId, email: reg.user.email },
       req,
+    });
+    // Notify student
+    pushNotification(reg.user._id, {
+      type: 'success',
+      title: '🎓 Certificate Issued!',
+      message: `Your QR-verified certificate for ${reg.domain} has been issued! Go to the Certificates tab to download and share it.`,
+      regId: reg._id,
     });
     res.json({ success: true, message: `Certificate sent to ${reg.user.email}` });
   } catch (err) {
@@ -562,6 +585,13 @@ router.post('/revoke/:id', async (req, res) => {
       targetLabel: reg.user ? reg.user.fullName : reg.certId,
       details: { certId: reg.certId, reason: reg.revokedReason },
       req,
+    });
+    // Notify student
+    pushNotification(reg.user._id, {
+      type: 'danger',
+      title: '⛔ Certificate Revoked',
+      message: `Your certificate (${reg.certId}) for ${reg.domain} has been revoked. Reason: ${reg.revokedReason}. Contact support.avrontech@gmail.com for help.`,
+      regId: reg._id,
     });
     res.json({ success: true, message: `Certificate ${reg.certId} revoked.` });
   } catch (err) {

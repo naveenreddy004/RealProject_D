@@ -293,11 +293,12 @@
         }
 
         /* ── Scrolling broadcast banner ── */
-        .broadcast-bar{background:#111827;color:#fff;height:32px;overflow:hidden;position:relative;display:none;border-bottom:1px solid #1f2937;}
+        .broadcast-bar{background:#fff;color:var(--midnight);height:36px;overflow:hidden;position:relative;display:none;border-bottom:2px solid var(--steel);border-top:1px solid var(--line);}
         .broadcast-bar.show{display:block;}
         .broadcast-track{display:flex;align-items:center;height:100%;white-space:nowrap;animation:scroll-left 35s linear infinite;}
         .broadcast-track:hover{animation-play-state:paused;}
-        .broadcast-msg{font-size:13px;white-space:nowrap;padding:0 60px;color:#e5e7eb;letter-spacing:.01em;}
+        .broadcast-msg{font-size:13px;white-space:nowrap;padding:0 60px;color:var(--midnight);font-weight:600;letter-spacing:.01em;}
+        .broadcast-msg::before{content:'📢 ';color:var(--steel);}
         @keyframes scroll-left{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
 
         /* Loading */
@@ -1214,6 +1215,17 @@
         // Re-render certificate section + previous registrations
         renderAllCertificates();
         renderPrevRegistrations();
+        // Refresh notification badge silently
+        try {
+          const nr = await fetch('/api/student/notifications', {headers:{'Authorization':'Bearer '+token}});
+          const nd = await nr.json();
+          if(nd.success){
+            const badge = document.getElementById('notif-badge');
+            if(nd.unread > 0){badge.style.display='inline-block';badge.textContent=nd.unread;}
+            else badge.style.display='none';
+            document.getElementById('notif-unread-count').textContent = nd.unread;
+          }
+        } catch(_) {}
       } catch(_) {}
     }, 10000);
 
@@ -1228,9 +1240,6 @@
     document.addEventListener('keydown', e => { if(e.key === 'Escape') closeCertLightbox(null, true); });
 
     // ── Notifications & Announcements (dynamic) ───────────────────────────────
-    function nKey(){return 'cp_notif_read_' + ((regData && regData.certId) || 'anon');}
-    function getReadIds(){try{return JSON.parse(localStorage.getItem(nKey())||'[]');}catch{return [];}}
-    function setReadIds(arr){localStorage.setItem(nKey(), JSON.stringify(arr));}
     function timeAgo(ts){
       const s = Math.floor((Date.now()-ts)/1000);
       if(s<60) return 'just now';
@@ -1239,81 +1248,97 @@
       return Math.floor(s/86400)+'d ago';
     }
 
-    // Build dynamic notifications based on actual registration status
-    function buildNotifications(){
-      const notifs = [];
-      if(regData){
-        notifs.push({id:'n-welcome', type:'success', title:'Welcome to avRoN Tech!', msg:`Hi! Your registration for ${regData.domain} is confirmed. Complete your payment to activate your internship.`, ts: new Date(regData.createdAt||Date.now()).getTime()});
-        if(regData.status === 'certificate_sent'){
-          notifs.push({id:'n-cert-ready', type:'success', title:'Certificate issued!', msg:`Your ${regData.domain} certificate is ready. Go to the Certificates tab to download it and share on LinkedIn.`, ts: Date.now() - 1000*60*10});
-        }
-        if(regData.status === 'payment_submitted'){
-          notifs.push({id:'n-pay-review', type:'warn', title:'Payment under review', msg:'Our admin team is verifying your payment. You will receive an Offer Letter email once approved.', ts: Date.now() - 1000*60*30});
-        }
-        if(regData.revoked){
-          notifs.push({id:'n-revoked', type:'danger', title:'Certificate revoked', msg:`Your certificate for ${regData.domain} has been revoked. Please contact support at support.avrontech@gmail.com for more information.`, ts: Date.now() - 1000*60*5});
-        }
-      }
-      return notifs;
-    }
-
     let allNotifs = [];
 
     async function renderNotifications(){
-      // Build base notifs from registration state
-      allNotifs = buildNotifications();
-
-      // Fetch admin broadcasts and add to notifications
-      try{
-        const r = await fetch('/api/broadcasts');
-        const d = await r.json();
-        if(d.success && d.data){
-          d.data.forEach(b => {
-            allNotifs.push({
-              id: 'broadcast-' + b._id,
-              type: 'event',
-              title: '📢 Announcement from avRoN Tech',
-              msg: b.details?.message || '',
-              ts: new Date(b.createdAt).getTime(),
-            });
-          });
-        }
-        // Sort by newest first
-        allNotifs.sort((a,b) => b.ts - a.ts);
-      }catch(e){}
-
-      const read = new Set(getReadIds());
       const list = document.getElementById('notifList');
-      const unread = allNotifs.filter(n => !read.has(n.id)).length;
-      document.getElementById('notif-unread-count').textContent = unread;
-      document.getElementById('notif-total-count').textContent = allNotifs.length;
-      const badge = document.getElementById('notif-badge');
-      if(unread > 0){badge.style.display='inline-block';badge.textContent = unread;}
-      else badge.style.display = 'none';
+      try {
+        // Fetch real notifications from API
+        const res = await fetch('/api/student/notifications', {headers:{'Authorization':'Bearer '+token}});
+        const data = await res.json();
+        allNotifs = data.data || [];
+        const unread = data.unread || 0;
 
-      if(!allNotifs.length){
-        list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--mut);font-size:13.5px;">No notifications yet. Check back after your internship is active.</div>';
-        return;
+        // Also fetch broadcasts and merge
+        try {
+          const br = await fetch('/api/broadcasts');
+          const bd = await br.json();
+          if(bd.success && bd.data){
+            bd.data.forEach(b => {
+              allNotifs.push({
+                _id: 'broadcast-' + b._id,
+                type: 'event',
+                title: '📢 Announcement',
+                message: b.details?.message || '',
+                read: false,
+                createdAt: b.createdAt,
+              });
+            });
+          }
+        } catch(_) {}
+
+        // Sort newest first
+        allNotifs.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const totalUnread = allNotifs.filter(n => !n.read).length;
+        document.getElementById('notif-unread-count').textContent = totalUnread;
+        document.getElementById('notif-total-count').textContent = allNotifs.length;
+        const badge = document.getElementById('notif-badge');
+        if(totalUnread > 0){badge.style.display='inline-block';badge.textContent=totalUnread;}
+        else badge.style.display='none';
+
+        if(!allNotifs.length){
+          list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--mut);font-size:13.5px;">No notifications yet.</div>';
+          return;
+        }
+
+        list.innerHTML = allNotifs.map(n => {
+          const isUnread = !n.read;
+          const ic = n.type==='success'?'✓':n.type==='warn'?'⚠':n.type==='event'?'📢':n.type==='danger'?'⛔':'ℹ';
+          const id = n._id;
+          const isBroadcast = String(id).startsWith('broadcast-');
+          return `<div class="notif ${isUnread?'unread':''} type-${n.type}" data-id="${id}" onclick="${isBroadcast?'':'markNotifRead(\''+id+'\')'}" style="cursor:${isBroadcast?'default':'pointer'};">
+            <div class="notif-ic">${ic}</div>
+            <div class="notif-body">
+              <div class="notif-title">${escapeHtml(n.title)}</div>
+              <div class="notif-msg">${escapeHtml(n.message)}</div>
+              <div class="notif-time">${timeAgo(new Date(n.createdAt).getTime())}</div>
+            </div>
+            ${isUnread && !isBroadcast?'<div class="notif-dot"></div>':''}
+          </div>`;
+        }).join('');
+      } catch(e) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mut);">Could not load notifications.</div>';
       }
-
-      list.innerHTML = allNotifs.map(n => {
-        const isUnread = !read.has(n.id);
-        const ic = n.type==='success'?'✓':n.type==='warn'?'⚠':n.type==='event'?'📢':n.type==='danger'?'⛔':'ℹ';
-        return `<div class="notif ${isUnread?'unread':''} type-${n.type}" data-id="${n.id}" onclick="markNotifRead('${n.id}')" data-testid="notif-item-${n.id}" style="cursor:pointer;">
-          <div class="notif-ic">${ic}</div>
-          <div class="notif-body">
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-msg">${n.msg}</div>
-            <div class="notif-time">${timeAgo(n.ts)}</div>
-          </div>
-          ${isUnread?'<div class="notif-dot"></div>':''}
-        </div>`;
-      }).join('');
     }
 
-    function markNotifRead(id){
-      const read = new Set(getReadIds()); read.add(id);
-      setReadIds([...read]); renderNotifications();
+    async function markNotifRead(id){
+      try {
+        await fetch('/api/student/notifications/read', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify({ id }),
+        });
+        // Update locally immediately
+        const n = allNotifs.find(x => x._id === id);
+        if(n) n.read = true;
+        renderNotifications();
+      } catch(_) {}
+    }
+
+    async function markAllNotifsRead(){
+      try {
+        await fetch('/api/student/notifications/read', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify({ all: true }),
+        });
+        allNotifs.forEach(n => n.read = true);
+        renderNotifications();
+        showToast('All notifications marked as read');
+      } catch(_) {
+        showToast('Could not mark as read', true);
+      }
     }
 
     // ── Broadcast banner ──────────────────────────────────────────────────────
@@ -1324,20 +1349,15 @@
         if(!d.success || !d.data || !d.data.length) return;
         const bar = document.getElementById('broadcastBar');
         const track = document.getElementById('broadcastTrack');
-        const msgs = d.data.map(b => `<span class="broadcast-msg">📢 ${escapeHtml(b.details?.message||'')}</span>`).join('  ·  ');
+        const msgs = d.data.map(b => `<span class="broadcast-msg">${escapeHtml(b.details?.message||'')}</span>`).join('  ·  ');
         track.innerHTML = msgs;
         bar.classList.add('show');
-        // Auto-hide after 3 minutes
         setTimeout(() => {
           bar.style.transition = 'opacity 1s ease';
           bar.style.opacity = '0';
           setTimeout(() => bar.classList.remove('show'), 1000);
         }, 3 * 60 * 1000);
       }catch(e){}
-    }    function markAllNotifsRead(){
-      setReadIds(allNotifs.map(n=>n.id));
-      renderNotifications();
-      showToast('All notifications marked as read');
     }
 
     // ── Support: Tickets (client-side via localStorage) ───────────────────────────

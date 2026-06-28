@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Registration = require('../models/Registration');
 const { generateToken, authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
+const { pushNotification } = require('../utils/notify');
 const multer = require('multer');
 const path = require('path');
 
@@ -76,6 +77,14 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
 
     // Respond IMMEDIATELY — single welcome email is dispatched in background.
     queueEmail('confirmation', { user, reg });
+
+    // Push registration notification
+    pushNotification(user._id, {
+      type: 'success',
+      title: '🎉 Registration Confirmed!',
+      message: `Your registration for ${domain} is confirmed. Submit your payment to activate your internship.`,
+      regId: reg._id,
+    });
 
     return res.json({ success: true, message: 'Registration successful! Check your email.', certId, isNewUser });
   } catch (err) {
