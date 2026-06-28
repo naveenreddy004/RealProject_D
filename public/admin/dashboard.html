@@ -768,12 +768,15 @@ async function postBroadcast(){
 }
 
 function toggleSidebar(){
-  document.getElementById('adminSidebar').classList.toggle('open');
+  const sidebar = document.getElementById('adminSidebar');
+  const isOpen = sidebar.classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('show');
+  document.body.style.overflow = isOpen ? 'hidden' : '';
 }
 function closeSidebar(){
   document.getElementById('adminSidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
     function gv(view, btn){

@@ -675,12 +675,16 @@
 
     // ── Mobile sidebar ────────────────────────────────────────────────────────
     function toggleSidebar(){
-      document.querySelector('.sidebar').classList.toggle('open');
+      const sidebar = document.querySelector('.sidebar');
+      const isOpen = sidebar.classList.toggle('open');
       document.getElementById('sidebarOverlay').classList.toggle('show');
+      // Lock body scroll when sidebar is open (prevents background scroll on iOS)
+      document.body.style.overflow = isOpen ? 'hidden' : '';
     }
     function closeSidebar(){
       document.querySelector('.sidebar').classList.remove('open');
       document.getElementById('sidebarOverlay').classList.remove('show');
+      document.body.style.overflow = '';
     }
     function showTab(name, btn){
       document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
