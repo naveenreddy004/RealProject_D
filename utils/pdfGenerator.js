@@ -159,7 +159,7 @@ async function generateReceiptPDF(user, reg) {
 
   doc.moveTo(40, y + 10).lineTo(W - 40, y + 10).lineWidth(0.5).strokeColor('#c3e6d8').stroke();
   doc.font('Helvetica').fontSize(8).fillColor('#999')
-    .text('This is a computer-generated receipt. For any queries contact support@avron.in',
+    .text('This is a computer-generated receipt. For any queries contact support.avrontech@gmail.com',
           40, y + 18, { align: 'center', width: W - 80 });
 
   doc.end();
@@ -187,7 +187,7 @@ async function generateOfferLetterPDF(user, reg) {
   doc.rect(0, 0, W, 100).fill(TEAL);
 
   // ── Logo image (phoenix) — top left
-  const logoPath = require('path').join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  const logoPath = require('path').join(__dirname, '../public/logo.png');
   const fs = require('fs');
   if (fs.existsSync(logoPath)) {
     doc.image(logoPath, 36, 14, { width: 64, height: 64 });

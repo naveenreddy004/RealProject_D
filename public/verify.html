@@ -174,15 +174,15 @@ async function verify(){
             <b>Holder:</b> ${d.name||'—'} · <b>Domain:</b> ${d.domain||'—'}<br>
             <b>Revoked on:</b> ${fmt(d.revokedAt)}<br>
             ${d.reason ? `<b>Reason:</b> <em>${d.reason}</em><br>` : ''}
-            <br>For queries contact <b>official@avrontech.in</b>.
+            <br>For queries contact <b>support.avrontech@gmail.com</b>.
           </div>
         </div>`;
     } else if(d.state === 'expired'){
-      box.innerHTML = `<div class="invalid-card warn"><div class="invalid-head"><div class="ic">⌛</div><div><h3>Certificate Expired</h3></div></div><div class="invalid-body">This certificate was valid but has now expired. For re-validation contact <b>official@avrontech.in</b>.</div></div>`;
+      box.innerHTML = `<div class="invalid-card warn"><div class="invalid-head"><div class="ic">⌛</div><div><h3>Certificate Expired</h3></div></div><div class="invalid-body">This certificate was valid but has now expired. For re-validation contact <b>support.avrontech@gmail.com</b>.</div></div>`;
     } else if(d.state === 'not_issued'){
       box.innerHTML = `<div class="invalid-card warn"><div class="invalid-head"><div class="ic">⏳</div><div><h3>Not Yet Issued</h3></div></div><div class="invalid-body">This Certificate ID exists but has not been issued yet.</div></div>`;
     } else {
-      box.innerHTML = `<div class="invalid-card"><div class="invalid-head"><div class="ic">✕</div><div><h3>Certificate Not Found</h3></div></div><div class="invalid-body">This Certificate ID does not exist in our records. Please double-check and try again.<br><br>Contact us at <b>official@avrontech.in</b>.</div></div>`;
+      box.innerHTML = `<div class="invalid-card"><div class="invalid-head"><div class="ic">✕</div><div><h3>Certificate Not Found</h3></div></div><div class="invalid-body">This Certificate ID does not exist in our records. Please double-check and try again.<br><br>Contact us at <b>support.avrontech@gmail.com</b>.</div></div>`;
     }
     box.classList.add('show');
   } catch(e){

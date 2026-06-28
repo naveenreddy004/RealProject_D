@@ -100,7 +100,7 @@ let _logoB64 = '';
 try {
   const _fs = require('fs');
   const _path = require('path');
-  const _lp = _path.join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  const _lp = _path.join(__dirname, '../public/logo.png');
   if (_fs.existsSync(_lp)) _logoB64 = _fs.readFileSync(_lp).toString('base64');
 } catch (_) {}
 
@@ -263,7 +263,7 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   // Logo as base64 for email embedding
   const fs = require('fs');
   const path = require('path');
-  const logoPath = path.join(__dirname, '../public/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png');
+  const logoPath = path.join(__dirname, '../public/logo.png');
   let logoTag = '';
   try {
     if (fs.existsSync(logoPath)) {
