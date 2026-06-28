@@ -16,8 +16,8 @@ html,body{min-height:100%;}body{font-family:'Inter',sans-serif;background:var(--
 .nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;}
 .brand-mark{width:52px;height:52px;display:flex;align-items:center;justify-content:center;}
-.brand-mark img{width:52px;height:52px;object-fit:contain;}
-@media(max-width:480px){.brand-mark{width:36px;height:36px;}.brand-mark img{width:36px;height:36px;}}
+.brand-mark img{width:52px;height:52px;object-fit:contain;border-radius:8px;}
+@media(max-width:480px){.brand-mark{width:36px;height:36px;}.brand-mark img{width:36px;height:36px;}.brand-name-img{height:32px !important;margin-left:-6px !important;}}
 .brand-name{font-family:'Sora',sans-serif;font-weight:800;color:var(--midnight);letter-spacing:-.2px;line-height:1.1;}
 .brand-name .bn-sm{font-size:17px;color:var(--midnight);}
 .brand-name .bn-lg{font-size:26px;color:var(--steel);}
@@ -92,7 +92,7 @@ html,body{min-height:100%;}body{font-family:'Inter',sans-serif;background:var(--
 <nav class="nav">
   <a href="/" class="brand">
     <div class="brand-mark"><img src="/logo.png" alt="avRoN Technologies"></div>
-    <img src="/brand-name.png" alt="avRoN Technologies" style="height:56px;object-fit:contain;display:block;margin-left:-18px;">
+    <img src="/brand-name.png" alt="avRoN Technologies" class="brand-name-img" style="height:56px;object-fit:contain;display:block;margin-left:-18px;">
   </a>
   <a href="/" class="btn-ghost">← Home</a>
 </nav>
