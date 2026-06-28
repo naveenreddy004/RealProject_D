@@ -43,7 +43,7 @@
         .sidebar-overlay.show{display:block;}
 
         /* Sidebar */
-        .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:fixed;top:0;left:0;width:260px;height:100vh;overflow-y:auto;z-index:1050;}
+        .sidebar{background:var(--midnight);color:#fff;padding:24px 18px;border-right:1px solid var(--midnight3);display:flex;flex-direction:column;position:fixed;top:0;left:0;width:260px;height:100vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;z-index:1050;}
         @media (max-width:900px){
           .sidebar{left:-280px;width:280px;transition:left .28s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 24px rgba(0,0,0,.3);}
           .sidebar.open{left:0;}
@@ -597,19 +597,12 @@
                         <div class="profile-row"><span class="lbl">Mobile</span><span class="val" id="pr-mobile">—</span></div>
                         <div class="profile-row"><span class="lbl">College</span><span class="val" id="pr-college">—</span></div>
                         <div class="profile-row"><span class="lbl">Course</span><span class="val" id="pr-course">—</span></div>
-                        <div class="profile-row"><span class="lbl">Certificate ID</span><span class="val" id="pr-certid" style="font-family:monospace;">—</span></div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h2>Internship Details</h2>
-                    <div style="margin-top:8px;">
-                        <div class="profile-row"><span class="lbl">Domain</span><span class="val" id="pri-domain">—</span></div>
-                        <div class="profile-row"><span class="lbl">Duration</span><span class="val" id="pri-duration">—</span></div>
-                        <div class="profile-row"><span class="lbl">Period</span><span class="val" id="pri-period">—</span></div>
-                        <div class="profile-row"><span class="lbl">Package</span><span class="val" id="pri-pkg">—</span></div>
-                        <div class="profile-row"><span class="lbl">Status</span><span class="val" id="pri-status">—</span></div>
-                    </div>
+                    <h2>My Internships</h2>
+                    <div id="profile-internships" style="margin-top:8px;"></div>
                 </div>
             </section>
 
@@ -811,12 +804,31 @@
           document.getElementById('pr-mobile').textContent = user.mobile || '—';
           document.getElementById('pr-college').textContent = user.college || '—';
           document.getElementById('pr-course').textContent = user.course || '—';
-          document.getElementById('pr-certid').textContent = allRegistrations.length + ' registration(s)';
-          document.getElementById('pri-domain').textContent = regData.domain;
-          document.getElementById('pri-duration').textContent = regData.duration || '—';
-          document.getElementById('pri-period').textContent = fmtDate(regData.startDate)+' – '+fmtDate(regData.endDate);
-          document.getElementById('pri-pkg').textContent = regData.package;
-          document.getElementById('pri-status').textContent = regData.revoked ? 'Revoked' : ((STATUS[regData.status]||{}).t || regData.status);
+
+          // Render all internships in profile
+          const profContainer = document.getElementById('profile-internships');
+          if(profContainer){
+            if(!allRegistrations.length){
+              profContainer.innerHTML = '<div style="color:var(--mut);font-size:13.5px;padding:8px 0;">No internships yet.</div>';
+            } else {
+              profContainer.innerHTML = allRegistrations.map((reg, i) => {
+                const statusText = reg.revoked ? 'Revoked' : ((STATUS[reg.status]||{}).t || reg.status);
+                const isFirst = i === 0;
+                return `
+                  <div style="border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:${i < allRegistrations.length-1 ? '12px':'0'};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                      <span style="font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:var(--midnight);">${escapeHtml(reg.domain)}</span>
+                      ${isFirst ? '<span style="font-size:10px;font-weight:700;background:var(--steel);color:#fff;padding:2px 8px;border-radius:10px;">Latest</span>' : ''}
+                    </div>
+                    <div class="profile-row"><span class="lbl">Certificate ID</span><span class="val" style="font-family:monospace;color:var(--steel);font-size:12px;">${reg.certId}</span></div>
+                    <div class="profile-row"><span class="lbl">Duration</span><span class="val">${reg.duration || '—'}</span></div>
+                    <div class="profile-row"><span class="lbl">Period</span><span class="val">${fmtDate(reg.startDate)} – ${fmtDate(reg.endDate)}</span></div>
+                    <div class="profile-row"><span class="lbl">Package</span><span class="val">${reg.package || '—'}</span></div>
+                    <div class="profile-row"><span class="lbl">Status</span><span class="val">${statusText}</span></div>
+                  </div>`;
+              }).join('');
+            }
+          }
 
           await loadCurriculum();
         }
