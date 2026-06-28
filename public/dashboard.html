@@ -51,7 +51,7 @@
         }
         .sb-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px;border-bottom:1px solid #1a2c4a;margin-bottom:18px;}
         .sb-brand-mark{width:52px;height:52px;display:flex;align-items:center;justify-content:center;}
-        .sb-brand-mark img{width:52px;height:52px;object-fit:contain;border-radius:8px;}
+        .sb-brand-mark img{width:52px;height:52px;object-fit:contain;mix-blend-mode:screen;}
         @media(max-width:480px){.sb-brand-mark{width:36px;height:36px;}.sb-brand-mark img{width:36px;height:36px;}.brand-name-img{height:32px !important;margin-left:-6px !important;}}
         .sb-brand-name{font-family:'Sora',sans-serif;font-weight:800;line-height:1.1;}
         .sb-brand-name .bn-sm{font-size:15px;color:#fff;}
@@ -139,7 +139,7 @@
         /* Certificate preview — medium card */
         .cert-frame{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;position:relative;}
         .cert-wrap{max-width:480px;margin:0 auto;}
-        .cert-preview{aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:2px solid var(--midnight);border-radius:8px;padding:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:zoom-in;transition:transform .2s, box-shadow .2s;}
+        .cert-preview{aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:2px solid var(--midnight);padding:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:zoom-in;transition:transform .2s, box-shadow .2s;}
         .cert-preview:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,25,44,.12);}
         .cert-preview::before{content:'DEMO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:'Sora',sans-serif;font-size:54px;font-weight:800;color:rgba(11,25,44,.09);letter-spacing:8px;pointer-events:none;white-space:nowrap;}
         .cp-zoom-hint{position:absolute;bottom:8px;right:10px;font-size:10px;color:var(--mut);background:rgba(255,255,255,.85);padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.05em;}
@@ -173,7 +173,7 @@
         .notif{display:flex;gap:14px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;align-items:flex-start;transition:all .15s;position:relative;}
         .notif.unread{border-left:3px solid var(--steel);background:#f7faff;}
         .notif:hover{border-color:var(--steel);}
-        .notif-ic{flex:0 0 36px;height:36px;border-radius:8px;background:var(--soft2);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+        .notif-ic{flex:0 0 36px;height:36px;background:var(--soft2);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
         .notif.type-info .notif-ic{background:#dbeafe;color:#1e40af;}
         .notif.type-success .notif-ic{background:#dcfce7;color:#15803d;}
         .notif.type-warn .notif-ic{background:#fef3c7;color:#92400e;}
@@ -221,14 +221,14 @@
 
         .cert-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;}
         @media (max-width:480px){.cert-actions{gap:8px;}.cert-actions .btn{font-size:12px;padding:8px 12px;}}
-        .cert-locked-note{background:#fef3c7;border:1px solid #fcd34d;color:#854d0e;border-radius:8px;padding:14px 18px;font-size:13.5px;display:flex;gap:11px;align-items:flex-start;margin-top:18px;}
+        .cert-locked-note{background:#fef3c7;border:1px solid #fcd34d;color:#854d0e;padding:14px 18px;font-size:13.5px;display:flex;gap:11px;align-items:flex-start;margin-top:18px;}
         .cert-locked-note .lic{font-size:18px;line-height:1;}
 
         /* Payment */
         .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
         @media (max-width:680px){.pay-grid{grid-template-columns:1fr;}}
         .qr-block{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:20px;text-align:center;}
-        .qr-block img{width:100%;max-width:210px;border-radius:8px;}
+        .qr-block img{width:100%;max-width:210px;}
         .qr-name{font-weight:700;color:var(--midnight);margin-top:10px;font-size:13.5px;}
         .qr-upi{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--steel);background:#fff;display:inline-block;padding:3px 9px;border-radius:5px;margin-top:5px;}
         .qr-amount{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--midnight);margin-top:6px;}
@@ -237,7 +237,7 @@
         .fg label{display:block;font-size:12px;font-weight:700;color:var(--midnight);margin-bottom:6px;}
         .fi{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:inherit;background:#fff;transition:all .2s;}
         .fi:focus{outline:none;border-color:var(--steel);box-shadow:0 0 0 3px rgba(96,139,193,.15);}
-        .btn-pay{width:100%;background:var(--midnight);color:#fff;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;}
+        .btn-pay{width:100%;background:var(--midnight);color:#fff;border:none;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;}
         .btn-pay:hover:not(:disabled){background:var(--midnight2);}
         .btn-pay:disabled{opacity:.6;cursor:not-allowed;}
 
@@ -312,7 +312,10 @@
 <!-- ── Mobile top bar ─────────────────────────────────────────────── -->
 <div class="mobile-topbar">
   <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
-  <div class="m-brand">av<span>RoN</span> Tech</div>
+  <div style="display:flex;align-items:center;gap:0;">
+    <img src="/logo.png" alt="avRoN Technologies" style="width:32px;height:32px;object-fit:contain;mix-blend-mode:screen;">
+    <img src="/brand-name.png" alt="avRoN Technologies" style="height:28px;object-fit:contain;display:block;margin-left:-6px;mix-blend-mode:screen;">
+  </div>
   <button class="ham-btn" onclick="logout()" aria-label="Logout" style="font-size:16px;">⊗</button>
 </div>
 
@@ -763,7 +766,7 @@
               if(reg.revoked) m = {ic:'⛔', t:'Certificate Revoked', badge:'Revoked', color:'#7f1d1d'};
               else m = STATUS[reg.status] || STATUS.pending;
               return `<div style="background:${m.color||'var(--midnight)'};color:#fff;border-radius:12px;padding:18px 22px;display:flex;gap:14px;align-items:center;">
-                <div style="flex:0 0 40px;height:40px;border-radius:8px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${m.ic}</div>
+                <div style="flex:0 0 40px;height:40px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${m.ic}</div>
                 <div style="flex:1;">
                   <div style="font-weight:700;font-size:14px;">${escapeHtml(reg.domain)}</div>
                   <div style="font-size:12px;color:#9eb2c8;margin-top:2px;">${m.t}</div>
@@ -887,7 +890,7 @@
             const issued = reg.status === 'certificate_sent' && !reg.revoked;
             const name = reg.registrantName || '—';
             return `<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-              <div style="flex:0 0 40px;height:40px;border-radius:8px;background:${m.bg||'var(--midnight)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;">${m.ic}</div>
+              <div style="flex:0 0 40px;height:40px;background:${m.bg||'var(--midnight)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;">${m.ic}</div>
               <div style="flex:1;min-width:120px;">
                 <div style="font-weight:700;font-size:14px;color:var(--midnight);">${escapeHtml(reg.domain)}</div>
                 <div style="font-size:12px;color:var(--mut);margin-top:2px;">${name} · ${fmtDate(reg.startDate)} – ${fmtDate(reg.endDate)}</div>
@@ -987,7 +990,7 @@
         domains.forEach(domain => {
           const btn = document.createElement('button');
           btn.textContent = domain;
-          btn.style.cssText = 'padding:8px 16px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--midnight);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;';
+          btn.style.cssText = 'padding:8px 16px;border:1.5px solid var(--line);background:#fff;color:var(--midnight);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;';
           btn.onclick = () => {
             activeCurrDomain = domain;
             switcher.querySelectorAll('button').forEach(b => {
@@ -1186,7 +1189,7 @@
               if(reg.revoked) m = {ic:'⛔', t:'Certificate Revoked', badge:'Revoked', color:'#7f1d1d'};
               else m = STATUS[reg.status] || STATUS.pending;
               return `<div style="background:${m.color||'var(--midnight)'};color:#fff;border-radius:12px;padding:18px 22px;display:flex;gap:14px;align-items:center;">
-                <div style="flex:0 0 40px;height:40px;border-radius:8px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${m.ic}</div>
+                <div style="flex:0 0 40px;height:40px;background:var(--steel);color:var(--midnight);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">${m.ic}</div>
                 <div style="flex:1;">
                   <div style="font-weight:700;font-size:14px;">${escapeHtml(reg.domain)}</div>
                   <div style="font-size:12px;color:#9eb2c8;margin-top:2px;">${m.t}</div>
