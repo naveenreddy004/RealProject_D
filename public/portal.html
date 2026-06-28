@@ -29,9 +29,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 /* Header */
 .topbar{position:fixed;top:0;left:0;right:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 36px;backdrop-filter:blur(20px);background:rgba(10,27,21,.7);border-bottom:1px solid var(--line);}
 .brand{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:800;letter-spacing:-.4px;color:#fff;}
-.brand-ic{width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
-.brand-ic img{width:34px;height:34px;object-fit:contain;border-radius:50%;}
-.brand-name{font-size:18px;}.brand-name span{color:var(--accent);}
+.brand-ic{width:52px;height:52px;display:flex;align-items:center;justify-content:center;}
+.brand-ic img{width:52px;height:52px;object-fit:contain;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;line-height:1.1;}
+.brand-name .bn-sm{font-size:15px;color:#fff;}
+.brand-name .bn-lg{font-size:22px;color:var(--accent);}
 .brand-sub{font-size:10px;color:var(--mut);margin-left:4px;letter-spacing:.14em;text-transform:uppercase;}
 .back-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--mut);border:1px solid var(--line);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
 .back-btn:hover{color:var(--accent);border-color:var(--accent);}
@@ -132,10 +134,8 @@ label{display:block;font-size:12px;font-weight:700;color:#fff;margin-bottom:7px;
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-ic"><img src="/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png" alt="avRoN Technologies"></div>
-    <div>
-      <div class="brand-name">av<span>RoN</span> Tech <span class="brand-sub">avRoNTech.in</span></div>
-    </div>
+    <div class="brand-ic"><img src="/logo.png" alt="avRoN Technologies"></div>
+    <img src="/brand-name.png" alt="avRoN Technologies" style="height:56px;object-fit:contain;display:block;margin-left:-18px;">
   </div>
   <button data-testid="back-home-btn" class="back-btn" onclick="location.href='/'">
     <span style="font-size:14px;">←</span> Home

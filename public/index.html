@@ -67,13 +67,14 @@ a{color:inherit;text-decoration:none;}
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:all 0.4s ease;}
 .nav.scrolled{background:rgba(255,255,255,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(11,25,44,0.08);box-shadow:0 4px 24px rgba(11,25,44,0.06);}
 .nav.top{background:rgba(255,255,255,0.0);backdrop-filter:blur(0px);}
-.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:72px;display:flex;align-items:center;justify-content:space-between;}
-.brand{display:flex;align-items:center;gap:11px;}
-.brand-mark{width:36px;height:36px;display:flex;align-items:center;justify-content:center;}
-.brand-mark img{width:36px;height:36px;object-fit:contain;}
-.brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:19px;color:var(--midnight);letter-spacing:-.4px;}
-.brand-name span{color:var(--steel);}
-.brand-sub{font-size:10px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;line-height:1;margin-top:2px;}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:88px;display:flex;align-items:center;justify-content:space-between;}
+.brand{display:flex;align-items:center;gap:0px;}
+.brand-mark{width:72px;height:72px;display:flex;align-items:center;justify-content:center;}
+.brand-mark img{width:72px;height:72px;object-fit:contain;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;color:var(--midnight);letter-spacing:-.2px;line-height:1.1;}
+.brand-name .bn-sm{font-size:17px;color:var(--midnight);}
+.brand-name .bn-lg{font-size:26px;color:var(--steel);}
+.brand-sub{font-size:12px;color:var(--mut);letter-spacing:.04em;font-weight:500;line-height:1;margin-top:1px;}
 .nav-links{display:flex;align-items:center;gap:36px;}
 .nav-links a{font-size:14px;font-weight:500;color:var(--ink2);transition:color .15s;position:relative;}
 .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--steel);transition:width .25s ease;}
@@ -245,8 +246,8 @@ a{color:inherit;text-decoration:none;}
 @media (max-width:760px){.foot-inner{grid-template-columns:1fr 1fr;}}
 @media (max-width:480px){.foot-inner{grid-template-columns:1fr;}}
 .foot-brand{display:flex;align-items:center;gap:12px;}
-.foot-brand-mark{width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
-.foot-brand-mark img{width:42px;height:42px;object-fit:contain;}
+.foot-brand-mark{width:56px;height:56px;display:flex;align-items:center;justify-content:center;}
+.foot-brand-mark img{width:56px;height:56px;object-fit:contain;}
 .foot-brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:19px;color:#fff;letter-spacing:-.4px;}
 .foot-brand-name span{color:var(--steel);}
 .foot-desc{font-size:13px;color:#617489;margin-top:18px;line-height:1.75;max-width:280px;}
@@ -281,11 +282,8 @@ a{color:inherit;text-decoration:none;}
 <nav class="nav top" id="mainNav">
   <div class="nav-inner">
     <a href="/" class="brand" data-testid="nav-home-link">
-      <div class="brand-mark"><img src="/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png" alt="avRoN Technologies"></div>
-      <div>
-        <div class="brand-name">av<span>RoN</span> Tech</div>
-        <div class="brand-sub">avRoNTech.in</div>
-      </div>
+      <div class="brand-mark"><img src="/logo.png" alt="avRoN Technologies"></div>
+      <img src="/brand-name.png" alt="avRoN Technologies" style="height:64px;object-fit:contain;display:block;margin-left:-18px;">
     </a>
     <div class="nav-links">
       <a href="#domains">Domains</a>
@@ -312,7 +310,7 @@ a{color:inherit;text-decoration:none;}
     <div>
       <span class="eyebrow fade-up fade-up-delay-1">Cohort 2026 · Now accepting applications</span>
       <h1 class="h1 fade-up fade-up-delay-2">Build the career<span class="br"></span>your campus<span class="br"></span><span class="hl">never taught you.</span></h1>
-      <p class="lede fade-up fade-up-delay-3">avRoN Tech runs project-driven virtual internships in high-demand CSE domains. Get a structured roadmap, real-world deliverables and a verified corporate certificate that recruiters can validate online.</p>
+      <p class="lede fade-up fade-up-delay-3"><span style="font-family:'Sora',sans-serif;font-weight:800;">av<span style="color:var(--steel);">R</span>o<span style="color:var(--steel);">N</span> Technologies</span> runs project-driven virtual internships in high-demand CSE domains. Get a structured roadmap, real-world deliverables and a verified corporate certificate that recruiters can validate online.</p>
       <div class="hero-cta fade-up fade-up-delay-4">
         <a href="/register" class="btn btn-primary btn-lg" data-testid="hero-apply-btn">Apply for Internship →</a>
         <a href="#domains" class="btn btn-outline btn-lg" data-testid="hero-domains-btn">Browse Domains</a>
@@ -464,10 +462,10 @@ a{color:inherit;text-decoration:none;}
   <div class="foot-inner">
     <div>
       <div class="foot-brand">
-        <div class="foot-brand-mark"><img src="/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png" alt="avRoN Technologies"></div>
+        <div class="foot-brand-mark"><img src="/logo.png" alt="avRoN Technologies"></div>
         <div>
-          <div class="foot-brand-name">av<span>RoN</span> Tech</div>
-          <div style="font-size:10.5px;color:#3f5368;letter-spacing:.16em;text-transform:uppercase;margin-top:2px;">avRoNTech.in</div>
+          <div class="foot-brand-name" style="line-height:1.1;">av<span>RoN</span> Technologies</div>
+          <div style="font-size:12px;color:#617489;letter-spacing:.04em;font-weight:500;margin-top:3px;">avRoNTech.in</div>
         </div>
       </div>
       <p class="foot-desc">A corporate engine for engineering interns. Roadmaps, projects and verified certificates — delivered with quality.</p>
@@ -494,7 +492,7 @@ a{color:inherit;text-decoration:none;}
     <div class="foot-col">
       <h5>Company</h5>
       <ul>
-        <li><a href="#">About avRoN Tech</a></li>
+        <li><a href="#">About <span style="font-family:'Sora',sans-serif;font-weight:800;">av<span style="color:var(--steel);">R</span>o<span style="color:var(--steel);">N</span></span> Technologies</a></li>
         <li><a href="#">Privacy Policy</a></li>
         <li><a href="#">Terms of Service</a></li>
         <li><a href="mailto:official@avrontech.in">Contact</a></li>
@@ -502,7 +500,7 @@ a{color:inherit;text-decoration:none;}
     </div>
   </div>
   <div class="foot-bot">
-    Copyright © 2026 avRoN Tech · All rights reserved · Built for engineers, by engineers.
+    Copyright © 2026 <span style="font-family:'Sora',sans-serif;font-weight:800;">av<span style="color:var(--steel);">R</span>o<span style="color:var(--steel);">N</span> Technologies</span> · All rights reserved · Built for engineers, by engineers.
   </div>
 </footer>
 

@@ -15,10 +15,11 @@
 html,body{min-height:100%;}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
 .nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;}
-.brand-mark{width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
-.brand-mark img{width:32px;height:32px;object-fit:contain;border-radius:50%;}
-.brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;color:var(--midnight);letter-spacing:-.3px;}
-.brand-name span{color:var(--steel);}
+.brand-mark{width:52px;height:52px;display:flex;align-items:center;justify-content:center;}
+.brand-mark img{width:52px;height:52px;object-fit:contain;}
+.brand-name{font-family:'Sora',sans-serif;font-weight:800;color:var(--midnight);letter-spacing:-.2px;line-height:1.1;}
+.brand-name .bn-sm{font-size:17px;color:var(--midnight);}
+.brand-name .bn-lg{font-size:26px;color:var(--steel);}
 .btn-ghost{background:transparent;color:var(--midnight);border:1px solid var(--line);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;}
 .btn-ghost:hover{border-color:var(--midnight);}
 
@@ -89,8 +90,8 @@ html,body{min-height:100%;}body{font-family:'Inter',sans-serif;background:var(--
 
 <nav class="nav">
   <a href="/" class="brand">
-    <div class="brand-mark"><img src="/uploads/Gemini_Generated_Image_k0zfh2k0zfh2k0zf.png" alt="avRoN Technologies"></div>
-    <div class="brand-name">av<span>RoN</span> Tech</div>
+    <div class="brand-mark"><img src="/logo.png" alt="avRoN Technologies"></div>
+    <img src="/brand-name.png" alt="avRoN Technologies" style="height:56px;object-fit:contain;display:block;margin-left:-18px;">
   </a>
   <a href="/" class="btn-ghost">← Home</a>
 </nav>
