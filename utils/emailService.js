@@ -112,33 +112,33 @@ const logoImgTag = _logoB64
 const wrap = (innerHTML) => `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .email-wrap{max-width:580px;margin:0 auto;}
-.header{background:#0e7c6e;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;}
+.header{background:#0B192C;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;border-bottom:3px solid #608BC1;}
 .brand-text .big{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.1;}
-.brand-text .sub{font-size:10px;color:#c8f0ec;margin-top:2px;letter-spacing:0.08em;}
-.body{background:#f0fbf9;padding:22px 26px;border-left:1px solid #b2e0d8;border-right:1px solid #b2e0d8;}
-.body h2{font-size:18px;font-weight:700;color:#0f2e2b;margin-bottom:4px;line-height:1.3;}
+.brand-text .sub{font-size:10px;color:#cdd9eb;margin-top:2px;letter-spacing:0.08em;}
+.body{background:#ffffff;padding:22px 26px;border-left:1px solid #e6ebf2;border-right:1px solid #e6ebf2;}
+.body h2{font-size:18px;font-weight:700;color:#0B192C;margin-bottom:4px;line-height:1.3;}
 .body p{font-size:14px;color:#374151;margin-bottom:10px;line-height:1.6;}
 .body p.muted{color:#6b7280;font-size:12.5px;}
-.kv{background:#e4f5f1;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #b2e0d8;}
-.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #c8ede8;}
+.kv{background:#f5f7fb;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #e6ebf2;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #e6ebf2;}
 .kv-row:last-child{border-bottom:none;}
-.kv-row:nth-child(even){background:#f0fbf9;}
-.kv-row .lbl{color:#0e7c6e;font-size:12.5px;font-weight:600;}
-.kv-row .val{font-weight:700;color:#0f2e2b;font-size:13px;text-align:right;}
-.steps{background:#e4f5f1;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #b2e0d8;}
-.steps .head{font-size:10px;font-weight:800;color:#0e7c6e;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+.kv-row:nth-child(even){background:#eef2f7;}
+.kv-row .lbl{color:#608BC1;font-size:12.5px;font-weight:600;}
+.kv-row .val{font-weight:700;color:#0B192C;font-size:13px;text-align:right;}
+.steps{background:#f5f7fb;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #e6ebf2;}
+.steps .head{font-size:10px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
 .steps ol{padding-left:18px;}
 .steps ol li{font-size:13px;color:#374151;margin-bottom:6px;line-height:1.5;}
-.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
-.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #c8ede8;}
-.signoff b{color:#0f2e2b;}
-hr.divider{border:none;border-top:1px solid #c8ede8;margin:14px 0;}
-.footer{background:#0f2e2b;padding:14px 26px;border-radius:0 0 10px 10px;color:#7ab8b0;font-size:11px;text-align:center;line-height:1.7;}
-.footer a{color:#c8f0ec;text-decoration:none;margin:0 4px;}
-.footer .pipe{color:#1a4a44;margin:0 2px;}
-.footer .small{font-size:10px;margin-top:4px;color:#4a8a82;display:block;}
+.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
+.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #e6ebf2;}
+.signoff b{color:#0B192C;}
+hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
+.footer{background:#0B192C;padding:14px 26px;border-radius:0 0 10px 10px;color:#7186a0;font-size:11px;text-align:center;line-height:1.7;}
+.footer a{color:#608BC1;text-decoration:none;margin:0 4px;}
+.footer .pipe{color:#1a2c4a;margin:0 2px;}
+.footer .small{font-size:10px;margin-top:4px;color:#4a5568;display:block;}
 </style></head><body>
 <div class="email-wrap">
   <div class="header">
@@ -169,25 +169,25 @@ async function sendConfirmationEmail(user, reg) {
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
-.header{background:#0e7c6e;padding:20px 28px;text-align:center;}
+.header{background:#0B192C;padding:20px 28px;text-align:center;}
 .header-inner{display:inline-flex;align-items:center;gap:12px;}
 .brand-name .big{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;line-height:1;}
-.brand-name .small{font-size:11px;color:#c8f0ec;margin-top:2px;}
-.body{background:#f0fbf9;padding:32px 32px 24px;}
-.title{font-size:24px;font-weight:800;color:#0f2e2b;margin-bottom:6px;}
+.brand-name .small{font-size:11px;color:#cdd9eb;margin-top:2px;}
+.body{background:#f5f7fb;padding:32px 32px 24px;}
+.title{font-size:24px;font-weight:800;color:#0B192C;margin-bottom:6px;}
 .subtitle{font-size:14px;color:#374151;margin-bottom:20px;line-height:1.6;}
-.highlight-box{background:#fff;border-left:4px solid #0e7c6e;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;}
+.highlight-box{background:#fff;border-left:4px solid #0B192C;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;}
 .highlight-box p{font-size:13.5px;color:#374151;margin-bottom:6px;line-height:1.6;}
 .highlight-box p:last-child{margin-bottom:0;}
-.highlight-box b{color:#0e7c6e;}
-.divider{border:none;border-top:1px solid #c8ede8;margin:20px 0;}
-.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:12px 30px;border-radius:7px;text-decoration:none;font-size:14px;font-weight:700;}
-.footer{background:#0f2e2b;padding:20px 28px;text-align:center;color:#7ab8b0;font-size:11px;line-height:2;}
-.footer a{color:#c8f0ec;text-decoration:none;margin:0 8px;}
+.highlight-box b{color:#0B192C;}
+.divider{border:none;border-top:1px solid #e6ebf2;margin:20px 0;}
+.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:12px 30px;border-radius:7px;text-decoration:none;font-size:14px;font-weight:700;}
+.footer{background:#0B192C;padding:20px 28px;text-align:center;color:#7186a0;font-size:11px;line-height:2;}
+.footer a{color:#cdd9eb;text-decoration:none;margin:0 8px;}
 .social{margin:8px 0;}
-.social a{display:inline-block;margin:0 6px;color:#c8f0ec;font-size:18px;text-decoration:none;}
+.social a{display:inline-block;margin:0 6px;color:#cdd9eb;font-size:18px;text-decoration:none;}
 </style></head><body>
 <div class="wrap">
 
@@ -211,13 +211,13 @@ body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
     <!-- Highlight box -->
     <div class="highlight-box">
       <p>🗓 <b>Duration:</b> ${fmt(reg.startDate)} to ${fmt(reg.endDate)}</p>
-      <p>🆔 <b>Certificate ID:</b> <span style="font-family:monospace;color:#0e7c6e;">${reg.certId}</span></p>
+      <p>🆔 <b>Certificate ID:</b> <span style="font-family:monospace;color:#0B192C;">${reg.certId}</span></p>
       <p>⏳ <b>Offer Letter Timeline:</b> within a few hours</p>
     </div>
 
     <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:10px;">Our team is reviewing your application. You will receive your offer letter shortly with further instructions on how to begin your internship journey.</p>
 
-    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:20px;">If you have any questions, feel free to reach out to our support team at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0e7c6e;">${SUPPORT_EMAIL}</a>.</p>
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:20px;">If you have any questions, feel free to reach out to our support team at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0B192C;">${SUPPORT_EMAIL}</a>.</p>
 
     <hr class="divider">
 
@@ -242,7 +242,7 @@ body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       <a href="#" title="LinkedIn">in</a>
       <a href="#" title="Instagram">&#9675;</a>
     </div>
-    <div style="font-size:10px;color:#4a8a82;margin-top:4px;">
+    <div style="font-size:10px;color:#4a5568;margin-top:4px;">
       You received this email because you registered for an internship at avRoNTech.in<br>
       © 2026 avRoN Technologies. All rights reserved. &nbsp;·&nbsp; UDYAM-AP-23-0089163
     </div>
@@ -276,24 +276,24 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
-.header{background:#0e7c6e;padding:22px 28px;display:flex;align-items:center;gap:14px;}
+.header{background:#0B192C;padding:22px 28px;display:flex;align-items:center;gap:14px;}
 .brand-name{color:#fff;}
 .brand-name .big{font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1;}
-.brand-name .small{font-size:11px;color:#c8f0ec;margin-top:2px;letter-spacing:0.05em;}
-.body{background:#f0fbf9;padding:28px 32px;}
+.brand-name .small{font-size:11px;color:#cdd9eb;margin-top:2px;letter-spacing:0.05em;}
+.body{background:#f5f7fb;padding:28px 32px;}
 .body p{font-size:14px;color:#374151;line-height:1.7;margin-bottom:12px;}
-.detail-row{display:flex;padding:10px 14px;border-bottom:1px solid #c8ede8;}
+.detail-row{display:flex;padding:10px 14px;border-bottom:1px solid #e6ebf2;}
 .detail-row:last-child{border-bottom:none;}
-.detail-row:nth-child(even){background:#e0f5f1;}
-.detail-row:nth-child(odd){background:#f0fbf9;}
-.detail-lbl{font-size:13px;font-weight:700;color:#0e7c6e;width:120px;flex-shrink:0;}
+.detail-row:nth-child(even){background:#eef2f7;}
+.detail-row:nth-child(odd){background:#f5f7fb;}
+.detail-lbl{font-size:13px;font-weight:700;color:#0B192C;width:120px;flex-shrink:0;}
 .detail-val{font-size:13px;color:#1a1a1a;}
-.table-wrap{border:1px solid #b2e0d8;border-radius:8px;overflow:hidden;margin:18px 0;}
-.cta{display:inline-block;background:#0e7c6e;color:#fff !important;padding:12px 28px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;margin:8px 0;}
-.footer{background:#0f2e2b;padding:16px 28px;text-align:center;color:#7ab8b0;font-size:11px;line-height:1.8;}
-.footer a{color:#c8f0ec;text-decoration:none;}
+.table-wrap{border:1px solid #e6ebf2;border-radius:8px;overflow:hidden;margin:18px 0;}
+.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:12px 28px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;margin:8px 0;}
+.footer{background:#0B192C;padding:16px 28px;text-align:center;color:#7186a0;font-size:11px;line-height:1.8;}
+.footer a{color:#cdd9eb;text-decoration:none;}
 </style></head><body>
 <div class="wrap">
   <div class="header">
@@ -311,12 +311,12 @@ body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
       <div class="detail-row"><span class="detail-lbl">Domain</span><span class="detail-val">${reg.domain}</span></div>
       <div class="detail-row"><span class="detail-lbl">Duration</span><span class="detail-val">${fmt(reg.startDate)} to ${fmt(reg.endDate)}</span></div>
       <div class="detail-row"><span class="detail-lbl">Stipend</span><span class="detail-val">₹ 0.00</span></div>
-      <div class="detail-row"><span class="detail-lbl">Certificate ID</span><span class="detail-val" style="font-family:monospace;color:#0e7c6e;">${reg.certId}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Certificate ID</span><span class="detail-val" style="font-family:monospace;color:#0B192C;">${reg.certId}</span></div>
     </div>
 
     <p>Please review the attached offer letter PDF.</p>
 
-    <p>Feel free to contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0e7c6e;">${SUPPORT_EMAIL}</a> if you have any questions.</p>
+    <p>Feel free to contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#0B192C;">${SUPPORT_EMAIL}</a> if you have any questions.</p>
 
     <p>We look forward to your positive response!</p>
 
@@ -329,7 +329,7 @@ body{background:#eaf6f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
   <div class="footer">
     <a href="${BASE}">Home</a> &nbsp;|&nbsp;
     <a href="mailto:${SUPPORT_EMAIL}">Support</a><br>
-    <span style="font-size:10px;color:#4a8a82;">© 2026 avRoN Technologies. UDYAM-AP-23-0089163</span>
+    <span style="font-size:10px;color:#4a5568;">© 2026 avRoN Technologies. UDYAM-AP-23-0089163</span>
   </div>
 </div>
 </body></html>`;
