@@ -105,36 +105,36 @@ try {
 } catch (_) {}
 
 const logoImgTag = _logoB64
-  ? `<img src="data:image/png;base64,${_logoB64}" alt="avRoN Technologies" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;" />`
+  ? `<img src="data:image/jpeg;base64,${_logoB64}" alt="avRoN Technologies" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;" />`
   : `<div style="width:48px;height:48px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
 
 // ── Common HTML scaffolding ───────────────────────────────────────────────────
 const wrap = (innerHTML) => `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
+body{background:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .email-wrap{max-width:580px;margin:0 auto;}
-.header{background:#0B192C;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;border-bottom:3px solid #608BC1;}
-.brand-text .big{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.1;}
-.brand-text .sub{font-size:10px;color:#cdd9eb;margin-top:2px;letter-spacing:0.08em;}
-.body{background:#ffffff;padding:22px 26px;border-left:1px solid #e6ebf2;border-right:1px solid #e6ebf2;}
+.header{background:#cdd9eb;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;border-bottom:3px solid #608BC1;}
+.brand-text .big{font-size:20px;font-weight:800;color:#0B192C;letter-spacing:-0.3px;line-height:1.1;}
+.brand-text .sub{font-size:10px;color:#5a6a7e;margin-top:2px;letter-spacing:0.08em;}
+.body{background:#ffffff;padding:22px 26px;border-left:1px solid #cdd9eb;border-right:1px solid #cdd9eb;}
 .body h2{font-size:18px;font-weight:700;color:#0B192C;margin-bottom:4px;line-height:1.3;}
 .body p{font-size:14px;color:#374151;margin-bottom:10px;line-height:1.6;}
 .body p.muted{color:#6b7280;font-size:12.5px;}
-.kv{background:#f5f7fb;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #e6ebf2;}
-.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #e6ebf2;}
+.kv{background:#eef3fa;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #cdd9eb;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #cdd9eb;}
 .kv-row:last-child{border-bottom:none;}
-.kv-row:nth-child(even){background:#eef2f7;}
+.kv-row:nth-child(even){background:#dce8f5;}
 .kv-row .lbl{color:#608BC1;font-size:12.5px;font-weight:600;}
 .kv-row .val{font-weight:700;color:#0B192C;font-size:13px;text-align:right;}
-.steps{background:#f5f7fb;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #e6ebf2;}
+.steps{background:#eef3fa;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #cdd9eb;}
 .steps .head{font-size:10px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
 .steps ol{padding-left:18px;}
 .steps ol li{font-size:13px;color:#374151;margin-bottom:6px;line-height:1.5;}
 .cta{display:inline-block;background:#0B192C;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
-.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #e6ebf2;}
+.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #cdd9eb;}
 .signoff b{color:#0B192C;}
-hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
+hr.divider{border:none;border-top:1px solid #cdd9eb;margin:14px 0;}
 .footer{background:#0B192C;padding:14px 26px;border-radius:0 0 10px 10px;color:#7186a0;font-size:11px;text-align:center;line-height:1.7;}
 .footer a{color:#608BC1;text-decoration:none;margin:0 4px;}
 .footer .pipe{color:#1a2c4a;margin:0 2px;}
@@ -145,7 +145,7 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:14px 0;}
     ${logoImgTag}
     <div class="brand-text">
       <div class="big">avRoN Technologies</div>
-      <div class="sub">${DOMAIN} &nbsp;·&nbsp; UDYAM-AP-23-0089163</div>
+      <div class="sub">${DOMAIN}</div>
     </div>
   </div>
   <div class="body">${innerHTML}</div>
@@ -171,10 +171,10 @@ async function sendConfirmationEmail(user, reg) {
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
-.header{background:#0B192C;padding:20px 28px;text-align:center;}
+.header{background:#cdd9eb;padding:20px 28px;text-align:center;}
 .header-inner{display:inline-flex;align-items:center;gap:12px;}
-.brand-name .big{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;line-height:1;}
-.brand-name .small{font-size:11px;color:#cdd9eb;margin-top:2px;}
+.brand-name .big{font-size:22px;font-weight:800;color:#0B192C;letter-spacing:-0.5px;line-height:1;}
+.brand-name .small{font-size:11px;color:#5a6a7e;margin-top:2px;}
 .body{background:#f5f7fb;padding:32px 32px 24px;}
 .title{font-size:24px;font-weight:800;color:#0B192C;margin-bottom:6px;}
 .subtitle{font-size:14px;color:#374151;margin-bottom:20px;line-height:1.6;}
@@ -184,7 +184,7 @@ body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .highlight-box b{color:#0B192C;}
 .divider{border:none;border-top:1px solid #e6ebf2;margin:20px 0;}
 .cta{display:inline-block;background:#0B192C;color:#fff !important;padding:12px 30px;border-radius:7px;text-decoration:none;font-size:14px;font-weight:700;}
-.footer{background:#0B192C;padding:20px 28px;text-align:center;color:#7186a0;font-size:11px;line-height:2;}
+.footer{background:#cdd9eb;padding:20px 28px;text-align:center;color:#7186a0;font-size:11px;line-height:2;}
 .footer a{color:#cdd9eb;text-decoration:none;margin:0 8px;}
 .social{margin:8px 0;}
 .social a{display:inline-block;margin:0 6px;color:#cdd9eb;font-size:18px;text-decoration:none;}
@@ -268,7 +268,7 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   try {
     if (fs.existsSync(logoPath)) {
       const logoB64 = fs.readFileSync(logoPath).toString('base64');
-      logoTag = `<img src="data:image/png;base64,${logoB64}" alt="avRoN Technologies" style="width:60px;height:60px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" />`;
+      logoTag = `<img src="data:image/jpeg;base64,${logoB64}" alt="avRoN Technologies" style="width:60px;height:60px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" />`;
     }
   } catch (_) {}
 
@@ -278,10 +278,10 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
 .wrap{max-width:600px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);}
-.header{background:#0B192C;padding:22px 28px;display:flex;align-items:center;gap:14px;}
+.header{background:#cdd9eb;padding:22px 28px;display:flex;align-items:center;gap:14px;}
 .brand-name{color:#fff;}
 .brand-name .big{font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1;}
-.brand-name .small{font-size:11px;color:#cdd9eb;margin-top:2px;letter-spacing:0.05em;}
+.brand-name .small{font-size:11px;color:#5a6a7e;margin-top:2px;letter-spacing:0.05em;}
 .body{background:#f5f7fb;padding:28px 32px;}
 .body p{font-size:14px;color:#374151;line-height:1.7;margin-bottom:12px;}
 .detail-row{display:flex;padding:10px 14px;border-bottom:1px solid #e6ebf2;}
@@ -329,7 +329,7 @@ body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
   <div class="footer">
     <a href="${BASE}">Home</a> &nbsp;|&nbsp;
     <a href="mailto:${SUPPORT_EMAIL}">Support</a><br>
-    <span style="font-size:10px;color:#4a5568;">© 2026 avRoN Technologies. UDYAM-AP-23-0089163</span>
+    <span style="font-size:10px;color:#4a5568;">© 2026 avRoN Technologies. 
   </div>
 </div>
 </body></html>`;
