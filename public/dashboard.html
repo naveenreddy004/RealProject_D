@@ -388,7 +388,7 @@
                 <!-- All internships overview (shown when 2+ registrations) -->
                 <div id="allStatusCards" style="display:none;margin-bottom:18px;"></div>
 
-                <div class="stats">
+                <div class="stats" id="statsSection">
                     <div class="stat"><div class="lbl">Domain</div><div class="val" id="s-domain">—</div></div>
                     <div class="stat"><div class="lbl">Duration</div><div class="val" id="s-duration">—</div><div class="sub" id="s-period">—</div></div>
                     <div class="stat"><div class="lbl">Package</div><div class="val" id="s-pkg">—</div><div class="sub" id="s-amt">—</div></div>
@@ -731,12 +731,17 @@
         document.getElementById('firstName').textContent = (user.fullName||'').split(' ')[0] || 'there';
 
         if(regData){
-          // Stats — show most recent
-          document.getElementById('s-domain').textContent = regData.domain;
-          document.getElementById('s-duration').textContent = regData.duration || '—';
-          document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
-          document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
-          document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+          // Stats — show most recent for single, hide stats for multiple
+          if(allRegistrations.length > 1){
+            document.getElementById('statsSection').style.display = 'none';
+          } else {
+            document.getElementById('statsSection').style.display = 'grid';
+            document.getElementById('s-domain').textContent = regData.domain;
+            document.getElementById('s-duration').textContent = regData.duration || '—';
+            document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
+            document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
+            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+          }
 
           // Status banner — check revoked first
           let meta;
@@ -1198,6 +1203,18 @@
                 <div style="background:rgba(96,139,193,.25);color:var(--steel);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;">${m.badge}</div>
               </div>`;
             }).join('');
+          }
+
+          // Update stats visibility for multiple internships
+          if(allRegistrations.length > 1){
+            document.getElementById('statsSection').style.display = 'none';
+          } else if(regData) {
+            document.getElementById('statsSection').style.display = 'grid';
+            document.getElementById('s-domain').textContent = regData.domain;
+            document.getElementById('s-duration').textContent = regData.duration || '—';
+            document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
+            document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
+            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
           }
 
           // Update task list progress
