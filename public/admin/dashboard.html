@@ -30,6 +30,7 @@
         /* ── MOBILE TOP BAR ── */
         .mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:1100;height:56px;background:var(--night);border-bottom:1px solid rgba(255,255,255,.08);align-items:center;justify-content:space-between;padding:0 16px;}
         @media(max-width:960px){.mobile-topbar{display:flex;}}
+        .mobile-topbar .m-left{display:flex;align-items:center;gap:12px;}
         .mobile-topbar .m-brand{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#fff;}
         .mobile-topbar .m-brand span{color:var(--steel);}
         .ham-btn{background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;padding:6px;line-height:1;}
@@ -286,10 +287,12 @@
 
 <!-- ── Mobile top bar ── -->
 <div class="mobile-topbar">
-  <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
-  <div style="display:flex;align-items:center;gap:0;">
-    <img src="/logo.png" alt="avRoN Technologies" style="width:32px;height:32px;object-fit:contain;">
-    <img src="/brand-name.png" alt="avRoN Technologies" style="height:28px;object-fit:contain;display:block;margin-left:-6px;">
+  <div class="m-left">
+    <button class="ham-btn" onclick="toggleSidebar()" aria-label="Menu">&#9776;</button>
+    <div style="display:flex;align-items:center;gap:0;">
+      <img src="/logo.png" alt="avRoN Technologies" style="width:32px;height:32px;object-fit:contain;">
+      <img src="/brand-name.png" alt="avRoN Technologies" style="height:28px;object-fit:contain;display:block;margin-left:-6px;">
+    </div>
   </div>
   <button class="ham-btn" onclick="openBroadcastModal()" aria-label="Post Update" style="font-size:14px;">📢</button>
 </div>

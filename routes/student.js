@@ -173,7 +173,7 @@ router.post('/submit-payment', authStudent, uploadPay.single('paymentScreenshot'
 router.post('/complete-task', authStudent, async (req, res) => {
   try {
     const taskIndex = parseInt(req.body.taskIndex, 10);
-    const reg = await Registration.findOne({ user: req.user._id });
+    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
     if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
     if (reg.status !== 'active') return res.status(400).json({ success: false, message: 'Internship not yet active.' });
 
@@ -236,7 +236,7 @@ router.get('/certificate/:regId', authStudent, async (req, res) => {
 // ── DOWNLOAD CERTIFICATE PDF (most recent) ────────────────────────────────────
 router.get('/certificate', authStudent, async (req, res) => {
   try {
-    const reg = await Registration.findOne({ user: req.user._id });
+    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
     if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
     if (reg.revoked) return res.status(403).json({ success: false, message: 'Certificate revoked.' });
     if (reg.status !== 'certificate_sent') {
@@ -304,7 +304,7 @@ router.get('/receipt/:regId', authStudent, async (req, res) => {
 // ── GET OFFER LETTER (most recent, legacy) ───────────────────────────────────
 router.get('/offer-letter', authStudent, async (req, res) => {
   try {
-    const reg = await Registration.findOne({ user: req.user._id });
+    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
     if (!reg) return res.status(404).json({ success: false, message: 'Registration not found.' });
     if (!['certificate_sent', 'active', 'completed'].includes(reg.status)) {
       return res.status(400).json({ success: false, message: 'Offer letter not yet available. Awaiting admin approval.' });
@@ -327,7 +327,7 @@ router.get('/offer-letter', authStudent, async (req, res) => {
 
 router.get('/receipt', authStudent, async (req, res) => {
   try {
-    const reg = await Registration.findOne({ user: req.user._id });
+    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
     if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
 
     let pdfBuf = toBuffer(reg.receiptPdf);
@@ -385,10 +385,14 @@ router.get('/verify/:certId', async (req, res) => {
     const reg = await Registration.findOne({ certId: req.params.certId }).populate('user', 'fullName college course');
     if (!reg) return res.json({ valid: false, message: 'Certificate not found.', state: 'not_found' });
 
+    const studentName = reg.registrantName || (reg.user ? reg.user.fullName : 'Unknown');
+    const studentCollege = reg.registrantCollege || (reg.user ? reg.user.college : '—');
+    const studentCourse = reg.registrantCourse || (reg.user ? reg.user.course : '—');
+
     if (reg.revoked) {
       return res.json({
         valid: false, state: 'revoked',
-        name: reg.user.fullName, domain: reg.domain, certId: reg.certId,
+        name: studentName, domain: reg.domain, certId: reg.certId,
         revokedAt: reg.revokedAt, reason: reg.revokedReason || 'Revoked by issuer',
       });
     }
@@ -401,10 +405,10 @@ router.get('/verify/:certId', async (req, res) => {
     res.json({
       valid: !expired,
       state: expired ? 'expired' : 'valid',
-      name: reg.user.fullName,
+      name: studentName,
       domain: reg.domain,
-      college: reg.user.college,
-      course: reg.user.course,
+      college: studentCollege,
+      course: studentCourse,
       startDate: reg.startDate,
       endDate: reg.endDate,
       certId: reg.certId,
