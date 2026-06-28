@@ -95,57 +95,63 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com'
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
-// ── Logo as base64 (loaded once at module level) ──────────────────────────────
-let _logoB64 = '';
-try {
-  const _fs = require('fs');
-  const _path = require('path');
-  const _lp = _path.join(__dirname, '../public/logo.png');
-  if (_fs.existsSync(_lp)) _logoB64 = _fs.readFileSync(_lp).toString('base64');
-} catch (_) {}
+// ── Logo as base64 — read fresh each time to always use latest file ───────────
+function getLogoTag(size = 48) {
+  try {
+    const _fs = require('fs');
+    const _path = require('path');
+    const _lp = _path.join(__dirname, '../public/logo.png');
+    if (_fs.existsSync(_lp)) {
+      const b64 = _fs.readFileSync(_lp).toString('base64');
+      const magic = _fs.readFileSync(_lp).slice(0,2).toString('hex');
+      const mime = magic === 'ffd8' ? 'image/jpeg' : 'image/png';
+      return `<img src="data:${mime};base64,${b64}" alt="avRoN Technologies" style="width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;" />`;
+    }
+  } catch (_) {}
+  return `<div style="width:48px;height:48px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
+}
 
-const logoImgTag = _logoB64
-  ? `<img src="data:image/jpeg;base64,${_logoB64}" alt="avRoN Technologies" style="width:48px;height:48px;object-fit:contain;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;" />`
-  : `<div style="width:48px;height:48px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
+// Keep backward compat for wrap() which uses logoImgTag
+const logoImgTag = getLogoTag(48);
 
 // ── Common HTML scaffolding ───────────────────────────────────────────────────
 const wrap = (innerHTML) => `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:16px 8px;}
-.email-wrap{max-width:580px;margin:0 auto;}
-.header{background:#cdd9eb;padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px;border-bottom:3px solid #608BC1;}
-.brand-text .big{font-size:20px;font-weight:800;color:#0B192C;letter-spacing:-0.3px;line-height:1.1;}
-.brand-text .sub{font-size:10px;color:#5a6a7e;margin-top:2px;letter-spacing:0.08em;}
-.body{background:#ffffff;padding:22px 26px;border-left:1px solid #cdd9eb;border-right:1px solid #cdd9eb;}
-.body h2{font-size:18px;font-weight:700;color:#0B192C;margin-bottom:4px;line-height:1.3;}
-.body p{font-size:14px;color:#374151;margin-bottom:10px;line-height:1.6;}
+body{background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:24px 8px;}
+.email-wrap{max-width:600px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(11,25,44,0.12);}
+.header{background:linear-gradient(135deg,#0B192C 0%,#152844 100%);padding:22px 28px;display:flex;align-items:center;gap:14px;border-bottom:3px solid #608BC1;}
+.brand-text .big{font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;line-height:1.1;}
+.brand-text .sub{font-size:10px;color:#7186a0;margin-top:3px;letter-spacing:0.1em;text-transform:uppercase;}
+.body{background:#ffffff;padding:28px 32px;}
+.body h2{font-size:20px;font-weight:700;color:#0B192C;margin-bottom:6px;line-height:1.3;}
+.body p{font-size:14px;color:#374151;margin-bottom:12px;line-height:1.7;}
 .body p.muted{color:#6b7280;font-size:12.5px;}
-.kv{background:#eef3fa;border-radius:8px;padding:0;margin:12px 0;overflow:hidden;border:1px solid #cdd9eb;}
-.kv-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid #cdd9eb;}
+.kv{background:#f5f7fb;border-radius:10px;padding:0;margin:16px 0;overflow:hidden;border:1px solid #e6ebf2;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #e6ebf2;}
 .kv-row:last-child{border-bottom:none;}
-.kv-row:nth-child(even){background:#dce8f5;}
+.kv-row:nth-child(even){background:#eef2f8;}
 .kv-row .lbl{color:#608BC1;font-size:12.5px;font-weight:600;}
 .kv-row .val{font-weight:700;color:#0B192C;font-size:13px;text-align:right;}
-.steps{background:#eef3fa;border-radius:8px;padding:14px 16px;margin:12px 0;border:1px solid #cdd9eb;}
-.steps .head{font-size:10px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+.steps{background:#f5f7fb;border-radius:10px;padding:16px 18px;margin:16px 0;border:1px solid #e6ebf2;}
+.steps .head{font-size:10px;font-weight:800;color:#608BC1;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;}
 .steps ol{padding-left:18px;}
-.steps ol li{font-size:13px;color:#374151;margin-bottom:6px;line-height:1.5;}
-.cta{display:inline-block;background:#0B192C;color:#fff !important;padding:11px 22px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:0.02em;}
-.signoff{font-size:13px;color:#374151;margin-top:14px;line-height:1.7;padding-top:14px;border-top:1px solid #cdd9eb;}
+.steps ol li{font-size:13.5px;color:#374151;margin-bottom:8px;line-height:1.6;}
+.cta{display:inline-block;background:linear-gradient(135deg,#0B192C,#152844);color:#fff !important;padding:13px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.02em;box-shadow:0 4px 14px rgba(11,25,44,0.25);}
+.signoff{font-size:13.5px;color:#374151;margin-top:16px;line-height:1.8;padding-top:16px;border-top:1px solid #e6ebf2;}
 .signoff b{color:#0B192C;}
-hr.divider{border:none;border-top:1px solid #cdd9eb;margin:14px 0;}
-.footer{background:#0B192C;padding:14px 26px;border-radius:0 0 10px 10px;color:#7186a0;font-size:11px;text-align:center;line-height:1.7;}
-.footer a{color:#608BC1;text-decoration:none;margin:0 4px;}
+hr.divider{border:none;border-top:1px solid #e6ebf2;margin:16px 0;}
+.footer{background:linear-gradient(135deg,#0B192C 0%,#0e2138 100%);padding:18px 28px;color:#4a5568;font-size:11px;text-align:center;line-height:1.9;}
+.footer a{color:#608BC1;text-decoration:none;margin:0 6px;}
 .footer .pipe{color:#1a2c4a;margin:0 2px;}
-.footer .small{font-size:10px;margin-top:4px;color:#4a5568;display:block;}
+.footer .small{font-size:10px;margin-top:6px;color:#3a4a60;display:block;}
 </style></head><body>
 <div class="email-wrap">
   <div class="header">
     ${logoImgTag}
     <div class="brand-text">
       <div class="big">avRoN Technologies</div>
-      <div class="sub">${DOMAIN}</div>
+      <div class="sub">avRoNTech.in &nbsp;·&nbsp; Corporate Internships</div>
     </div>
   </div>
   <div class="body">${innerHTML}</div>
@@ -156,7 +162,7 @@ hr.divider{border:none;border-top:1px solid #cdd9eb;margin:14px 0;}
       <a href="https://${DOMAIN}/privacy">Privacy</a><span class="pipe">|</span>
       <a href="mailto:${SUPPORT_EMAIL}">Support</a>
     </div>
-    <span class="small">© 2026 avRoN Technologies. You received this because you registered for an internship.</span>
+    <span class="small">© 2026 avRoN Technologies · All rights reserved</span>
   </div>
 </div></body></html>`;
 
@@ -260,17 +266,8 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   const name = (reg && reg.registrantName) || user.fullName;
   const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
 
-  // Logo as base64 for email embedding
-  const fs = require('fs');
-  const path = require('path');
-  const logoPath = path.join(__dirname, '../public/logo.png');
-  let logoTag = '';
-  try {
-    if (fs.existsSync(logoPath)) {
-      const logoB64 = fs.readFileSync(logoPath).toString('base64');
-      logoTag = `<img src="data:image/jpeg;base64,${logoB64}" alt="avRoN Technologies" style="width:60px;height:60px;object-fit:contain;border-radius:50%;background:#fff;padding:4px;" />`;
-    }
-  } catch (_) {}
+  // Logo - auto detects JPEG/PNG
+  const logoTag = getLogoTag(60);
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -346,15 +343,16 @@ body{background:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 // ── 3. OTP ────────────────────────────────────────────────────────────────────
 async function sendOTPEmail(user, otp) {
   const html = wrap(`
-    <h2>Login verification code</h2>
-    <p>Hello ${user.fullName}, use the code below to login to your <b>${BRAND}</b> dashboard. Valid for 10 minutes.</p>
-    <div style="background:#0B192C;border-radius:6px;text-align:center;padding:28px 22px;margin:22px 0;">
-      <div style="font-size:42px;font-weight:800;color:#608BC1;letter-spacing:8px;font-family:'SF Mono',Consolas,Monaco,monospace;">${otp}</div>
-      <div style="font-size:11px;color:#9eb2c8;margin-top:8px;letter-spacing:.1em;text-transform:uppercase;">Expires in 10 minutes</div>
+    <h2 style="font-size:22px;font-weight:800;color:#0B192C;margin-bottom:4px;">Login Verification Code</h2>
+    <p style="color:#608BC1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Secure Access</p>
+    <p>Hello <b>${user.fullName}</b>, use the code below to login to your <b>avRoN Technologies</b> dashboard. Valid for 10 minutes.</p>
+    <div style="background:linear-gradient(135deg,#0B192C 0%,#152844 100%);border-radius:12px;text-align:center;padding:32px 22px;margin:24px 0;border:1px solid #1a2c4a;">
+      <div style="font-size:48px;font-weight:800;color:#608BC1;letter-spacing:12px;font-family:'SF Mono',Consolas,Monaco,monospace;">${otp}</div>
+      <div style="font-size:11px;color:#7186a0;margin-top:10px;letter-spacing:.14em;text-transform:uppercase;">Expires in 10 minutes</div>
     </div>
     <p class="muted">If you didn't request this code, you can safely ignore this email.</p>
   `);
-  await sendMail({ to: user.email, subject: `Your ${BRAND} login code: ${otp}`, html });
+  await sendMail({ to: user.email, subject: `${otp} — Your avRoN Technologies login code`, html });
   console.log(`✉️ OTP sent to ${user.email}`);
 }
 
