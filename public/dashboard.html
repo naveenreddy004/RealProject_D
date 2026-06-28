@@ -1151,6 +1151,21 @@
 
     loadDashboard();
 
+    // ── Auto-refresh every 30s — silent, no flicker, picks up certificate/status changes ──
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/student/dashboard', {headers:{'Authorization':'Bearer '+token}});
+        if(!res.ok) return;
+        const data = await res.json();
+        if(!data.success) return;
+        allRegistrations = data.registrations || (data.registration ? [data.registration] : []);
+        regData = data.registration || (allRegistrations[0] || null);
+        // Silently re-render certificate section only
+        renderAllCertificates();
+        renderPrevRegistrations();
+      } catch(_) {}
+    }, 30000);
+
     // ── Certificate Lightbox ──────────────────────────────────────────────────────
     function openCertLightbox(){document.getElementById('certLightbox').classList.add('show');document.body.style.overflow='hidden';}
     function closeCertLightbox(e, force){
