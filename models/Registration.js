@@ -36,7 +36,6 @@ const registrationSchema = new mongoose.Schema({
   // Payment
   payment: {
     utrNumber:         { type: String, default: null },
-    receiptUrl:        { type: String, default: null },
     screenshotPath:    { type: String, default: null },
     submittedAt:       { type: Date, default: null },
     verifiedAt:        { type: Date, default: null },
@@ -66,7 +65,7 @@ const registrationSchema = new mongoose.Schema({
   revokedAt:  { type: Date, default: null },
   revokedReason: { type: String, default: null },
 
-  // Portal
+  // Portal — tracks whether invite was sent
   portalInviteSent: { type: Boolean, default: false },
 
 }, { timestamps: true });

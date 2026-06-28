@@ -269,7 +269,7 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
     <hr class="divider">
     <div class="signoff">Regards,<br><b>The ${BRAND} Team</b></div>
   `);
-  await sendMail({ to: user.email, subject: `Action Required: Payment Resubmission Needed — ${BRAND}`, html });
+  await sendMail({ to: user.email, subject: `Action Required: Payment Resubmission Needed — avRoN Technologies`, html });
   console.log(`✉️ Payment rejection notice sent to ${user.email}`);
 }
 
@@ -289,7 +289,7 @@ async function sendRevocationEmail(user, reg, reason) {
     <hr class="divider">
     <div class="signoff">Regards,<br><b>avRoN Tech Team</b></div>
   `);
-  await sendMail({ to: user.email, subject: `Certificate Revoked — ${reg.certId} | avRoN Tech`, html });
+  await sendMail({ to: user.email, subject: `Certificate Revoked — ${reg.certId} | avRoN Technologies`, html });
   console.log(`✉️ Revocation email sent to ${user.email}`);
 }
 

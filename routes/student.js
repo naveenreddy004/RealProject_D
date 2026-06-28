@@ -195,7 +195,7 @@ router.post('/complete-task', authStudent, async (req, res) => {
     await reg.save();
     res.json({ success: true, status: reg.status, tasksCompletedCount: reg.tasksCompletedCount });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Error.' });
+    res.status(500).json({ success: false, message: 'Failed to update task.' });
   }
 });
 

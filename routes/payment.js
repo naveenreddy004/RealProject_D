@@ -354,7 +354,7 @@ async function activatePayment(reg, { paymentId, utrNumber, verifiedBy, method }
       // Persist receipt as binary in MongoDB — no file on disk
       await Registration.findByIdAndUpdate(reg._id, { receiptPdf: receiptBuf });
     } catch (e) { console.error('Receipt PDF error:', e.message); }
-    queueEmail('paymentVerified', { user, reg });
+    queueEmail('offerLetter', { user, reg, pdfBuffer: null });
   });
 }
 
