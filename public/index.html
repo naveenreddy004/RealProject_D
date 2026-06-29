@@ -235,8 +235,8 @@ a{color:inherit;text-decoration:none;}
 .price-card:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(11,25,44,0.08);}
 .price-card.featured{background:linear-gradient(150deg,var(--midnight),#0d1f38);color:#fff;border-color:transparent;transform:scale(1.03);box-shadow:0 24px 64px rgba(11,25,44,0.3);}
 .price-card.featured:hover{transform:scale(1.03) translateY(-4px);}
-.price-card.featured::before{content:'RECOMMENDED';position:absolute;top:-13px;right:24px;background:linear-gradient(135deg,var(--steel),#3b82f6);color:#fff;font-size:10.5px;font-weight:800;padding:5px 14px;border-radius:20px;letter-spacing:.1em;box-shadow:0 4px 12px rgba(96,139,193,0.4);}
-.price-card.featured::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,var(--steel),#8bb8e8,var(--steel));}
+.price-card.featured::before{content:none;}
+.price-card.featured::after{content:none;}
 .price-name{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;}
 .price-card.featured .price-name{color:rgba(96,139,193,0.9);}
 .price-amt{font-family:'Sora',sans-serif;font-size:58px;font-weight:800;color:var(--midnight);letter-spacing:-2px;margin-top:10px;}
@@ -453,7 +453,7 @@ a{color:inherit;text-decoration:none;}
         </ul>
         <a href="/register?package=basic" class="btn btn-outline price-btn" data-testid="pricing-basic-btn">Choose Basic →</a>
       </div>
-      <div class="price-card featured reveal reveal-delay-2">
+      <div class="price-card featured reveal reveal-delay-2" style="position:relative;">
         <div class="price-name">Complete Certification Bundle</div>
         <div class="price-amt"><span class="cur">₹</span>399</div>
         <ul class="price-list">
@@ -463,11 +463,41 @@ a{color:inherit;text-decoration:none;}
           <li><span class="chk">✓</span><span>2-year certificate validity</span></li>
           <li><span class="chk">✓</span><span>LinkedIn-ready credential</span></li>
         </ul>
-        <a href="/register?package=complete" class="btn btn-primary price-btn" data-testid="pricing-complete-btn" style="background:var(--steel);color:var(--midnight);">Choose Complete →</a>
+        <button onclick="document.getElementById('landingComingSoon').classList.add('show')" class="btn btn-primary price-btn" style="width:100%;justify-content:center;background:var(--steel);color:var(--midnight);">Coming Soon — Notify Me</button>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Coming Soon Modal (landing page) -->
+<div id="landingComingSoon" style="display:none;position:fixed;inset:0;background:rgba(11,25,44,.65);backdrop-filter:blur(10px);z-index:9999;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)this.classList.remove('show')">
+  <div style="background:#fff;border-radius:14px;max-width:440px;width:100%;overflow:hidden;animation:popIn .3s ease-out;">
+    <div style="background:var(--midnight);padding:22px 26px;color:#fff;">
+      <div style="display:inline-block;background:linear-gradient(135deg,var(--steel),#3b82f6);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.08em;margin-bottom:10px;">COMING SOON</div>
+      <div style="font-family:'Sora',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px;">We're building something great!</div>
+      <p style="font-size:13.5px;color:var(--steel-soft);margin-top:4px;">The ₹399 Complete Bundle is under active development and will be available very soon.</p>
+    </div>
+    <div style="padding:24px 26px;">
+      <ul style="list-style:none;padding:0;font-size:14px;color:var(--ink2);">
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Week-by-week guided roadmap</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Real-world project with admin review</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Completion Letter + QR Certificate</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>LinkedIn Recommendation from avRoN</li>
+      </ul>
+      <div style="background:var(--soft);border:1px solid var(--line);padding:14px;margin-top:14px;border-radius:8px;font-size:13px;color:var(--mut);">
+        For now, start with the <b style="color:var(--midnight);">Basic Package (₹199)</b> — we'll notify you when the bundle launches!
+      </div>
+    </div>
+    <div style="padding:0 26px 24px;display:flex;gap:10px;">
+      <button onclick="document.getElementById('landingComingSoon').classList.remove('show')" style="flex:1;background:transparent;color:var(--midnight);border:1.5px solid var(--line);padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:4px;">Close</button>
+      <a href="/register?package=basic" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--midnight);color:#fff;padding:12px 22px;font-size:14px;font-weight:700;text-decoration:none;border-radius:4px;">Continue with ₹199 →</a>
+    </div>
+  </div>
+</div>
+<style>
+#landingComingSoon.show{display:flex!important;}
+@keyframes popIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+</style>
 
 <!-- ── Footer ── -->
 <footer class="footer">

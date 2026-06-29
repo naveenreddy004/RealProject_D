@@ -194,8 +194,8 @@ select.fi{cursor:pointer;}
             <li>Email support</li>
           </ul>
         </div>
-        <div class="pkg featured" id="pkg-complete" onclick="selectPackage('complete')" data-testid="pkg-complete">
-          <div class="pkg-badge">RECOMMENDED</div>
+        <div class="pkg featured" id="pkg-complete" onclick="showComingSoon()" data-testid="pkg-complete">
+          <div class="pkg-badge">COMING SOON</div>
           <div class="pkg-name">Complete Certification Bundle</div>
           <div class="pkg-amt"><span class="cur">₹</span>399</div>
           <div class="pkg-tag">Project + Verified Certificate</div>
@@ -321,31 +321,28 @@ select.fi{cursor:pointer;}
   </div>
 </div>
 
-<!-- UPSELL MODAL -->
-<div class="modal" id="upsellModal">
+<!-- COMING SOON MODAL -->
+<div class="modal" id="comingSoonModal">
   <div class="modal-card">
     <div class="modal-head">
-      <div class="pkg-badge">LIMITED OFFER</div>
-      <h3>Wait! Upgrade for just ₹200 more?</h3>
-      <p>Switch to the Complete Certification Bundle and unlock the full-blown experience.</p>
+      <div class="pkg-badge" style="background:linear-gradient(135deg,var(--steel),#3b82f6);">COMING SOON</div>
+      <h3>We're building something great!</h3>
+      <p>The ₹399 Complete Bundle is under active development and will be available very soon.</p>
     </div>
     <div class="modal-body">
       <ul style="list-style:none;padding:0;font-size:14px;color:var(--ink2);">
-        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>Industry-grade real-world project</li>
-        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>QR-verifiable Certificate of Completion</li>
-        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>2-year certificate validity</li>
-        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:#22c55e;font-weight:800;">+</span>LinkedIn-ready credential</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Week-by-week guided roadmap</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Real-world project with admin review</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>Completion Letter + QR Certificate</li>
+        <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>LinkedIn Recommendation from avRoN</li>
       </ul>
-      <div style="background:var(--soft);border:1px solid var(--line);padding:14px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
-        <div><div style="font-size:12px;color:var(--mut);">From <span style="text-decoration:line-through;">₹199</span></div>
-          <div style="font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--midnight);">₹399</div></div>
-        <div style="text-align:right;"><div style="font-size:11px;color:var(--mut);">Just add</div>
-          <div style="font-size:18px;font-weight:800;color:var(--steel);">₹200</div></div>
+      <div style="background:var(--soft);border:1px solid var(--line);padding:14px;margin-top:14px;border-radius:8px;">
+        <div style="font-size:13px;color:var(--mut);">For now, continue with the <b style="color:var(--midnight);">Basic Package (₹199)</b> — we'll notify you when the bundle launches!</div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="keepBasic()" data-testid="upsell-keep-btn">Keep ₹199 Basic</button>
-      <button class="btn btn-primary" onclick="upgradeBundle()" data-testid="upsell-upgrade-btn">Upgrade to ₹399 →</button>
+      <button class="btn btn-outline" onclick="closeModal('comingSoonModal')" data-testid="comingsoon-close-btn">Close</button>
+      <button class="btn btn-primary" onclick="selectBasicFromPopup()" data-testid="comingsoon-basic-btn">Continue with ₹199 →</button>
     </div>
   </div>
 </div>
@@ -353,6 +350,15 @@ select.fi{cursor:pointer;}
 <div class="toast" id="toast"></div>
 
 <script>
+function showComingSoon(){
+  document.getElementById('comingSoonModal').classList.add('show');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function selectBasicFromPopup(){
+  closeModal('comingSoonModal');
+  selectPackage('basic');
+}
+
 let pkgSelected = null;
 let pkgPrice = 199;
 let certIdRef = '';
@@ -362,8 +368,9 @@ const qp = new URLSearchParams(location.search);
 // Pre-select from URL
 window.addEventListener('DOMContentLoaded', ()=>{
   const p = qp.get('package');
-  if(p === 'complete') selectPackage('complete');
-  else if(p === 'basic') selectPackage('basic');
+  if(p === 'complete') {
+    showComingSoon();  // block 399, show popup
+  } else if(p === 'basic') selectPackage('basic');
 
   const d = qp.get('domain');
   if(d){
@@ -401,20 +408,14 @@ function selectPackage(which){
 
 function next1(){
   if(!pkgSelected){showToast('Please pick a package.', true);return;}
-  if(pkgSelected === 'basic'){
-    // Trigger upsell
-    document.getElementById('upsellModal').classList.add('show');
-    return;
-  }
   goStep(2);
 }
 function keepBasic(){
-  document.getElementById('upsellModal').classList.remove('show');
+  closeModal('comingSoonModal');
   goStep(2);
 }
 function upgradeBundle(){
-  selectPackage('complete');
-  document.getElementById('upsellModal').classList.remove('show');
+  closeModal('comingSoonModal');
   goStep(2);
 }
 
