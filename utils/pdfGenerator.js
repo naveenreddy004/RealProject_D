@@ -52,7 +52,7 @@ async function generateCertificatePDF(user, reg) {
   const path = require('path');
 
   // ── Background template
-  const tpl = path.join(__dirname, '../public/certificate.png');
+  const tpl = path.join(__dirname, '../public/certificate-compressed.jpg');
   if (fs.existsSync(tpl)) {
     doc.image(tpl, 0, 0, { width: W, height: H });
   } else {
