@@ -129,6 +129,20 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
+// ── Demo certificate — public, no auth, used by student portal preview ────────
+app.get('/api/demo-certificate', async (req, res) => {
+  try {
+    const { generateDemoCertificatePDF } = require('./utils/pdfGenerator');
+    const buf = await generateDemoCertificatePDF();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="avRoN_Demo_Certificate.pdf"');
+    res.setHeader('Content-Length', buf.length);
+    res.send(buf);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not generate demo certificate.' });
+  }
+});
+
 // ── Health check ──────────────────────────────────────────────────────────────
 
 // Helper: format bytes to human-readable
@@ -213,6 +227,10 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/health/live', (req, res) => {
   res.status(200).json({ alive: true, timestamp: new Date().toISOString() });
 });
+
+// ── UptimeRobot ping — lightweight, no DB hit, prevents cold starts ───────────
+// Point UptimeRobot (free tier) at: GET <your-domain>/ping  every 5 minutes
+app.get('/ping', (req, res) => res.status(200).send('pong'));
 
 // ── Readiness probe — is the app ready to serve traffic? ─────────────────────
 app.get('/api/health/ready', (req, res) => {

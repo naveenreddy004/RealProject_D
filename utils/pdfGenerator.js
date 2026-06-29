@@ -1,7 +1,7 @@
 /**
- * PDF Generator — ALL PDFs are generated into memory Buffers.
- * Nothing is written to disk. Buffers are stored directly in MongoDB
- * on the Registration document (certificatePdf / offerLetterPdf / receiptPdf).
+ * PDF Generator — ALL PDFs are generated on-demand into memory Buffers.
+ * Nothing is written to disk and nothing is stored in MongoDB.
+ * Buffers are streamed directly to the HTTP response or attached to emails.
  */
 
 const PDFDocument = require('pdfkit');
@@ -28,9 +28,9 @@ async function generateCertificatePDF(user, reg) {
   const certName    = reg.registrantName    || user.fullName;
   const certCollege = reg.registrantCollege || user.college;
   const certCourse  = reg.registrantCourse  || user.course;
-  const mentorName  = reg.mentorName  || 'Rohit Sharma';
-  const mentorTitle = reg.mentorTitle || 'Senior Software Engineer';
-  const ceoName     = reg.ceoName     || 'Amit Malhotra';
+  const mentorName  = reg.mentorName  || 'Rudra Teja';
+ const mentorTitle = reg.mentorTitle || 'Software Engineer & CO-Founder';
+  const ceoName     = reg.ceoName     || 'Naveen Kumar';
 
   const verifyUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify?id=${reg.certId}`;
 
@@ -141,11 +141,14 @@ doc.moveTo(cx + 12, lineY2).lineTo(W - 280, lineY2).lineWidth(0.8).strokeColor(G
   doc.font('Helvetica-Bold').fontSize(valSize).fillColor(NAVY)
     .text(reg.certId, col2cx - colW / 2, infoY + 14, { width: colW, align: 'center' });
 
-  // ISSUE DATE
+  // ISSUE DATE — internship end date + 1 day
+  const issueDate = reg.endDate
+    ? new Date(new Date(reg.endDate).getTime() + 24 * 60 * 60 * 1000)
+    : (reg.sentAt || new Date());
   doc.font('Helvetica-Bold').fontSize(labelSize).fillColor(NAVY)
     .text('ISSUE DATE', col3cx - colW / 2, infoY, { width: colW, align: 'center' });
   doc.font('Helvetica-Bold').fontSize(valSize).fillColor(NAVY)
-    .text(fmt(reg.sentAt || new Date()), col3cx - colW / 2, infoY + 14, { width: colW, align: 'center' });
+    .text(fmt(issueDate), col3cx - colW / 2, infoY + 14, { width: colW, align: 'center' });
 
   // ── QR Code — far right, moved up to avoid blue corner overlap
  doc.image(qrBuffer, W - 158, 348, { width: 96, height: 96 });
@@ -157,8 +160,15 @@ doc.font('Helvetica').fontSize(7).fillColor('#444444')
   const sigY = 478;
 
   // Mentor — left
-  doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
-    .text(mentorName, 90, sigY, { width: 160, align: 'center' });
+  const mentorSigPath = path.join(__dirname, reg._demoSig ? '../public/signature3.png' : '../public/signature2.png');  if (fs.existsSync(mentorSigPath)) {
+    doc.save();
+    doc.opacity(1.0);
+    doc.image(mentorSigPath, 105, sigY - 10, { width: 120, height: 28 });
+    doc.restore();
+  } else {
+    doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
+      .text(mentorName, 90, sigY, { width: 160, align: 'center' });
+  }
   doc.moveTo(90, sigY + 20).lineTo(250, sigY + 20).lineWidth(0.5).strokeColor('#aaaaaa').stroke();
   doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
     .text('MENTOR', 90, sigY + 25, { width: 160, align: 'center' });
@@ -168,15 +178,23 @@ doc.font('Helvetica').fontSize(7).fillColor('#444444')
     .text(mentorTitle, 90, sigY + 49, { width: 160, align: 'center' });
 
   // CEO — right (leave space for QR on far right)
-  doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
-    .text(ceoName, 490, sigY, { width: 160, align: 'center' });
+  const ceoSigPath = path.join(__dirname, reg._demoSig ? '../public/signature4.png' : '../public/signature.png');
+  if (fs.existsSync(ceoSigPath)) {
+    doc.save();
+    doc.opacity(1.0);
+    doc.image(ceoSigPath, 525, sigY - 10, { width: 120, height: 28 });
+    doc.restore();
+  } else {
+    doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
+      .text(ceoName, 490, sigY, { width: 160, align: 'center' });
+  }
   doc.moveTo(490, sigY + 20).lineTo(650, sigY + 20).lineWidth(0.5).strokeColor('#aaaaaa').stroke();
   doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('CEO & CO-FOUNDER', 490, sigY + 25, { width: 160, align: 'center' });
+    .text('CEO & FOUNDER', 490, sigY + 25, { width: 160, align: 'center' });
   doc.font('Helvetica').fontSize(8).fillColor('#555')
     .text(ceoName, 490, sigY + 37, { width: 160, align: 'center' });
   doc.font('Helvetica').fontSize(8).fillColor('#555')
-    .text('AvRoN Technologies', 490, sigY + 49, { width: 160, align: 'center' });
+    .text('avRoN Technologies', 490, sigY + 49, { width: 160, align: 'center' });
 
   // ── Seal logo in center (if exists)
   const sealPath = path.join(__dirname, '../public/seal.png');
@@ -381,3 +399,29 @@ async function generateOfferLetterPDF(user, reg) {
 }
 
 module.exports = { generateCertificatePDF, generateReceiptPDF, generateOfferLetterPDF };
+
+// ─── Demo Certificate PDF (public — no auth, dummy data, signature3.png) ──────
+async function generateDemoCertificatePDF() {
+  const dummyUser = { fullName: 'Priya Sharma', college: 'JNTU Hyderabad', course: 'B.Tech CSE' };
+  const dummyReg  = {
+    registrantName:    'Priya Sharma',
+    registrantCollege: 'JNTU Hyderabad',
+    registrantCourse:  'B.Tech CSE',
+    mentorName:  'Rudra Teja',
+    mentorTitle: 'Software Engineer & Co-Founder',
+    ceoName:     'Naveen Kumar',
+    domain:      'Full Stack Web Development',
+    duration:    '8 Weeks',
+    startDate:   new Date('2025-04-01'),
+    endDate:     new Date('2025-05-27'),
+    certId:      'AVRN-DEMO-2025',
+    sentAt:      new Date('2025-05-28'),
+    // tell generator to use signature3.png for both slots
+    _demoSig:    true,
+  };
+
+  // Temporarily override signature lookup to use signature3.png
+  return generateCertificatePDF(dummyUser, dummyReg);
+}
+
+module.exports = { generateCertificatePDF, generateReceiptPDF, generateOfferLetterPDF, generateDemoCertificatePDF };

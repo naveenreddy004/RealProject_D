@@ -9,14 +9,6 @@ const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
 const { generateReceiptPDF, generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
 
-// Normalize MongoDB Binary or Buffer to a plain Buffer
-function toBuffer(val) {
-  if (!val) return null;
-  if (Buffer.isBuffer(val)) return val;
-  if (val.buffer) return Buffer.from(val.buffer); // Mongoose Binary
-  return Buffer.from(val);
-}
-
 // Multer for payment screenshot
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads/'),
@@ -98,13 +90,6 @@ router.post('/submit-payment-public', uploadPay.single('paymentScreenshot'), asy
     reg.tasksCompletedCount = reg.tasks.filter(t => t.completed).length;
     await reg.save();
     res.json({ success: true, message: 'Payment submitted for admin review.' });
-
-    setImmediate(async () => {
-      try {
-        const receiptBuf = await generateReceiptPDF(user, reg);
-        await Registration.findByIdAndUpdate(reg._id, { receiptPdf: receiptBuf });
-      } catch (e) { console.error('Receipt PDF error:', e.message); }
-    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to submit payment.' });
@@ -156,13 +141,6 @@ router.post('/submit-payment', authStudent, uploadPay.single('paymentScreenshot'
       status: reg.status,
     });
 
-    // Background: generate PDF receipt — stored in MongoDB, no disk file.
-    setImmediate(async () => {
-      try {
-        const receiptBuf = await generateReceiptPDF(req.user, reg);
-        await Registration.findByIdAndUpdate(reg._id, { receiptPdf: receiptBuf });
-      } catch (e) { console.error('Receipt PDF error:', e.message); }
-    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to submit payment.' });
@@ -219,11 +197,7 @@ router.get('/certificate/:regId', authStudent, async (req, res) => {
     if (reg.status !== 'certificate_sent') {
       return res.status(400).json({ success: false, message: 'Certificate not yet issued.' });
     }
-    let pdfBuf = toBuffer(reg.certificatePdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      pdfBuf = await generateCertificatePDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { certificatePdf: pdfBuf });
-    }
+    const pdfBuf = await generateCertificatePDF(req.user, reg);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Certificate_${reg.certId}.pdf"`);
     res.setHeader('Content-Length', pdfBuf.length);
@@ -243,14 +217,8 @@ router.get('/certificate', authStudent, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Certificate is locked. It will be available once your payment is approved by our admin team.' });
     }
 
-    // Serve from MongoDB buffer — no file read
-    let pdfBuf = toBuffer(reg.certificatePdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      // Regenerate on-the-fly and persist for next time
-      pdfBuf = await generateCertificatePDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { certificatePdf: pdfBuf });
-    }
-
+    // Generate on-demand — nothing stored in MongoDB
+    const pdfBuf = await generateCertificatePDF(req.user, reg);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Certificate_${reg.certId}.pdf"`);
     res.setHeader('Content-Length', pdfBuf.length);
@@ -268,11 +236,7 @@ router.get('/offer-letter/:regId', authStudent, async (req, res) => {
     if (!['certificate_sent', 'active', 'completed'].includes(reg.status)) {
       return res.status(400).json({ success: false, message: 'Offer letter not yet available.' });
     }
-    let pdfBuf = toBuffer(reg.offerLetterPdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      pdfBuf = await generateOfferLetterPDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: pdfBuf });
-    }
+    const pdfBuf = await generateOfferLetterPDF(req.user, reg);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="OfferLetter_${reg.certId}.pdf"`);
     res.setHeader('Content-Length', pdfBuf.length);
@@ -287,11 +251,7 @@ router.get('/receipt/:regId', authStudent, async (req, res) => {
   try {
     const reg = await Registration.findOne({ _id: req.params.regId, user: req.user._id });
     if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
-    let pdfBuf = toBuffer(reg.receiptPdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      pdfBuf = await generateReceiptPDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
-    }
+    const pdfBuf = await generateReceiptPDF(req.user, reg);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Receipt_${reg.certId}.pdf"`);
     res.setHeader('Content-Length', pdfBuf.length);
@@ -310,11 +270,7 @@ router.get('/offer-letter', authStudent, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Offer letter not yet available. Awaiting admin approval.' });
     }
 
-    let pdfBuf = toBuffer(reg.offerLetterPdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      pdfBuf = await generateOfferLetterPDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: pdfBuf });
-    }
+    const pdfBuf = await generateOfferLetterPDF(req.user, reg);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="OfferLetter_${reg.certId}.pdf"`);
@@ -330,11 +286,7 @@ router.get('/receipt', authStudent, async (req, res) => {
     const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
     if (!reg || !reg.payment.utrNumber) return res.status(404).json({ success: false, message: 'No payment found.' });
 
-    let pdfBuf = toBuffer(reg.receiptPdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      pdfBuf = await generateReceiptPDF(req.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
-    }
+    const pdfBuf = await generateReceiptPDF(req.user, reg);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Receipt_${reg.certId}.pdf"`);

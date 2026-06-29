@@ -4,7 +4,7 @@ const Registration = require('../models/Registration');
 const User = require('../models/User');
 const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
-const { generateReceiptPDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
+const { generateOfferLetterPDF } = require('../utils/pdfGenerator');
 const { logActivity } = require('../utils/activityLogger');
 
 const router = express.Router();
@@ -349,26 +349,10 @@ async function activatePayment(reg, { paymentId, utrNumber, verifiedBy, method }
   const user = (reg.user && reg.user.email) ? reg.user : await User.findById(reg.user);
   // Background — never blocks the caller (which is usually a webhook handler).
   setImmediate(async () => {
-    let receiptBuf = null;
-    let offerBuf = null;
     try {
-      receiptBuf = await generateReceiptPDF(user, reg);
-    } catch (e) { console.error('Receipt PDF error:', e.message); }
-    try {
-      offerBuf = await generateOfferLetterPDF(user, reg);
+      const offerBuf = await generateOfferLetterPDF(user, reg);
+      queueEmail('offerLetter', { user, reg, pdfBuffer: offerBuf });
     } catch (e) { console.error('Offer Letter PDF error:', e.message); }
-
-    // Persist PDFs in MongoDB
-    const updateObj = {};
-    if (receiptBuf) updateObj.receiptPdf = receiptBuf;
-    if (offerBuf) updateObj.offerLetterPdf = offerBuf;
-    if (Object.keys(updateObj).length > 0) {
-      try {
-        await Registration.findByIdAndUpdate(reg._id, updateObj);
-      } catch (e) { console.error('Failed to update registration PDFs:', e.message); }
-    }
-
-    queueEmail('offerLetter', { user, reg, pdfBuffer: offerBuf });
   });
 }
 

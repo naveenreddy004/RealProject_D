@@ -137,37 +137,19 @@
         .coming-soon h3{font-family:'Sora',sans-serif;font-size:18px;color:var(--midnight);}
         .coming-soon p{font-size:13.5px;color:var(--mut);margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto;}
 
-        /* Certificate preview — medium card */
+        /* ── Certificate preview ─────────────────────────────────────────────── */
         .cert-frame{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;position:relative;}
         .cert-wrap{max-width:480px;margin:0 auto;}
-        .cert-preview{aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:2px solid var(--midnight);padding:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:zoom-in;transition:transform .2s, box-shadow .2s;}
-        .cert-preview:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,25,44,.12);}
-        .cert-preview::before{content:'DEMO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:'Sora',sans-serif;font-size:54px;font-weight:800;color:rgba(11,25,44,.09);letter-spacing:8px;pointer-events:none;white-space:nowrap;}
-        .cp-zoom-hint{position:absolute;bottom:8px;right:10px;font-size:10px;color:var(--mut);background:rgba(255,255,255,.85);padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.05em;}
-        .cp-logo{font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:var(--midnight);letter-spacing:-.5px;}
-        .cp-logo span{color:var(--steel);}
-        .cp-sub{font-size:8.5px;color:var(--mut);letter-spacing:.18em;text-transform:uppercase;margin-top:2px;}
-        .cp-divider{width:36px;height:2px;background:var(--steel);margin:11px auto;}
-        .cp-presents{font-size:9px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;}
-        .cp-name{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--midnight);margin-top:5px;letter-spacing:-.5px;}
-        .cp-for{font-size:10px;color:var(--mut);margin-top:9px;}
-        .cp-domain{font-size:13px;font-weight:700;color:var(--midnight);margin-top:3px;}
-        .cp-cid{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);font-weight:600;}
+        .cert-preview{width:100%;display:block;border-radius:8px;overflow:hidden;cursor:zoom-in;transition:transform .2s,box-shadow .2s;position:relative;}
+        .cert-preview:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(11,25,44,.15);}
+        .cert-preview img{width:100%;height:auto;display:block;}
+        .cp-zoom-hint{position:absolute;bottom:8px;right:10px;font-size:10px;color:#fff;background:rgba(11,25,44,.6);padding:3px 8px;border-radius:4px;font-weight:600;letter-spacing:.04em;}
 
-        /* Cert lightbox (enlarge) */
-        .cert-lightbox{position:fixed;inset:0;background:rgba(11,25,44,.85);backdrop-filter:blur(8px);z-index:10001;display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
+        /* ── Lightbox ─────────────────────────────────────────────────────────── */
+        .cert-lightbox{position:fixed;inset:0;background:rgba(11,25,44,.9);backdrop-filter:blur(8px);z-index:10001;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;}
         .cert-lightbox.show{display:flex;animation:fadeIn .2s;}
-        .cert-lightbox .cert-big{width:min(92vw,900px);aspect-ratio:1.414/1;background:linear-gradient(135deg,#fcfcfd,#f5f7fb);border:3px solid var(--midnight);border-radius:10px;padding:48px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:default;}
-        .cert-lightbox .cert-big::before{content:'DEMO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:'Sora',sans-serif;font-size:130px;font-weight:800;color:rgba(11,25,44,.08);letter-spacing:14px;pointer-events:none;}
-        .cert-lightbox .cert-big .cp-logo{font-size:30px;}
-        .cert-lightbox .cert-big .cp-sub{font-size:12px;}
-        .cert-lightbox .cert-big .cp-divider{width:64px;margin:22px auto;}
-        .cert-lightbox .cert-big .cp-presents{font-size:13px;}
-        .cert-lightbox .cert-big .cp-name{font-size:40px;margin-top:10px;}
-        .cert-lightbox .cert-big .cp-for{font-size:14px;margin-top:20px;}
-        .cert-lightbox .cert-big .cp-domain{font-size:22px;margin-top:6px;}
-        .cert-lightbox .cert-big .cp-cid{font-size:14px;margin-top:22px;}
-        .cert-lightbox .close-x{position:absolute;top:18px;right:22px;color:#fff;font-size:34px;cursor:pointer;background:none;border:none;font-weight:300;line-height:1;}
+        .cert-lightbox img{width:min(96vw,900px);height:auto;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.5);cursor:default;}
+        .cert-lightbox .close-x{position:absolute;top:14px;right:18px;color:#fff;font-size:34px;cursor:pointer;background:none;border:none;font-weight:300;line-height:1;z-index:10;}
 
         /* Notifications */
         .notif-list{display:flex;flex-direction:column;gap:10px;}
@@ -469,18 +451,10 @@
 
                 <!-- Demo preview card always shown -->
                 <div class="cert-frame" style="margin-bottom:18px;">
-                    <div style="font-size:11px;font-weight:700;color:var(--steel);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">Sample Certificate Format</div>
+                    <div style="font-size:11px;font-weight:700;color:var(--midnight);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;text-align:center;">Sample Certificate Format</div>
                     <div class="cert-wrap">
-                        <div class="cert-preview" id="certPreview" data-testid="cert-preview" onclick="openCertLightbox()" title="Click to enlarge">
-                            <div class="cp-logo">av<span>RoN</span> Tech</div>
-                            <div class="cp-sub">CORPORATE INTERNSHIP DIVISION</div>
-                            <div class="cp-divider"></div>
-                            <div class="cp-presents">This is to certify that</div>
-                            <div class="cp-name" id="cp-name">Sample Student</div>
-                            <div class="cp-for">has successfully completed the</div>
-                            <div class="cp-domain" id="cp-domain">Internship Program</div>
-                            <div class="cp-cid" id="cp-cid">CERT-ID: DEMO-0000-XXXX</div>
-                            <div class="cp-zoom-hint">⤢ Click to enlarge</div>
+                        <div style="max-width:480px;margin:0 auto;">
+                            <img src="/demo.png" alt="avRoN Technologies Sample Certificate" draggable="false" style="width:100%;height:auto;display:block;border-radius:8px;">
                         </div>
                     </div>
                 </div>
@@ -613,16 +587,7 @@
 <!-- Certificate Lightbox -->
 <div class="cert-lightbox" id="certLightbox" onclick="closeCertLightbox(event)" data-testid="cert-lightbox">
     <button class="close-x" onclick="closeCertLightbox(event,true)" data-testid="cert-lightbox-close">×</button>
-    <div class="cert-big" onclick="event.stopPropagation()">
-        <div class="cp-logo">av<span>RoN</span> Tech</div>
-        <div class="cp-sub">CORPORATE INTERNSHIP DIVISION</div>
-        <div class="cp-divider"></div>
-        <div class="cp-presents">This is to certify that</div>
-        <div class="cp-name">Sample Student</div>
-        <div class="cp-for">has successfully completed the</div>
-        <div class="cp-domain">Full Stack Web Development Internship</div>
-        <div class="cp-cid">CERT-ID: DEMO-0000-XXXX</div>
-    </div>
+    <img src="/certificate.png" alt="avRoN Technologies Certificate" onclick="event.stopPropagation()" draggable="false">
 </div>
 
 <!-- Modal: Payment under review (popup after submit) -->
@@ -901,14 +866,23 @@
     function renderPrevRegistrations(){
       const container = document.getElementById('prevRegsContainer');
       if(!container) return;
-      // Show all registrations except the most recent one (already shown above)
-      const others = allRegistrations.slice(1);
-      if(!others.length){ container.innerHTML = ''; return; }
+
+      // For multi-reg: show all except most recent (already shown in allStatusCards above)
+      // For single reg: if certificate_sent, show it here so student can download
+      let regsToShow;
+      if(allRegistrations.length > 1){
+        regsToShow = allRegistrations.slice(1);
+      } else {
+        // Single reg — only show if certificate is issued (gives a download row)
+        regsToShow = allRegistrations.filter(r => r.status === 'certificate_sent' && !r.revoked);
+      }
+
+      if(!regsToShow.length){ container.innerHTML = ''; return; }
 
       container.innerHTML = `
         <div style="margin-top:8px;margin-bottom:8px;">
-          <div style="font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">Previous Internships</div>
-          ${others.map(reg => {
+          <div style="font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">${allRegistrations.length > 1 ? 'Previous Internships' : 'Certificate'}</div>
+          ${regsToShow.map(reg => {
             let m = reg.revoked
               ? {ic:'⛔', t:'Certificate Revoked', badge:'Revoked', bg:'#7f1d1d'}
               : (STATUS[reg.status] || STATUS.pending);
@@ -1266,7 +1240,10 @@
     }, 10000);
 
     // ── Certificate Lightbox ──────────────────────────────────────────────────────
-    function openCertLightbox(){document.getElementById('certLightbox').classList.add('show');document.body.style.overflow='hidden';}
+    function openCertLightbox(){
+      // Open the real generated demo certificate PDF in a new tab
+      window.open('/api/demo-certificate', '_blank');
+    }
     function closeCertLightbox(e, force){
       if(force || e.target.id === 'certLightbox' || e.target.classList.contains('close-x')){
         document.getElementById('certLightbox').classList.remove('show');

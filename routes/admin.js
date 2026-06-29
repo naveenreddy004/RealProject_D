@@ -10,13 +10,6 @@ const { logActivity } = require('../utils/activityLogger');
 const { pushNotification } = require('../utils/notify');
 
 // Normalize MongoDB Binary or Buffer to a plain Buffer
-function toBuffer(val) {
-  if (!val) return null;
-  if (Buffer.isBuffer(val)) return val;
-  if (val.buffer) return Buffer.from(val.buffer); // Mongoose Binary
-  return Buffer.from(val);
-}
-
 // All routes require admin JWT
 router.use(authAdmin);
 
@@ -182,7 +175,7 @@ const approvePayment = async (req, res) => {
         });
 
         if (offerBuf) {
-          await Registration.findByIdAndUpdate(reg._id, { offerLetterPdf: offerBuf });
+          // no longer storing in DB — generate on demand
         }
 
         // Send offer letter email only
@@ -295,7 +288,6 @@ router.post('/send-certificate/:id', async (req, res) => {
     queueEmail('certificate', { user: reg.user, reg, pdfBuffer: certBuf });
 
     reg.status = 'certificate_sent';
-    reg.certificatePdf = certBuf;
     reg.sentAt = new Date();
     const certTask = reg.tasks.find(t => t.title === 'Receive Certificate');
     if (certTask) { certTask.completed = true; certTask.completedAt = new Date(); }
@@ -446,7 +438,6 @@ router.post('/bulk-send-certificates', async (req, res) => {
         queueEmail('certificate', { user: reg.user, reg, pdfBuffer: certBuf });
 
         reg.status = 'certificate_sent';
-        reg.certificatePdf = certBuf;
         reg.sentAt = new Date();
         const certTask = reg.tasks.find(t => t.title === 'Receive Certificate');
         if (certTask) { certTask.completed = true; certTask.completedAt = new Date(); }
@@ -482,13 +473,9 @@ router.get('/certificate/:id', async (req, res) => {
     const reg = await Registration.findById(req.params.id).populate('user');
     if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
 
-    let pdfBuf = toBuffer(reg.certificatePdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
-      const { generateCertificatePDF } = require('../utils/pdfGenerator');
-      pdfBuf = await generateCertificatePDF(reg.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { certificatePdf: pdfBuf });
-    }
+    if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
+    const { generateCertificatePDF } = require('../utils/pdfGenerator');
+    const pdfBuf = await generateCertificatePDF(reg.user, reg);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Certificate_${reg.certId}.pdf"`);
@@ -505,13 +492,9 @@ router.get('/receipt/:id', async (req, res) => {
     const reg = await Registration.findById(req.params.id).populate('user');
     if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
 
-    let pdfBuf = toBuffer(reg.receiptPdf);
-    if (!pdfBuf || pdfBuf.length === 0) {
-      if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
-      const { generateReceiptPDF } = require('../utils/pdfGenerator');
-      pdfBuf = await generateReceiptPDF(reg.user, reg);
-      await Registration.findByIdAndUpdate(reg._id, { receiptPdf: pdfBuf });
-    }
+    if (!reg.user) return res.status(404).json({ success: false, message: 'User data missing.' });
+    const { generateReceiptPDF } = require('../utils/pdfGenerator');
+    const pdfBuf = await generateReceiptPDF(reg.user, reg);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Receipt_${reg.certId}.pdf"`);

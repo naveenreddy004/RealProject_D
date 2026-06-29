@@ -54,10 +54,7 @@ const registrationSchema = new mongoose.Schema({
   tasks: { type: [taskSchema], default: [] },
   tasksCompletedCount: { type: Number, default: 0 },
 
-  // Certificate — stored as binary in MongoDB, no files on disk
-  certificatePdf:   { type: Buffer, default: null },
-  offerLetterPdf:   { type: Buffer, default: null },
-  receiptPdf:       { type: Buffer, default: null },
+  // Certificate — generated on-demand, not stored in DB
   sentAt:     { type: Date, default: null },
   validityYears: { type: Number, default: () => Number(process.env.CERT_VALIDITY_YEARS) || 2 },
   expiresAt:  { type: Date, default: null },
