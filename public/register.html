@@ -410,14 +410,6 @@ function next1(){
   if(!pkgSelected){showToast('Please pick a package.', true);return;}
   goStep(2);
 }
-function keepBasic(){
-  closeModal('comingSoonModal');
-  goStep(2);
-}
-function upgradeBundle(){
-  closeModal('comingSoonModal');
-  goStep(2);
-}
 
 function recomputeEndDate(){
   const months = +document.getElementById('duration').value;
