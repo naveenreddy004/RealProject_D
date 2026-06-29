@@ -28,12 +28,14 @@ async function generateCertificatePDF(user, reg) {
   const certName    = reg.registrantName    || user.fullName;
   const certCollege = reg.registrantCollege || user.college;
   const certCourse  = reg.registrantCourse  || user.course;
+  const mentorName  = reg.mentorName  || 'Rohit Sharma';
+  const mentorTitle = reg.mentorTitle || 'Senior Software Engineer';
+  const ceoName     = reg.ceoName     || 'Amit Malhotra';
 
   const verifyUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/verify?id=${reg.certId}`;
 
-  // QR code — dark navy on white
   const qrBuffer = await QRCode.toBuffer(verifyUrl, {
-    width: 100, margin: 1,
+    width: 130, margin: 1,
     color: { dark: '#0B192C', light: '#ffffff' },
   });
 
@@ -43,177 +45,144 @@ async function generateCertificatePDF(user, reg) {
     bufferPages: true,
   });
   const bufferPromise = streamToBuffer(doc);
-  const W = doc.page.width, H = doc.page.height;
+  const W = doc.page.width;   // 841.89
+  const H = doc.page.height;  // 595.28
 
-  // ── Background
-  doc.rect(0, 0, W, H).fill('#ffffff');
+  const fs   = require('fs');
+  const path = require('path');
 
-  // ── Navy corner decorations (top-left + bottom-right)
-  const NAVY = '#0B192C';
-  const GOLD = '#C9A84C';
-
-  // Top-left navy triangle
-  doc.polygon([0,0],[180,0],[0,140]).fill(NAVY);
-  // Bottom-right navy triangle
-  doc.polygon([W,H],[W-180,H],[W,H-140]).fill(NAVY);
-
-  // Gold diagonal accent lines — top-left
-  for(let i=0;i<4;i++){
-    const off = 12 + i*10;
-    doc.moveTo(0, off*1.8).lineTo(off*1.8, 0).lineWidth(1.2).strokeColor(GOLD).stroke();
-  }
-  // Gold diagonal accent lines — bottom-right
-  for(let i=0;i<4;i++){
-    const off = 12 + i*10;
-    doc.moveTo(W, H-off*1.8).lineTo(W-off*1.8, H).lineWidth(1.2).strokeColor(GOLD).stroke();
+  // ── Background template
+  const tpl = path.join(__dirname, '../public/certificate.png');
+  if (fs.existsSync(tpl)) {
+    doc.image(tpl, 0, 0, { width: W, height: H });
+  } else {
+    doc.rect(0, 0, W, H).fill('#ffffff');
   }
 
-  // ── Outer gold border
-  doc.rect(22, 18, W-44, H-36).lineWidth(1.5).strokeColor(GOLD).stroke();
-  // Inner thin border
-  doc.rect(27, 23, W-54, H-46).lineWidth(0.5).strokeColor(GOLD).stroke();
+  const NAVY    = '#0B192C';
+  const GOLD    = '#b8972a';
+  const cx      = W / 2;
 
-  // ── Logo (phoenix) — centered top
-  const logoPath = require('path').join(__dirname, '../public/logo.png');
-  const fs = require('fs');
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, W/2 - 36, 28, { width: 72, height: 72 });
-  }
+  // ── "This is to certify that" — italic, centered
+// ── Decorative gold line under title
+const lineY1 = 192;
+doc.moveTo(250, lineY1).lineTo(cx - 15, lineY1).lineWidth(0.8).strokeColor(GOLD).stroke();
+doc.circle(cx, lineY1, 3).fillAndStroke(GOLD, GOLD);
+doc.moveTo(cx + 15, lineY1).lineTo(W - 250, lineY1).lineWidth(0.8).strokeColor(GOLD).stroke();
 
-  // ── Company name below logo
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(NAVY).text('AvRoN', W/2 - 60, 104, { continued: true });
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(GOLD).text('N');
-  doc.font('Helvetica').fontSize(11).fillColor(NAVY).text('technologies', W/2 - 45, 128);
+doc.font('Helvetica-Oblique').fontSize(13).fillColor('#444444')
+  .text('This is to certify that', 180, 205, { width: W - 360, align: 'center' });
+  // ── Intern Name — large script-style bold italic, centered
+  const nameSize = certName.length > 24 ? 28 : certName.length > 18 ? 34 : 42;
+  doc.font('Helvetica-BoldOblique').fontSize(nameSize).fillColor('#142A63')
+    .text(certName, 180, 235, { width: W - 360, align: 'center' });
 
-  // ── MSME logo top-right
-  doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
-    .text('MSME', W - 78, 28, { width: 60, align: 'center', characterSpacing: 1 });
-  doc.font('Helvetica').fontSize(6).fillColor('#555')
-    .text('MICRO, SMALL & MEDIUM\nENTERPRISES', W - 78, 37, { width: 60, align: 'center' });
-  doc.rect(W-78, 25, 60, 38).lineWidth(0.5).strokeColor(NAVY).stroke();
+  // ── Gold diamond separator under name — use simple text bullet
+ // ── Gold line with diamond below name
+const lineY2 = 282;
+doc.moveTo(280, lineY2).lineTo(cx - 12, lineY2).lineWidth(0.8).strokeColor(GOLD).stroke();
+// Draw a diamond shape using polygon
+doc.save();
+doc.translate(cx, lineY2);
+doc.moveTo(0, -5).lineTo(5, 0).lineTo(0, 5).lineTo(-5, 0).closePath();
+doc.fillAndStroke(GOLD, GOLD);
+doc.restore();
+doc.moveTo(cx + 12, lineY2).lineTo(W - 280, lineY2).lineWidth(0.8).strokeColor(GOLD).stroke();
+  // ── "has successfully completed the Virtual Internship Program in"
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text('has successfully completed the Virtual Internship Program in', 180, 295, { width: W - 360, align: 'center' });
 
-  // ── "EMPOWERING FUTURE PROFESSIONALS" tagline
-  const ty = 148;
-  const lw = 90;
-  doc.moveTo(W/2 - lw - 50, ty+5).lineTo(W/2 - 12, ty+5).lineWidth(0.8).strokeColor(GOLD).stroke();
-  doc.moveTo(W/2 + 12, ty+5).lineTo(W/2 + lw + 50, ty+5).lineWidth(0.8).strokeColor(GOLD).stroke();
-  doc.font('Helvetica').fontSize(8).fillColor(GOLD)
-    .text('EMPOWERING FUTURE PROFESSIONALS', 0, ty, { align: 'center', characterSpacing: 2 });
-
-  // ── Main title
-  doc.font('Helvetica-Bold').fontSize(26).fillColor(NAVY)
-    .text('INTERNSHIP COMPLETION CERTIFICATE', 0, 163, { align: 'center', characterSpacing: 1 });
-
-  // Gold diamond divider
-  doc.moveTo(W/2 - 80, 196).lineTo(W/2 - 8, 196).lineWidth(0.8).strokeColor(GOLD).stroke();
-  doc.circle(W/2, 196, 4).fill(GOLD);
-  doc.moveTo(W/2 + 8, 196).lineTo(W/2 + 80, 196).lineWidth(0.8).strokeColor(GOLD).stroke();
-
-  // ── "This is to certify that"
-  doc.font('Helvetica').fontSize(11).fillColor('#555')
-    .text('This is to certify that', 0, 208, { align: 'center' });
-
-  // ── Candidate name in large italic
-  doc.font('Helvetica-BoldOblique').fontSize(36).fillColor(NAVY)
-    .text(certName, 0, 222, { align: 'center' });
-
-  // Gold line under name
-  const nameW = Math.min(doc.widthOfString(certName, { fontSize: 36 }) + 40, 300);
-  doc.moveTo(W/2 - nameW/2, 264).lineTo(W/2 + nameW/2, 264).lineWidth(1).strokeColor(GOLD).stroke();
-  doc.circle(W/2, 264, 3).fill(GOLD);
-
-  // ── Body text
-  doc.font('Helvetica').fontSize(11).fillColor('#444')
-    .text('has successfully completed the Virtual Internship Program in', 0, 273, { align: 'center' });
-
+  // ── Domain bold, centered
   doc.font('Helvetica-Bold').fontSize(14).fillColor(NAVY)
-    .text(reg.domain, 0, 290, { align: 'center' });
+    .text(reg.domain, 180, 315, { width: W - 360, align: 'center' });
 
-  doc.font('Helvetica').fontSize(10.5).fillColor('#444')
-    .text('conducted by AvRoN Technologies.', 0, 308, { align: 'center' });
+  // ── "conducted by AvRoN Technologies." — single line, moved down slightly
+  doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
+    .text('conducted by AvRoN Technologies.', 180, 334, { width: W - 360, align: 'center' });
 
-  doc.font('Helvetica').fontSize(9.5).fillColor('#666')
-    .text('During the internship, the intern demonstrated dedication, consistency\nand a strong grasp of the concepts while completing all assigned tasks,\nassessments and the final project.', 0, 322, { align: 'center', lineGap: 2 });
+  // ── Description paragraph
+  doc.font('Helvetica').fontSize(9.5).fillColor('#444444')
+    .text(
+      'During the internship, the intern demonstrated dedication, consistency\nand a strong grasp of the concepts while completing all assigned tasks,\nassessments and the final project.',
+      180, 358, { width: W - 360, align: 'center', lineGap: 2 }
+    );
 
-  // ── Info row: Duration | Cert ID | Issue Date
-  const infoY = H - 140;
-  const col1 = W/2 - 200, col2 = W/2 - 30, col3 = W/2 + 120;
+  // ── 3-column info row: DURATION | CERTIFICATE ID | ISSUE DATE
+  // Vertical dividers + icon placeholders
+  const infoY   = 418;
+  const col1cx  = 280;   // DURATION center x
+  const col2cx  = cx;    // CERT ID center x (421)
+  const col3cx  = 562;   // ISSUE DATE center x
 
-  // Dividers
-  doc.moveTo(W/2 - 82, infoY - 2).lineTo(W/2 - 82, infoY + 36).lineWidth(0.5).strokeColor('#ccc').stroke();
-  doc.moveTo(W/2 + 80, infoY - 2).lineTo(W/2 + 80, infoY + 36).lineWidth(0.5).strokeColor('#ccc').stroke();
+  const colW = 140;
 
-  // Duration
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('DURATION', col1, infoY, { width: 120, align: 'center', characterSpacing: 1 });
-  doc.font('Helvetica').fontSize(11).fillColor('#333')
-    .text(reg.duration || `${Math.round((new Date(reg.endDate)-new Date(reg.startDate))/(1000*60*60*24*7))} Weeks`, col1, infoY+13, { width: 120, align: 'center' });
+  // Vertical separators
+  doc.moveTo(col1cx + colW / 2 + 10, infoY - 5).lineTo(col1cx + colW / 2 + 10, infoY + 50)
+    .lineWidth(0.8).strokeColor('#cccccc').stroke();
+  doc.moveTo(col3cx - colW / 2 - 10, infoY - 5).lineTo(col3cx - colW / 2 - 10, infoY + 50)
+    .lineWidth(0.8).strokeColor('#cccccc').stroke();
 
-  // Cert ID
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('CERTIFICATE ID', col2, infoY, { width: 120, align: 'center', characterSpacing: 1 });
-  doc.font('Helvetica').fontSize(10).fillColor('#333')
-    .text(reg.certId, col2, infoY+13, { width: 120, align: 'center' });
+  // Labels (bold, navy, small caps feel)
+  const labelSize = 8;
+  const valSize   = 11;
 
-  // Issue Date
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('ISSUE DATE', col3, infoY, { width: 120, align: 'center', characterSpacing: 1 });
-  doc.font('Helvetica').fontSize(11).fillColor('#333')
-    .text(fmt(reg.sentAt || new Date()), col3, infoY+13, { width: 120, align: 'center' });
+  // DURATION
+  doc.font('Helvetica-Bold').fontSize(labelSize).fillColor(NAVY)
+    .text('DURATION', col1cx - colW / 2, infoY, { width: colW, align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(valSize).fillColor(NAVY)
+    .text(
+      reg.duration || `${Math.round((new Date(reg.endDate) - new Date(reg.startDate)) / (1000*60*60*24*7))} Weeks`,
+      col1cx - colW / 2, infoY + 14, { width: colW, align: 'center' }
+    );
 
+  // CERTIFICATE ID
+  doc.font('Helvetica-Bold').fontSize(labelSize).fillColor(NAVY)
+    .text('CERTIFICATE ID', col2cx - colW / 2, infoY, { width: colW, align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(valSize).fillColor(NAVY)
+    .text(reg.certId, col2cx - colW / 2, infoY + 14, { width: colW, align: 'center' });
+
+  // ISSUE DATE
+  doc.font('Helvetica-Bold').fontSize(labelSize).fillColor(NAVY)
+    .text('ISSUE DATE', col3cx - colW / 2, infoY, { width: colW, align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(valSize).fillColor(NAVY)
+    .text(fmt(reg.sentAt || new Date()), col3cx - colW / 2, infoY + 14, { width: colW, align: 'center' });
+
+  // ── QR Code — far right, moved up to avoid blue corner overlap
+ doc.image(qrBuffer, W - 158, 348, { width: 96, height: 96 });
+doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
+  .text('SCAN TO VERIFY', W - 163, 447, { width: 110, align: 'center' });
+doc.font('Helvetica').fontSize(7).fillColor('#444444')
+  .text('THIS CERTIFICATE', W - 163, 456, { width: 110, align: 'center' });
   // ── Signatures row
-  const sigY = H - 95;
+  const sigY = 478;
 
-  // Left: Mentor/Coordinator
+  // Mentor — left
   doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
-    .text('avRoN Tech', 55, sigY, { width: 160, align: 'center' });
-  doc.moveTo(55, sigY + 18).lineTo(215, sigY + 18).lineWidth(0.8).strokeColor('#888').stroke();
+    .text(mentorName, 90, sigY, { width: 160, align: 'center' });
+  doc.moveTo(90, sigY + 20).lineTo(250, sigY + 20).lineWidth(0.5).strokeColor('#aaaaaa').stroke();
   doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('PROGRAM COORDINATOR', 55, sigY + 22, { width: 160, align: 'center', characterSpacing: 0.5 });
+    .text('MENTOR', 90, sigY + 25, { width: 160, align: 'center' });
   doc.font('Helvetica').fontSize(8).fillColor('#555')
-    .text('avRoN Technologies', 55, sigY + 33, { width: 160, align: 'center' });
+    .text(mentorName, 90, sigY + 37, { width: 160, align: 'center' });
+  doc.font('Helvetica').fontSize(8).fillColor('#555')
+    .text(mentorTitle, 90, sigY + 49, { width: 160, align: 'center' });
 
-  // Center: AvRoN seal
-  const sealX = W/2 - 38, sealY = sigY - 10;
-  doc.circle(W/2, sealY + 38, 38).fill(NAVY);
-  doc.circle(W/2, sealY + 38, 34).lineWidth(1.5).strokeColor(GOLD).stroke();
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, sealX + 6, sealY + 8, { width: 64, height: 64 });
+  // CEO — right (leave space for QR on far right)
+  doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
+    .text(ceoName, 490, sigY, { width: 160, align: 'center' });
+  doc.moveTo(490, sigY + 20).lineTo(650, sigY + 20).lineWidth(0.5).strokeColor('#aaaaaa').stroke();
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
+    .text('CEO & CO-FOUNDER', 490, sigY + 25, { width: 160, align: 'center' });
+  doc.font('Helvetica').fontSize(8).fillColor('#555')
+    .text(ceoName, 490, sigY + 37, { width: 160, align: 'center' });
+  doc.font('Helvetica').fontSize(8).fillColor('#555')
+    .text('AvRoN Technologies', 490, sigY + 49, { width: 160, align: 'center' });
+
+  // ── Seal logo in center (if exists)
+  const sealPath = path.join(__dirname, '../public/seal.png');
+  if (fs.existsSync(sealPath)) {
+    doc.image(sealPath, cx - 40, sigY - 10, { width: 80, height: 80 });
   }
-  doc.font('Helvetica-Bold').fontSize(7).fillColor(GOLD)
-    .text('AvRoN', W/2 - 15, sealY + 60);
-  doc.font('Helvetica').fontSize(5.5).fillColor('#cdd9eb')
-    .text('technologies', W/2 - 17, sealY + 70);
-
-  // Right: CEO
-  doc.font('Helvetica-BoldOblique').fontSize(14).fillColor(NAVY)
-    .text('Naveen Reddy', W - 215, sigY, { width: 160, align: 'center' });
-  doc.moveTo(W - 215, sigY + 18).lineTo(W - 55, sigY + 18).lineWidth(0.8).strokeColor('#888').stroke();
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-    .text('CEO & FOUNDER', W - 215, sigY + 22, { width: 160, align: 'center', characterSpacing: 0.5 });
-  doc.font('Helvetica').fontSize(8).fillColor('#555')
-    .text('Naveen Reddy\navRoN Technologies', W - 215, sigY + 33, { width: 160, align: 'center' });
-
-  // ── QR Code — top right area
-  doc.image(qrBuffer, W - 140, 155, { width: 80, height: 80 });
-  doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
-    .text('SCAN TO VERIFY', W - 140, 238, { width: 80, align: 'center', characterSpacing: 0.5 });
-  doc.font('Helvetica').fontSize(7).fillColor('#666')
-    .text('THIS CERTIFICATE', W - 140, 248, { width: 80, align: 'center' });
-
-  // ── Footer bar
-  const fY = H - 28;
-  doc.rect(27, fY, W - 54, 22).fill(NAVY);
-  const fItems = [
-    '🛡  Issued by AvRoN Technologies',
-    '🏛  An MSME Registered Enterprise',
-    '🔒  This certificate is digitally signed and secure.',
-  ];
-  const fW = (W - 54) / 3;
-  fItems.forEach((txt, i) => {
-    doc.font('Helvetica').fontSize(7.5).fillColor('#fff')
-      .text(txt, 27 + i * fW, fY + 7, { width: fW, align: 'center' });
-  });
 
   doc.end();
   return bufferPromise;
