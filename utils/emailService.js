@@ -219,7 +219,7 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   console.log(`✉️ Offer letter sent to ${user.email}`);
 }
 
-// ── 3. OTP ────────────────────────────────────────────────────────────────────
+// ── 3. OTP (Login) ───────────────────────────────────────────────────────────
 async function sendOTPEmail(user, otp) {
   const html = wrap(`
     <h2 style="font-size:22px;font-weight:800;color:#0B192C;margin-bottom:4px;">Login Verification Code</h2>
@@ -233,6 +233,26 @@ async function sendOTPEmail(user, otp) {
   `);
   await sendMail({ to: user.email, subject: `${otp} — Your avRoN Technologies login code`, html });
   console.log(`✉️ OTP sent to ${user.email}`);
+}
+
+// ── 3b. Password Reset OTP ────────────────────────────────────────────────────
+async function sendPasswordResetOTPEmail(user, otp) {
+  const html = wrap(`
+    <h2 style="font-size:22px;font-weight:800;color:#0B192C;margin-bottom:4px;">Password Reset Request</h2>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:20px;">avRoN Technologies — Account Security</p>
+    <p>Hello <b>${user.fullName}</b>,</p>
+    <p>We received a request to reset the password for your avRoN Technologies account (<b>${user.email}</b>). Use the OTP below to proceed.</p>
+    <div style="background:linear-gradient(135deg,#0B192C 0%,#152844 100%);border-radius:12px;text-align:center;padding:32px 22px;margin:24px 0;border:1px solid #1a2c4a;">
+      <div style="font-size:13px;color:#7186a0;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;">Your Password Reset Code</div>
+      <div style="font-size:48px;font-weight:800;color:#608BC1;letter-spacing:12px;font-family:'SF Mono',Consolas,Monaco,monospace;">${otp}</div>
+      <div style="font-size:11px;color:#7186a0;margin-top:12px;letter-spacing:.1em;text-transform:uppercase;">⏱ Expires in 10 minutes</div>
+    </div>
+    <p>Enter this code in the dashboard to set your new password.</p>
+    <hr class="divider">
+    <p class="muted">⚠️ If you did not request a password reset, please ignore this email. Your password will remain unchanged. If you're concerned about your account security, contact us at <b>support.avrontech@gmail.com</b>.</p>
+  `);
+  await sendMail({ to: user.email, subject: `${otp} — Password Reset Code · avRoN Technologies`, html });
+  console.log(`✉️ Password reset OTP sent to ${user.email}`);
 }
 
 // ── 4. Payment Rejected ───────────────────────────────────────────────────────
@@ -332,6 +352,7 @@ module.exports = {
   sendOfferLetterEmail,
   sendPaymentRejectedEmail,
   sendOTPEmail,
+  sendPasswordResetOTPEmail,
   sendTicketEmail,
   sendRevocationEmail,
   sendCertificateEmail: noop,

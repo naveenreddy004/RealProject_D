@@ -204,24 +204,37 @@ router.get('/me', authStudent, async (req, res) => {
   }
 });
 
-// ── CHANGE PASSWORD ───────────────────────────────────────────────────────────
-router.post('/change-password', authStudent, async (req, res) => {
+// ── CHANGE PASSWORD — Step 1: Send OTP to logged-in user's email ─────────────
+router.post('/change-password-otp', authStudent, async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    const otp = user.generateOTP();
+    await user.save();
+    queueEmail('passwordResetOtp', { user, otp });
+    res.json({ success: true, message: 'OTP sent to your registered email.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to send OTP.' });
+  }
+});
+
+// ── CHANGE PASSWORD — Step 2: Verify OTP + set new password ──────────────────
+router.post('/change-password-verify', authStudent, async (req, res) => {
+  try {
+    const { otp, newPassword } = req.body;
+    if (!otp) return res.status(400).json({ success: false, message: 'OTP is required.' });
     if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters.' });
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
     }
     const user = await User.findById(req.user._id);
-    if (user.password) {
-      if (!currentPassword) return res.status(400).json({ success: false, message: 'Current password is required.' });
-      const match = await user.comparePassword(currentPassword);
-      if (!match) return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
-    }
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    const result = user.verifyOTP(otp);
+    if (!result.valid) return res.status(400).json({ success: false, message: result.reason });
     user.password = newPassword;
     await user.save();
     res.json({ success: true, message: 'Password updated successfully.' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to change password.' });
+    res.status(500).json({ success: false, message: 'Failed to update password.' });
   }
 });
 

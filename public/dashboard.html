@@ -330,7 +330,7 @@
     </nav>
 
     <div class="sb-foot">
-        <button class="sb-link" data-testid="change-pw-btn" onclick="openModal('pwModal')"><span class="ico">⊙</span> Change Password</button>
+        <button class="sb-link" data-testid="change-pw-btn" onclick="openPwModal()"><span class="ico">⊙</span> Change Password</button>
         <a href="/" class="sb-link"><span class="ico">↻</span> Main Site</a>
         <button data-testid="logout-btn" class="sb-link danger" onclick="logout()"><span class="ico">⊗</span> Logout</button>
     </div>
@@ -606,16 +606,23 @@
 <!-- Modal: change password -->
 <div class="modal" id="pwModal">
     <div class="modal-card">
-        <div class="modal-head"><h3>Change password</h3><p>Set a new password for your account.</p></div>
+        <div class="modal-head"><h3>Change Password</h3><p>Enter the OTP sent to your email and set a new password.</p></div>
         <div class="modal-body">
-            <div class="fg"><label>Current password</label><input type="password" id="curPw" class="fi" data-testid="cur-pw"></div>
-            <div class="fg"><label>New password</label><input type="password" id="newPw" class="fi" data-testid="new-pw"></div>
-            <div class="fg"><label>Confirm new password</label><input type="password" id="cnfPw" class="fi" data-testid="cnf-pw"></div>
+            <div class="fg">
+                <label>OTP</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="pwOtp" class="fi" placeholder="6-digit OTP" maxlength="6" style="flex:1;">
+                    <button onclick="sendPwOtp()" id="sendOtpBtn" style="white-space:nowrap;padding:10px 14px;background:var(--midnight,#0B192C);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;flex-shrink:0;">Send OTP</button>
+                </div>
+                <div id="pwOtpErr" style="display:none;font-size:12px;color:var(--danger);margin-top:4px;"></div>
+            </div>
+            <div class="fg"><label>New password</label><input type="password" id="newPw" class="fi"></div>
+            <div class="fg"><label>Confirm new password</label><input type="password" id="cnfPw" class="fi"></div>
             <div id="pwErr" style="display:none;font-size:12px;color:var(--danger);"></div>
         </div>
         <div class="modal-foot">
-            <button class="btn btn-outline" onclick="closeModal('pwModal')">Cancel</button>
-            <button class="btn btn-primary" onclick="changePw()" data-testid="save-pw-btn">Update password</button>
+            <button class="btn btn-outline" onclick="closePwModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="verifyPwOtp()">Update Password</button>
         </div>
     </div>
 </div>
@@ -1135,21 +1142,64 @@
       window.open('/verify?id=' + regData.certId, '_blank');
     }
 
-    // ── Change password ───────────────────────────────────────────────────────────
-    async function changePw(){
-      const cur = document.getElementById('curPw').value;
+    // ── Change password (OTP-based) ───────────────────────────────────────────
+    function openPwModal() {
+      document.getElementById('pwOtp').value = '';
+      document.getElementById('newPw').value = '';
+      document.getElementById('cnfPw').value = '';
+      document.getElementById('pwOtpErr').style.display = 'none';
+      document.getElementById('pwErr').style.display = 'none';
+      document.getElementById('sendOtpBtn').disabled = false;
+      document.getElementById('sendOtpBtn').textContent = 'Send OTP';
+      openModal('pwModal');
+    }
+    function closePwModal() { closeModal('pwModal'); }
+
+    async function sendPwOtp() {
+      const btn = document.getElementById('sendOtpBtn');
+      const err = document.getElementById('pwOtpErr');
+      err.style.display = 'none';
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        const res = await fetch('/api/auth/change-password-otp', { method:'POST', headers:{'Authorization':'Bearer '+token} });
+        const d = await res.json();
+        if (d.success) {
+          btn.textContent = 'Resend';
+          btn.disabled = false;
+          err.style.color = 'var(--steel,#608BC1)';
+          err.textContent = '✓ OTP sent to your email.';
+          err.style.display = 'block';
+          setTimeout(() => { err.style.display='none'; err.style.color='var(--danger)'; }, 4000);
+        } else {
+          err.style.color = 'var(--danger)';
+          err.textContent = d.message; err.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Send OTP';
+        }
+      } catch {
+        err.textContent = 'Network error.'; err.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Send OTP';
+      }
+    }
+
+    async function verifyPwOtp() {
+      const otp = document.getElementById('pwOtp').value.trim();
       const nw  = document.getElementById('newPw').value;
       const cnf = document.getElementById('cnfPw').value;
       const err = document.getElementById('pwErr');
-      err.style.display='none';
-      if(nw.length < 6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
-      if(nw !== cnf){err.textContent='New passwords do not match.';err.style.display='block';return;}
-      try{
-        const res = await fetch('/api/auth/change-password', {method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({currentPassword:cur, newPassword: nw})});
+      err.style.display = 'none';
+      if (!otp) { err.textContent = 'Please enter the OTP.'; err.style.display = 'block'; return; }
+      if (nw.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+      if (nw !== cnf) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+      try {
+        const res = await fetch('/api/auth/change-password-verify', {
+          method:'POST',
+          headers:{'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
+          body: JSON.stringify({ otp, newPassword: nw })
+        });
         const d = await res.json();
-        if(d.success){closeModal('pwModal');showToast('Password updated.');document.getElementById('curPw').value='';document.getElementById('newPw').value='';document.getElementById('cnfPw').value='';}
-        else{err.textContent=d.message;err.style.display='block';}
-      }catch{err.textContent='Network error.';err.style.display='block';}
+        if (d.success) { closePwModal(); showToast('Password updated successfully.'); }
+        else { err.textContent = d.message; err.style.display = 'block'; }
+      } catch { err.textContent = 'Network error.'; err.style.display = 'block'; }
     }
 
     loadDashboard();
