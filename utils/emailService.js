@@ -95,25 +95,13 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com'
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
-// ── Logo as base64 — read once at startup, cached for performance ─────────────
-let _logoB64 = '';
-let _logoMime = 'image/jpeg';
-try {
-  const _fs = require('fs');
-  const _path = require('path');
-  const _lp = _path.join(__dirname, '../public/logo.jpg');
-  if (_fs.existsSync(_lp)) {
-    const buf = _fs.readFileSync(_lp);
-    _logoMime = buf.slice(0, 2).toString('hex') === 'ffd8' ? 'image/jpeg' : 'image/png';
-    _logoB64 = buf.toString('base64');
-  }
-} catch (_) {}
+// ── Logo URL for emails — use hosted URL instead of base64 to keep email size small
+// Use logo.png (transparent background) so it blends with dark header
+const LOGO_URL = `${process.env.BASE_URL || 'https://avrontech.in'}/logo.png`;
 
-function getLogoTag(size = 48) {
-  if (_logoB64) {
-    return `<img src="data:${_logoMime};base64,${_logoB64}" alt="avRoN Technologies" style="width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;" />`;
-  }
-  return `<div style="width:${size}px;height:${size}px;background:#608BC1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0B192C;flex-shrink:0;">aR</div>`;
+function getLogoTag(size = 52) {
+  // No background, no border — matches how dashboard renders it on dark bg
+  return `<img src="${LOGO_URL}" alt="avRoN" width="${size}" height="${size}" style="width:${size}px;height:${size}px;object-fit:contain;flex-shrink:0;display:block;" />`;
 }
 
 const logoImgTag = getLogoTag(48);
@@ -124,9 +112,10 @@ const wrap = (innerHTML) => `<!DOCTYPE html>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;padding:24px 8px;}
 .email-wrap{max-width:600px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(11,25,44,0.12);}
-.header{background:linear-gradient(135deg,#0B192C 0%,#152844 100%);padding:22px 28px;display:flex;align-items:center;gap:14px;border-bottom:3px solid #608BC1;}
-.brand-text .big{font-size:21px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;line-height:1.1;}
-.brand-text .sub{font-size:10px;color:#7186a0;margin-top:3px;letter-spacing:0.1em;text-transform:uppercase;}
+.header{background:linear-gradient(135deg,#0B192C 0%,#152844 100%);padding:20px 28px;display:flex;align-items:center;gap:16px;border-bottom:3px solid #608BC1;}
+.brand-text{margin-left:4px;}
+.brand-text .big{font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;line-height:1.15;}
+.brand-text .sub{font-size:10.5px;color:#7186a0;margin-top:5px;letter-spacing:0.04em;}
 .body{background:#ffffff;padding:28px 32px;}
 .body h2{font-size:20px;font-weight:700;color:#0B192C;margin-bottom:6px;line-height:1.3;}
 .body p{font-size:14px;color:#374151;margin-bottom:12px;line-height:1.7;}
@@ -155,7 +144,7 @@ hr.divider{border:none;border-top:1px solid #e6ebf2;margin:16px 0;}
     ${logoImgTag}
     <div class="brand-text">
       <div class="big">avRoN Technologies</div>
-      <div class="sub">avRoNTech.in &nbsp;·&nbsp; Corporate Internships</div>
+      <div class="sub">avrontech.in &nbsp;·&nbsp; Corporate Internships</div>
     </div>
   </div>
   <div class="body">${innerHTML}</div>
@@ -176,7 +165,7 @@ async function sendConfirmationEmail(user, reg) {
   const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
   const html = wrap(`
     <h2>Internship Registration Confirmed! 🎉</h2>
-    <p style="color:#608BC1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;">avRoN Technologies — Internship Program</p>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:16px;">avRoN Technologies — Internship Program</p>
     <p>Dear <b>${name}</b>,</p>
     <p>Thank you for applying for the <b>${reg.domain}</b> internship program at <b>avRoN Technologies</b>! We have received your application successfully.</p>
     <div class="kv">
@@ -203,13 +192,13 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
   const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
   const html = wrap(`
     <h2>Official Offer Letter 🎓</h2>
-    <p style="color:#608BC1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;">avRoN Technologies — Corporate Internship</p>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:16px;">avRoN Technologies — Corporate Internship</p>
     <p>Dear <b>${name}</b>,</p>
     <p>We are pleased to offer you an internship at <b>avRoN Technologies</b>. Here are your program details:</p>
     <div class="kv">
       <div class="kv-row"><span class="lbl">💻 Domain</span><span class="val">${reg.domain}</span></div>
       <div class="kv-row"><span class="lbl">📅 Duration</span><span class="val">${fmt(reg.startDate)} to ${fmt(reg.endDate)}</span></div>
-      <div class="kv-row"><span class="lbl">💰 Stipend</span><span class="val">₹ 0.00 (Learning-based)</span></div>
+      <div class="kv-row"><span class="lbl">💰 Stipend</span><span class="val">₹ 0.00</span></div>
       <div class="kv-row"><span class="lbl">🆔 Certificate ID</span><span class="val" style="font-family:monospace;">${reg.certId}</span></div>
     </div>
     <p>Your <b>Official Offer Letter PDF</b> is attached. Please keep it for your records.</p>
@@ -234,7 +223,7 @@ async function sendOfferLetterEmail(user, reg, pdfBuffer) {
 async function sendOTPEmail(user, otp) {
   const html = wrap(`
     <h2 style="font-size:22px;font-weight:800;color:#0B192C;margin-bottom:4px;">Login Verification Code</h2>
-    <p style="color:#608BC1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">avRoN Technologies — Secure Access</p>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:20px;">avRoN Technologies — Secure Access</p>
     <p>Hello <b>${user.fullName}</b>, use the code below to login to your <b>avRoN Technologies</b> dashboard. Valid for 10 minutes.</p>
     <div style="background:linear-gradient(135deg,#0B192C 0%,#152844 100%);border-radius:12px;text-align:center;padding:32px 22px;margin:24px 0;border:1px solid #1a2c4a;">
       <div style="font-size:48px;font-weight:800;color:#608BC1;letter-spacing:12px;font-family:'SF Mono',Consolas,Monaco,monospace;">${otp}</div>

@@ -312,7 +312,7 @@ async function generateOfferLetterPDF(user, reg) {
 
   // ── Reference + Date row
   const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
-  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(`ID — ${reg.certId}`, 48, 154);
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(`Ref. ID :   ${reg.certId}`, 48, 154);
   doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(dateStr, W - 48, 154, { align: 'right', width: 200 });
 
   // ── Salutation
@@ -340,9 +340,8 @@ async function generateOfferLetterPDF(user, reg) {
     ['Email',          user.email],
     ['Domain',         reg.domain],
     ['Duration',       `${fmt(reg.startDate)} to ${fmt(reg.endDate)}`],
-    ['Stipend',        '₹ 0.00 (Learning-based / Unpaid)'],
+    ['Stipend',        '0.00 ₹'],
     ['Certificate ID', reg.certId],
-    ...(certCollege ? [['College', certCollege + (certCourse ? ` · ${certCourse}` : '')]] : []),
   ];
 
   const tableX = 48, tableW = W - 96, rowH = 24;
@@ -376,12 +375,22 @@ async function generateOfferLetterPDF(user, reg) {
   y += 16;
   doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK).text('Team avRoN Technologies', 48, y);
 
-  // ── Signature line
-  y += 36;
-  doc.moveTo(48, y).lineTo(200, y).lineWidth(1).strokeColor('#aaaaaa').stroke();
+  // ── Signature image
+  y += 10;
+  const sigImgPath = require('path').join(__dirname, '../public/signature.png');
+  if (fs.existsSync(sigImgPath)) {
+    doc.image(sigImgPath, 48, y, { width: 120, height: 30 });
+    y += 34;
+  } else {
+    y += 24;
+  }
+
+  // ── Signature line + name
+  doc.moveTo(48, y).lineTo(220, y).lineWidth(0.8).strokeColor('#aaaaaa').stroke();
   y += 6;
-  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('Program Coordinator', 48, y);
-  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('avRoN Technologies', 48, y + 13);
+  doc.font('Helvetica-Bold').fontSize(9.5).fillColor(DARK).text('Naveen Kumar', 48, y);
+  y += 13;
+  doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('CEO & Founder, avRoN Technologies', 48, y);
 
   // ── MSME QR code (right side, bottom area) — use QRCode for UDYAM number
   try {
