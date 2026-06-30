@@ -51,10 +51,13 @@ async function generateCertificatePDF(user, reg) {
   const fs   = require('fs');
   const path = require('path');
 
-  // ── Background template
-  const tpl = path.join(__dirname, '../public/certificate-compressed.jpg');
+  // ── Background template (edited-photo.png — clean, no baked-in text)
+  const tpl = path.join(__dirname, '../public/certificate-template.jpg');
+  const tplFallback = path.join(__dirname, '../public/certificate-template.jpg');
   if (fs.existsSync(tpl)) {
     doc.image(tpl, 0, 0, { width: W, height: H });
+  } else if (fs.existsSync(tplFallback)) {
+    doc.image(tplFallback, 0, 0, { width: W, height: H });
   } else {
     doc.rect(0, 0, W, H).fill('#ffffff');
   }
@@ -63,8 +66,67 @@ async function generateCertificatePDF(user, reg) {
   const GOLD    = '#b8972a';
   const cx      = W / 2;
 
-  // ── "This is to certify that" — italic, centered
-// ── Decorative gold line under title
+  // ── Header: Logo + "avRoN / Technologies" side by side, centered as a group
+  const logoPath = path.join(__dirname, '../public/logo.png');
+  const logoSize = 72;
+  const logoY    = 28;
+  // measure group: logo(72) + gap(12) + text(~130) ≈ 214
+  const groupW   = 214;
+  const groupX   = cx - groupW / 2;
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, groupX, logoY, { width: logoSize, height: logoSize });
+  }
+  // "avRoN" + "Technologies" vertically centered next to logo
+  // "avRoN" starts from middle of logo, "Technologies" just below, both sitting just above EMPOWERING
+  doc.font('Helvetica-Bold').fontSize(30).fillColor(NAVY)
+    .text('avRoN', groupX + logoSize + 6, logoY + 28, { width: 130 });
+  doc.font('Helvetica-Bold').fontSize(18).fillColor(NAVY)
+    .text('Technologies', groupX + logoSize + 6, logoY + 62, { width: 130 });
+
+  // ── MSME badge — top-right with small QR
+  const msmeQrBuffer = await QRCode.toBuffer(
+    'https://udyamregistration.gov.in/verifyudyambarcode.aspx?verifyudrn=8Zd8uxyFud1mBQuoZm9tx9Fdb/M73x2wLa1y4Hb+SO0=',
+    { width: 40, margin: 1, color: { dark: '#0B192C', light: '#ffffff' } }
+  );
+  const msmeQrSize = 32;
+  const msmeQrX    = W - 16 - msmeQrSize;
+  const msmeQrY    = 34;
+  doc.image(msmeQrBuffer, msmeQrX, msmeQrY, { width: msmeQrSize, height: msmeQrSize });
+  // Text just left of QR, tight gap
+  const msmeTextW = 100;
+  const msmeTextX = msmeQrX - msmeTextW - 4;
+  doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
+    .text('MSME REGISTERED', msmeTextX, 36, { width: msmeTextW, align: 'right', characterSpacing: 0.8 });
+  doc.font('Helvetica').fontSize(7).fillColor('#555555')
+    .text('Scan to Verify', msmeTextX, 47, { width: msmeTextW, align: 'right' });
+  doc.font('Helvetica').fontSize(7).fillColor('#777777')
+    .text('Micro Enterprise · Govt. of India', msmeTextX, 58, { width: msmeTextW, align: 'right' });
+
+  // ── "EMPOWERING FUTURE PROFESSIONALS" — dark navy, tight short gold lines + dots
+  const tagY    = 133;
+  const tagText = 'EMPOWERING FUTURE PROFESSIONALS';
+  const tagW    = 216;   // approx width at fontSize 8 with letterSpacing 1.5
+  const tagX    = cx - tagW / 2;
+  const lineGap = 6;
+  const lineLen = 22;
+  // Left: dot then short line right up to text
+  doc.circle(tagX - lineGap - lineLen - 3, tagY + 4.5, 1.8).fillAndStroke(GOLD, GOLD);
+  doc.moveTo(tagX - lineGap - lineLen + 1, tagY + 4.5).lineTo(tagX - lineGap, tagY + 4.5)
+    .lineWidth(0.8).strokeColor(GOLD).stroke();
+  // Right: short line then dot
+  doc.moveTo(tagX + tagW + lineGap, tagY + 4.5).lineTo(tagX + tagW + lineGap + lineLen - 1, tagY + 4.5)
+    .lineWidth(0.8).strokeColor(GOLD).stroke();
+  doc.circle(tagX + tagW + lineGap + lineLen + 3, tagY + 4.5, 1.8).fillAndStroke(GOLD, GOLD);
+  // Text — dark navy, small caps feel
+  doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
+    .text(tagText, 0, tagY, { width: W, align: 'center', characterSpacing: 1.5 });
+
+  // ── "INTERNSHIP COMPLETION CERTIFICATE" — dark navy-blue matching original
+  // ── "INTERNSHIP COMPLETION CERTIFICATE" — large bold navy, matching original size
+  doc.font('Helvetica-Bold').fontSize(28).fillColor('#1c2c43')
+    .text('INTERNSHIP COMPLETION CERTIFICATE', 0, 158, { width: W, align: 'center', characterSpacing: 2.5 });
+
+  // ── Decorative gold line under header area
 const lineY1 = 192;
 doc.moveTo(250, lineY1).lineTo(cx - 15, lineY1).lineWidth(0.8).strokeColor(GOLD).stroke();
 doc.circle(cx, lineY1, 3).fillAndStroke(GOLD, GOLD);
@@ -96,9 +158,9 @@ doc.moveTo(cx + 12, lineY2).lineTo(W - 280, lineY2).lineWidth(0.8).strokeColor(G
   doc.font('Helvetica-Bold').fontSize(14).fillColor(NAVY)
     .text(reg.domain, 180, 315, { width: W - 360, align: 'center' });
 
-  // ── "conducted by AvRoN Technologies." — single line, moved down slightly
+  // ── "conducted by avRoN Technologies." — single line, moved down slightly
   doc.font('Helvetica').fontSize(10.5).fillColor('#333333')
-    .text('conducted by AvRoN Technologies.', 180, 334, { width: W - 360, align: 'center' });
+    .text('conducted by avRoN Technologies.', 180, 334, { width: W - 360, align: 'center' });
 
   // ── Description paragraph
   doc.font('Helvetica').fontSize(9.5).fillColor('#444444')
