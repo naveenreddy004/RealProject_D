@@ -46,7 +46,7 @@ router.get('/dashboard', authStudent, async (req, res) => {
       upiDetails: {
         upiId: process.env.UPI_ID || 'avron@upi',
         name: process.env.UPI_NAME || 'avRoN Technologies',
-        amount: reg ? reg.amount : 199,
+        amount: reg ? reg.amount : 299,
       }
     });
   } catch (err) {

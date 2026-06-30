@@ -18,7 +18,7 @@ const registrationSchema = new mongoose.Schema({
   startDate:  { type: Date, required: true },
   endDate:    { type: Date, required: true },
   package:    { type: String, default: 'Certificate Program' },
-  amount:     { type: Number, default: 199 },
+  amount:     { type: Number, default: 299 },
 
   // Registrant details — stored at registration time so certificate is always correct
   // even if the same email is used for multiple people
@@ -41,7 +41,7 @@ const registrationSchema = new mongoose.Schema({
     verifiedAt:        { type: Date, default: null },
     verifiedBy:        { type: String, default: null },
     approved:          { type: Boolean, default: false },
-    amount:            { type: Number, default: 199 },
+    amount:            { type: Number, default: 299 },
     upiId:             { type: String, default: null },
     notes:             { type: String, default: null },
     method:            { type: String, enum: ['upi_manual', 'razorpay', 'cashfree', null], default: null },

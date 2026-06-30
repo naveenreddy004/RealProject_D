@@ -502,12 +502,21 @@ a{color:inherit;text-decoration:none;}
     <div class="sec-head reveal">
       <span class="eyebrow">Transparent Pricing</span>
       <h2>Two simple packages. No hidden fees.</h2>
-      <p>Pick the basic tracking package, or upgrade to the complete bundle for a real-world project and verified certificate.</p>
+      <p>Pick the basic internship package, or upgrade to the complete bundle for a real-world project and verified certificate.</p>
     </div>
     <div class="price-grid">
-      <div class="price-card reveal reveal-delay-1">
+      <div class="price-card reveal reveal-delay-1" style="position:relative;">
         <div class="price-name">Basic Package</div>
-        <div class="price-amt"><span class="cur">₹</span>199</div>
+        <!-- Price row with discount -->
+        <div style="display:flex;align-items:baseline;gap:10px;margin:8px 0 4px;">
+          <div class="price-amt" style="margin:0;"><span class="cur">₹</span><span id="basicPriceAmt">199</span></div>
+          <span id="basicOriginal" style="font-size:15px;color:#94a3b8;text-decoration:line-through;">₹299</span>
+          <span id="earlyBirdPill" style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.04em;">33% OFF</span>
+        </div>
+        <!-- Countdown -->
+        <div id="earlyBirdTimer" style="display:inline-flex;align-items:center;gap:6px;background:#fef9ec;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;margin-bottom:14px;font-size:12px;font-weight:600;color:#92400e;">
+          <span>⏳</span><span id="earlyBirdCountdown">Calculating...</span>
+        </div>
         <ul class="price-list">
           <li><span class="chk">✓</span><span>Standard tracking and baseline portal access</span></li>
           <li><span class="chk">✓</span><span>Domain roadmap inside your dashboard</span></li>
@@ -518,7 +527,7 @@ a{color:inherit;text-decoration:none;}
       </div>
       <div class="price-card featured reveal reveal-delay-2" style="position:relative;">
         <div class="price-name">Complete Certification Bundle</div>
-        <div class="price-amt"><span class="cur">₹</span>399</div>
+        <div class="price-amt"><span class="cur">₹</span>1099</div>
         <ul class="price-list">
           <li><span class="chk">✓</span><span>Everything in the Basic Package</span></li>
           <li><span class="chk">✓</span><span>Industry-grade real-world project</span></li>
@@ -531,6 +540,42 @@ a{color:inherit;text-decoration:none;}
     </div>
   </div>
 </section>
+<script>
+  // Early bird offer — countdown starts from server deploy time (10 days)
+  let EARLY_BIRD_END = null;
+  async function initEarlyBird() {
+    try {
+      const res = await fetch('/api/early-bird');
+      const d = await res.json();
+      EARLY_BIRD_END = d.endsAt;
+      updateEarlyBird();
+    } catch { updateEarlyBird(); }
+  }
+  function updateEarlyBird() {
+    const now = Date.now();
+    const priceAmt  = document.getElementById('basicPriceAmt');
+    const original  = document.getElementById('basicOriginal');
+    const pill      = document.getElementById('earlyBirdPill');
+    const timerBox  = document.getElementById('earlyBirdTimer');
+    const countdown = document.getElementById('earlyBirdCountdown');
+    if (!priceAmt) return;
+    if (EARLY_BIRD_END && now < EARLY_BIRD_END) {
+      const diff = EARLY_BIRD_END - now;
+      const days = Math.floor(diff / 86400000);
+      const hrs  = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      countdown.textContent = `Early bird price ends in ${days}d ${hrs}h ${mins}m ${secs}s`;
+    } else if (EARLY_BIRD_END) {
+      priceAmt.textContent = '299';
+      if (original) original.style.display = 'none';
+      if (pill)     pill.style.display     = 'none';
+      if (timerBox) timerBox.style.display = 'none';
+    }
+  }
+  initEarlyBird();
+  setInterval(updateEarlyBird, 1000);
+</script>
 
 <!-- Coming Soon Modal (landing page) -->
 <div id="landingComingSoon" style="display:none;position:fixed;inset:0;background:rgba(11,25,44,.65);backdrop-filter:blur(10px);z-index:9999;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)this.classList.remove('show')">
@@ -538,7 +583,7 @@ a{color:inherit;text-decoration:none;}
     <div style="background:var(--midnight);padding:22px 26px;color:#fff;">
       <div style="display:inline-block;background:linear-gradient(135deg,var(--steel),#3b82f6);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.08em;margin-bottom:10px;">COMING SOON</div>
       <div style="font-family:'Sora',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px;">We're building something great!</div>
-      <p style="font-size:13.5px;color:var(--steel-soft);margin-top:4px;">The ₹399 Complete Bundle is under active development and will be available very soon.</p>
+      <p style="font-size:13.5px;color:var(--steel-soft);margin-top:4px;">The ₹1099 Complete Bundle is under active development and will be available very soon.</p>
     </div>
     <div style="padding:24px 26px;">
       <ul style="list-style:none;padding:0;font-size:14px;color:var(--ink2);">
@@ -548,12 +593,12 @@ a{color:inherit;text-decoration:none;}
         <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>LinkedIn Recommendation from avRoN</li>
       </ul>
       <div style="background:var(--soft);border:1px solid var(--line);padding:14px;margin-top:14px;border-radius:8px;font-size:13px;color:var(--mut);">
-        For now, start with the <b style="color:var(--midnight);">Basic Package (₹199)</b> — we'll notify you when the bundle launches!
+        For now, start with the <b style="color:var(--midnight);">Basic Package (₹299)</b> — we'll notify you when the bundle launches!
       </div>
     </div>
     <div style="padding:0 26px 24px;display:flex;gap:10px;">
       <button onclick="document.getElementById('landingComingSoon').classList.remove('show')" style="flex:1;background:transparent;color:var(--midnight);border:1.5px solid var(--line);padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:4px;">Close</button>
-      <a href="/register?package=basic" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--midnight);color:#fff;padding:12px 22px;font-size:14px;font-weight:700;text-decoration:none;border-radius:4px;">Continue with ₹199 →</a>
+      <a href="/register?package=basic" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--midnight);color:#fff;padding:12px 22px;font-size:14px;font-weight:700;text-decoration:none;border-radius:4px;">Continue with ₹299 →</a>
     </div>
   </div>
 </div>

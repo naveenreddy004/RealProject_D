@@ -389,7 +389,7 @@
                             <div id="qrBox"><div style="padding:24px;color:var(--mut);font-size:12px;">Loading QR…</div></div>
                             <div class="qr-name" id="upi-name">avRoN Tech</div>
                             <div class="qr-upi" id="upi-id">—</div>
-                            <div class="qr-amount">₹<span id="upi-amt">199</span></div>
+                            <div class="qr-amount">₹<span id="upi-amt">299</span></div>
                         </div>
                         <div>
                             <div class="fg"><label>UTR Number *</label>
@@ -712,7 +712,7 @@
             document.getElementById('s-duration').textContent = regData.duration || '—';
             document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
             document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
-            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 299);
           }
 
           // Status banner — check revoked first
@@ -765,7 +765,7 @@
             document.getElementById('r-when').textContent = regData.payment.submittedAt ? fmtDate(regData.payment.submittedAt) : '—';
           }
           if(needsPay){
-            const r = await fetch('/api/upi-qr?amount=' + (regData.amount||199));
+            const r = await fetch('/api/upi-qr?amount=' + (regData.amount||299));
             const d = await r.json();
             if(d.success){
               document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
@@ -1257,7 +1257,7 @@
             document.getElementById('s-duration').textContent = regData.duration || '—';
             document.getElementById('s-period').textContent = fmtDate(regData.startDate) + ' – ' + fmtDate(regData.endDate);
             document.getElementById('s-pkg').textContent = (regData.package || '').replace(/\(.*\)/,'').trim();
-            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 199);
+            document.getElementById('s-amt').textContent = '₹' + (regData.amount || 299);
           }
 
           // Update task list progress

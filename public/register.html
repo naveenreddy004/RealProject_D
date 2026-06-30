@@ -186,7 +186,15 @@ select.fi{cursor:pointer;}
       <div class="pkg-grid">
         <div class="pkg" id="pkg-basic" onclick="selectPackage('basic')" data-testid="pkg-basic">
           <div class="pkg-name">Basic Package</div>
-          <div class="pkg-amt"><span class="cur">₹</span>199</div>
+          <!-- Early bird discount display -->
+          <div style="display:flex;align-items:baseline;gap:8px;margin:6px 0 2px;">
+            <div class="pkg-amt" style="margin:0;"><span class="cur">₹</span><span id="regBasicPrice">199</span></div>
+            <span id="regOrigPrice" style="font-size:13px;color:#94a3b8;text-decoration:line-through;">₹299</span>
+            <span id="regDiscPill" style="background:#dcfce7;color:#15803d;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;">33% OFF</span>
+          </div>
+          <div id="regTimer" style="display:inline-flex;align-items:center;gap:4px;background:#fef9ec;border:1px solid #fde68a;border-radius:5px;padding:3px 8px;margin-bottom:8px;font-size:11px;font-weight:600;color:#92400e;">
+            <span>⏳</span><span id="regCountdown">Loading...</span>
+          </div>
           <div class="pkg-tag">Standard Tracking &amp; Baseline Access</div>
           <ul class="pkg-features">
             <li>Domain roadmap in dashboard</li>
@@ -197,7 +205,7 @@ select.fi{cursor:pointer;}
         <div class="pkg featured" id="pkg-complete" onclick="showComingSoon()" data-testid="pkg-complete">
           <div class="pkg-badge">COMING SOON</div>
           <div class="pkg-name">Complete Certification Bundle</div>
-          <div class="pkg-amt"><span class="cur">₹</span>399</div>
+          <div class="pkg-amt"><span class="cur">₹</span>1099</div>
           <div class="pkg-tag">Project + Verified Certificate</div>
           <ul class="pkg-features">
             <li>Everything in Basic</li>
@@ -300,7 +308,7 @@ select.fi{cursor:pointer;}
       <div class="qr-block">
         <div id="qrBox"><div style="padding:40px;color:var(--mut);">Loading QR…</div></div>
         <div class="qr-info"><b id="upi-name">avRoN Tech</b><br><span id="upi-id" style="font-family:monospace;font-size:12px;">—</span></div>
-        <div class="qr-amount">₹<span id="pay-amount">199</span></div>
+        <div class="qr-amount">₹<span id="pay-amount">299</span></div>
       </div>
 
       <div class="fg"><label>UTR / Transaction Reference Number <span class="req">*</span></label>
@@ -344,7 +352,7 @@ select.fi{cursor:pointer;}
     <div class="modal-head">
       <div class="pkg-badge" style="background:linear-gradient(135deg,var(--steel),#3b82f6);">COMING SOON</div>
       <h3>We're building something great!</h3>
-      <p>The ₹399 Complete Bundle is under active development and will be available very soon.</p>
+      <p>The ₹1099 Complete Bundle is under active development and will be available very soon.</p>
     </div>
     <div class="modal-body">
       <ul style="list-style:none;padding:0;font-size:14px;color:var(--ink2);">
@@ -354,12 +362,12 @@ select.fi{cursor:pointer;}
         <li style="padding:6px 0;display:flex;gap:10px;"><span style="color:var(--steel);font-weight:800;">→</span>LinkedIn Recommendation from avRoN</li>
       </ul>
       <div style="background:var(--soft);border:1px solid var(--line);padding:14px;margin-top:14px;border-radius:8px;">
-        <div style="font-size:13px;color:var(--mut);">For now, continue with the <b style="color:var(--midnight);">Basic Package (₹199)</b> — we'll notify you when the bundle launches!</div>
+        <div style="font-size:13px;color:var(--mut);">For now, continue with the <b style="color:var(--midnight);">Basic Package (₹299)</b> — we'll notify you when the bundle launches!</div>
       </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal('comingSoonModal')" data-testid="comingsoon-close-btn">Close</button>
-      <button class="btn btn-primary" onclick="selectBasicFromPopup()" data-testid="comingsoon-basic-btn">Continue with ₹199 →</button>
+      <button class="btn btn-primary" onclick="selectBasicFromPopup()" data-testid="comingsoon-basic-btn">Continue with ₹299 →</button>
     </div>
   </div>
 </div>
@@ -377,7 +385,45 @@ function selectBasicFromPopup(){
 }
 
 let pkgSelected = null;
-let pkgPrice = 199;
+let pkgPrice = 299;
+  let EARLY_BIRD_END_REG = null;
+  async function initRegEarlyBird() {
+    try {
+      const res = await fetch('/api/early-bird');
+      const d = await res.json();
+      EARLY_BIRD_END_REG = d.endsAt;
+      updateRegEarlyBird();
+    } catch { updateRegEarlyBird(); }
+  }
+  function updateRegEarlyBird() {
+    const now = Date.now();
+    const priceEl  = document.getElementById('regBasicPrice');
+    const origEl   = document.getElementById('regOrigPrice');
+    const pillEl   = document.getElementById('regDiscPill');
+    const timerEl  = document.getElementById('regTimer');
+    const countEl  = document.getElementById('regCountdown');
+    if (!priceEl) return;
+    if (EARLY_BIRD_END_REG && now < EARLY_BIRD_END_REG) {
+      pkgPrice = 199;
+      priceEl.textContent = '199';
+      const diff = EARLY_BIRD_END_REG - now;
+      const days = Math.floor(diff / 86400000);
+      const hrs  = Math.floor((diff % 86400000) / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      countEl.textContent = `Early bird ends in ${days}d ${hrs}h ${mins}m ${secs}s`;
+    } else if (EARLY_BIRD_END_REG) {
+      pkgPrice = 299;
+      priceEl.textContent = '299';
+      if (origEl)  origEl.style.display  = 'none';
+      if (pillEl)  pillEl.style.display  = 'none';
+      if (timerEl) timerEl.style.display = 'none';
+    }
+    const payEl = document.getElementById('pay-amount');
+    if (payEl) payEl.textContent = pkgPrice;
+  }
+  initRegEarlyBird();
+  setInterval(updateRegEarlyBird, 1000);
 let certIdRef = '';
 
 const qp = new URLSearchParams(location.search);
@@ -386,7 +432,7 @@ const qp = new URLSearchParams(location.search);
 window.addEventListener('DOMContentLoaded', ()=>{
   const p = qp.get('package');
   if(p === 'complete') {
-    showComingSoon();  // block 399, show popup
+    showComingSoon();  // block 1099, show popup
   } else if(p === 'basic') selectPackage('basic');
 
   const d = qp.get('domain');
@@ -417,7 +463,7 @@ function goStep(n){
 
 function selectPackage(which){
   pkgSelected = which;
-  pkgPrice = which === 'complete' ? 399 : 199;
+  pkgPrice = which === 'complete' ? 1099 : (EARLY_BIRD_END_REG && Date.now() < EARLY_BIRD_END_REG ? 199 : 299);
   document.getElementById('pkg-basic').classList.toggle('selected', which==='basic');
   document.getElementById('pkg-complete').classList.toggle('selected', which==='complete');
   document.getElementById('step1-next').disabled = false;
@@ -475,8 +521,8 @@ async function submitApplication(){
   const months = +document.getElementById('duration').value;
   const durationLabel = months + ' Months';
   const pkgLabel = pkgSelected === 'complete'
-    ? 'Complete Certification Bundle (₹399)'
-    : 'Basic Package (₹199)';
+    ? 'Complete Certification Bundle (₹1099)'
+    : 'Basic Package (₹299)';
 
   // 1) Register
   const fd = new FormData();

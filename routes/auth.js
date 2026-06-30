@@ -64,7 +64,7 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
       user: user._id, certId, domain, duration,
       startDate: parsedStart, endDate: parsedEnd,
       package: pkg || 'Basic Package',
-      amount: Number(req.body.amount) || 199,
+      amount: Number(req.body.amount) || 299,
       status: 'payment_pending',
       // Store registrant's actual name/college/course from the form
       // so certificate is correct even when the same email is reused

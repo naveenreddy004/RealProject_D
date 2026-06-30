@@ -831,7 +831,7 @@ function closeSidebar(){
           document.getElementById('recent-pays').innerHTML = (pd.data||[]).map(r=>`
             <div class="rc-item">
               <div class="rc-av">💳</div>
-              <div><div class="rc-nm">${r.registrantName||r.user?.fullName||'—'}</div><div class="rc-sub">UTR: <span style="font-family:'JetBrains Mono',monospace;color:var(--steel);">${r.payment?.utrNumber||'—'}</span> · ₹${r.payment?.amount||199}</div></div>
+              <div><div class="rc-nm">${r.registrantName||r.user?.fullName||'—'}</div><div class="rc-sub">UTR: <span style="font-family:'JetBrains Mono',monospace;color:var(--steel);">${r.payment?.utrNumber||'—'}</span> · ₹${r.payment?.amount||299}</div></div>
               <button class="act ok" onclick="qVerify('${r._id}')" style="font-size:10px;padding:4px 8px;margin-left:auto;">✅</button>
             </div>`).join('');
         } else {
@@ -913,7 +913,7 @@ function closeSidebar(){
             <div class="rw-av">${(r.registrantName||r.user?.fullName||'?').slice(0,2).toUpperCase()}</div>
             <div style="flex:1;min-width:0;">
               <div class="rw-nm">${r.registrantName||r.user?.fullName||'—'}</div>
-              <div class="rw-info">${r.domain} · ₹${r.payment?.amount||199}</div>
+              <div class="rw-info">${r.domain} · ₹${r.payment?.amount||299}</div>
               <div class="rw-utr">UTR ${r.payment?.utrNumber||'—'}</div>
               <div class="rw-when">${fmt(r.payment?.submittedAt)}</div>
             </div>
@@ -939,7 +939,7 @@ function closeSidebar(){
           <div class="rd-row"><span class="lbl">Package</span><span class="val">${r.package||'—'}</span></div>
           <div class="rd-row"><span class="lbl">Duration</span><span class="val">${r.duration||'—'}</span></div>
           <div class="rd-row"><span class="lbl">Period</span><span class="val">${fmt(r.startDate)} – ${fmt(r.endDate)}</span></div>
-          <div class="rd-row"><span class="lbl">Amount</span><span class="val">₹${r.payment?.amount||199}</span></div>
+          <div class="rd-row"><span class="lbl">Amount</span><span class="val">₹${r.payment?.amount||299}</span></div>
           <div class="rd-row"><span class="lbl">UTR Number</span><span class="val mono">${r.payment?.utrNumber||'—'}</span></div>
           <div class="rd-row"><span class="lbl">Submitted</span><span class="val">${fmtT(r.payment?.submittedAt)}</span></div>
           ${r.payment?.notes?`<div class="rd-row"><span class="lbl">Notes</span><span class="val">${r.payment.notes}</span></div>`:''}

@@ -228,6 +228,18 @@ app.get('/api/health/live', (req, res) => {
   res.status(200).json({ alive: true, timestamp: new Date().toISOString() });
 });
 
+// ── Early bird offer info — returns fixed end date from env ──────────────────
+const SERVER_START_TIME = Date.now();
+const EARLY_BIRD_DAYS   = 10;
+const EARLY_BIRD_END_TS = process.env.EARLY_BIRD_END_DATE
+  ? new Date(process.env.EARLY_BIRD_END_DATE).getTime()
+  : SERVER_START_TIME + EARLY_BIRD_DAYS * 24 * 60 * 60 * 1000;
+
+app.get('/api/early-bird', (req, res) => {
+  const endsAt = EARLY_BIRD_END_TS;
+  res.json({ endsAt, active: Date.now() < endsAt });
+});
+
 // ── UptimeRobot ping — lightweight, no DB hit, prevents cold starts ───────────
 // Point UptimeRobot (free tier) at: GET <your-domain>/ping  every 5 minutes
 app.get('/ping', (req, res) => res.status(200).send('pong'));
@@ -247,7 +259,9 @@ app.get('/api/health/ready', (req, res) => {
 app.get('/api/upi-qr', async (req, res) => {
   try {
     const QRCode = require('qrcode');
-    const amount = req.query.amount || process.env.UPI_AMOUNT || '199';
+    const isEarlyBird = Date.now() < EARLY_BIRD_END_TS;
+    const defaultAmt  = isEarlyBird ? '199' : (process.env.UPI_AMOUNT || '299');
+    const amount = req.query.amount || defaultAmt;
     const upiId  = process.env.UPI_ID || 'avron@upi';
     const name   = encodeURIComponent(process.env.UPI_NAME || BRAND);
     const upiString = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&cu=INR&tn=avRoN+Tech+Internship`;
