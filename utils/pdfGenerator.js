@@ -83,24 +83,24 @@ async function generateCertificatePDF(user, reg) {
   doc.font('Helvetica-Bold').fontSize(18).fillColor(NAVY)
     .text('Technologies', groupX + logoSize + 6, logoY + 62, { width: 130 });
 
-  // ── MSME badge — top-right with small QR
+  // ── MSME logo + QR — top-right
+  const msmeLogoPath = path.join(__dirname, '../public/msme.jpg');
   const msmeQrBuffer = await QRCode.toBuffer(
     'https://udyamregistration.gov.in/verifyudyambarcode.aspx?verifyudrn=8Zd8uxyFud1mBQuoZm9tx9Fdb/M73x2wLa1y4Hb+SO0=',
     { width: 40, margin: 1, color: { dark: '#0B192C', light: '#ffffff' } }
   );
-  const msmeQrSize = 32;
+  const msmeQrSize = 28;
   const msmeQrX    = W - 16 - msmeQrSize;
-  const msmeQrY    = 34;
+  const msmeQrY    = 26;
+  // QR on far right
   doc.image(msmeQrBuffer, msmeQrX, msmeQrY, { width: msmeQrSize, height: msmeQrSize });
-  // Text just left of QR, tight gap
-  const msmeTextW = 100;
-  const msmeTextX = msmeQrX - msmeTextW - 4;
-  doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
-    .text('MSME REGISTERED', msmeTextX, 36, { width: msmeTextW, align: 'right', characterSpacing: 0.8 });
-  doc.font('Helvetica').fontSize(7).fillColor('#777777')
-    .text('Micro & Small Enterprise', msmeTextX, 47, { width: msmeTextW, align: 'right' });
-    doc.font('Helvetica').fontSize(7).fillColor('#555555')
-    .text('Govt. of India · AP-23', msmeTextX, 58, { width: msmeTextW, align: 'right' });
+  doc.font('Helvetica').fontSize(6).fillColor('#777777')
+    .text('Scan to Verify', msmeQrX - 4, msmeQrY + msmeQrSize + 3, { width: msmeQrSize + 8, align: 'center' });
+  // MSME logo just left of QR — closer gap
+  if (fs.existsSync(msmeLogoPath)) {
+    const msmeLogoSize = 36;
+    doc.image(msmeLogoPath, msmeQrX - msmeLogoSize - 3, msmeQrY, { width: msmeLogoSize, height: msmeLogoSize });
+  }
 
   // ── "EMPOWERING FUTURE PROFESSIONALS" — dark navy, tight short gold lines + dots
   const tagY    = 133;

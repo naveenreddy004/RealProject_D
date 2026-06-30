@@ -302,6 +302,7 @@ router.get('/curriculum', authStudent, async (req, res) => {
   try {
     const requestedDomain = req.headers['x-domain'];
     let domain = requestedDomain;
+    let durationMonths = null;
 
     if (!domain) {
       const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 });
@@ -311,8 +312,8 @@ router.get('/curriculum', authStudent, async (req, res) => {
         return res.status(403).json({ success: false, message: 'Curriculum access is unlocked after payment verification.' });
       }
       domain = reg.domain;
+      durationMonths = reg.duration ? parseInt(reg.duration) : null;
     } else {
-      // Must have an active registration for the requested domain
       const reg = await Registration.findOne({ user: req.user._id, domain }).sort({ createdAt: -1 });
       if (!reg) return res.status(403).json({ success: false, message: 'No registration found for this domain.' });
       if (reg.revoked) {
@@ -321,10 +322,11 @@ router.get('/curriculum', authStudent, async (req, res) => {
       if (!['payment_verified', 'active', 'completed', 'certificate_sent'].includes(reg.status)) {
         return res.status(403).json({ success: false, message: 'Curriculum access is unlocked after payment verification.' });
       }
+      durationMonths = reg.duration ? parseInt(reg.duration) : null;
     }
 
     const { getCurriculum } = require('../utils/curricula');
-    const data = getCurriculum(domain);
+    const data = getCurriculum(domain, durationMonths);
     res.json({ success: true, domain, curriculum: data });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Could not load curriculum.' });
