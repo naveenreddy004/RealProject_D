@@ -97,10 +97,10 @@ async function generateCertificatePDF(user, reg) {
   const msmeTextX = msmeQrX - msmeTextW - 4;
   doc.font('Helvetica-Bold').fontSize(7).fillColor(NAVY)
     .text('MSME REGISTERED', msmeTextX, 36, { width: msmeTextW, align: 'right', characterSpacing: 0.8 });
-  doc.font('Helvetica').fontSize(7).fillColor('#555555')
-    .text('Scan to Verify', msmeTextX, 47, { width: msmeTextW, align: 'right' });
   doc.font('Helvetica').fontSize(7).fillColor('#777777')
-    .text('Micro Enterprise · Govt. of India', msmeTextX, 58, { width: msmeTextW, align: 'right' });
+    .text('Micro & Small Enterprise', msmeTextX, 47, { width: msmeTextW, align: 'right' });
+    doc.font('Helvetica').fontSize(7).fillColor('#555555')
+    .text('Govt. of India · AP-23', msmeTextX, 58, { width: msmeTextW, align: 'right' });
 
   // ── "EMPOWERING FUTURE PROFESSIONALS" — dark navy, tight short gold lines + dots
   const tagY    = 133;

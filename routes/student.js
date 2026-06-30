@@ -334,11 +334,10 @@ router.get('/curriculum', authStudent, async (req, res) => {
 // ── VERIFY CERTIFICATE (public) ───────────────────────────────────────────────
 router.get('/verify/:certId', async (req, res) => {
   try {
-    const reg = await Registration.findOne({ certId: req.params.certId }).populate('user', 'fullName college course');
+    const reg = await Registration.findOne({ certId: req.params.certId }).populate('user', 'fullName course');
     if (!reg) return res.json({ valid: false, message: 'Certificate not found.', state: 'not_found' });
 
     const studentName = reg.registrantName || (reg.user ? reg.user.fullName : 'Unknown');
-    const studentCollege = reg.registrantCollege || (reg.user ? reg.user.college : '—');
     const studentCourse = reg.registrantCourse || (reg.user ? reg.user.course : '—');
 
     if (reg.revoked) {
@@ -359,7 +358,6 @@ router.get('/verify/:certId', async (req, res) => {
       state: expired ? 'expired' : 'valid',
       name: studentName,
       domain: reg.domain,
-      college: studentCollege,
       course: studentCourse,
       startDate: reg.startDate,
       endDate: reg.endDate,

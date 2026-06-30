@@ -157,7 +157,6 @@ async function verify(){
           <div class="valid-body">
             <div class="vrow"><span class="lbl">Student Name</span><span class="val">${d.name}</span></div>
             <div class="vrow"><span class="lbl">Domain</span><span class="val">${d.domain}</span></div>
-            ${d.college ? `<div class="vrow"><span class="lbl">College</span><span class="val">${d.college}</span></div>` : ''}
             <div class="vrow"><span class="lbl">Duration</span><span class="val">${fmt(d.startDate)} – ${fmt(d.endDate)}</span></div>
             <div class="vrow"><span class="lbl">Issue Date</span><span class="val">${fmt(d.issuedAt)}</span></div>
             <div class="vrow"><span class="lbl">Certificate ID</span><span class="val mono">${d.certId}</span></div>
