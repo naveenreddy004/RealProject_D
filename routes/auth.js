@@ -146,6 +146,19 @@ router.post('/verify-otp', async (req, res) => {
       try { await User.findByIdAndUpdate(user._id, { otpVerified: false }); } catch (_) {}
     });
 
+    // Send offer letter on first login if internship is already active (Razorpay auto-paid)
+    if (isFirstLogin && reg && reg.status === 'active' && !reg.portalInviteSent) {
+      setImmediate(async () => {
+        try {
+          // Mark as sent first to prevent any duplicate sends
+          await Registration.findByIdAndUpdate(reg._id, { portalInviteSent: true });
+          const { generateOfferLetterPDF } = require('../utils/pdfGenerator');
+          const offerBuf = await generateOfferLetterPDF(user, reg);
+          queueEmail('offerLetter', { user, reg, pdfBuffer: offerBuf });
+        } catch (e) { console.error('Offer letter on first login error:', e.message); }
+      });
+    }
+
     res.json({
       success: true,
       token,

@@ -282,7 +282,6 @@ async function sendPaymentRejectedEmail(user, reg, reason) {
   console.log(`✉️ Payment rejection notice sent to ${user.email}`);
 }
 
-// ── 6. Certificate Revocation ─────────────────────────────────────────────────
 async function sendRevocationEmail(user, reg, reason) {
   const name = (reg && reg.registrantName) || user.fullName;
   const html = wrap(`

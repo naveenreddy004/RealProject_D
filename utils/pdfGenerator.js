@@ -26,8 +26,6 @@ function streamToBuffer(doc) {
 // ─── Certificate PDF ──────────────────────────────────────────────────────────
 async function generateCertificatePDF(user, reg) {
   const certName    = reg.registrantName    || user.fullName;
-  const certCollege = reg.registrantCollege || user.college;
-  const certCourse  = reg.registrantCourse  || user.course;
   const mentorName  = reg.mentorName  || 'Rudra Teja';
  const mentorTitle = reg.mentorTitle || 'Software Engineer & CO-Founder';
   const ceoName     = reg.ceoName     || 'Naveen Kumar';
@@ -322,8 +320,6 @@ async function generateReceiptPDF(user, reg) {
 // ─── Offer Letter PDF ─────────────────────────────────────────────────────────
 async function generateOfferLetterPDF(user, reg) {
   const certName    = reg.registrantName    || user.fullName;
-  const certCollege = reg.registrantCollege || user.college;
-  const certCourse  = reg.registrantCourse  || user.course;
   const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true });
   const bufferPromise = streamToBuffer(doc);
 
@@ -469,29 +465,16 @@ async function generateOfferLetterPDF(user, reg) {
   return bufferPromise;
 }
 
-module.exports = { generateCertificatePDF, generateReceiptPDF, generateOfferLetterPDF };
-
-// ─── Demo Certificate PDF (public — no auth, dummy data, signature3.png) ──────
+// ─── Demo Certificate PDF (public — no auth, dummy data) ─────────────────────
 async function generateDemoCertificatePDF() {
   const dummyUser = { fullName: 'Priya Sharma', college: 'JNTU Hyderabad', course: 'B.Tech CSE' };
   const dummyReg  = {
-    registrantName:    'Priya Sharma',
-    registrantCollege: 'JNTU Hyderabad',
-    registrantCourse:  'B.Tech CSE',
-    mentorName:  'Rudra Teja',
-    mentorTitle: 'Software Engineer & Co-Founder',
-    ceoName:     'Naveen Kumar',
-    domain:      'Full Stack Web Development',
-    duration:    '8 Weeks',
-    startDate:   new Date('2025-04-01'),
-    endDate:     new Date('2025-05-27'),
-    certId:      'AVRN-DEMO-2025',
-    sentAt:      new Date('2025-05-28'),
-    // tell generator to use signature3.png for both slots
-    _demoSig:    true,
+    registrantName: 'Priya Sharma', registrantCollege: 'JNTU Hyderabad', registrantCourse: 'B.Tech CSE',
+    mentorName: 'Rudra Teja', mentorTitle: 'Software Engineer & Co-Founder', ceoName: 'Naveen Kumar',
+    domain: 'Full Stack Web Development', duration: '8 Weeks',
+    startDate: new Date('2025-04-01'), endDate: new Date('2025-05-27'),
+    certId: 'AVRN-DEMO-2025', sentAt: new Date('2025-05-28'), _demoSig: true,
   };
-
-  // Temporarily override signature lookup to use signature3.png
   return generateCertificatePDF(dummyUser, dummyReg);
 }
 

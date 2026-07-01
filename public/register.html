@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Apply for Internship — avRoN Tech</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -139,6 +140,7 @@ select.fi{cursor:pointer;}
 .qr-info{font-size:13px;color:var(--mut);margin-top:10px;}
 .qr-info b{color:var(--midnight);}
 .qr-amount{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;color:var(--midnight);margin-top:6px;}
+@keyframes shimmerBar{0%{background-position:0% center;}100%{background-position:200% center;}}
 
 /* Success */
 .success{text-align:center;padding:30px 20px;}
@@ -304,31 +306,58 @@ select.fi{cursor:pointer;}
 
     <!-- STEP 3: PAYMENT -->
     <div class="step" id="step-3">
-      <h2>Submit your payment</h2>
-      <div class="sub">Pay using any UPI app and submit your UTR number below.</div>
+      <h2>Secure Payment</h2>
+      <div class="sub">Complete your payment to activate your internship instantly.</div>
 
-      <div class="qr-block">
-        <div id="qrBox"><div style="padding:40px;color:var(--mut);">Loading QR…</div></div>
-        <div class="qr-info"><b id="upi-name">avRoN Tech</b><br><span id="upi-id" style="font-family:monospace;font-size:12px;">—</span></div>
-        <div class="qr-amount">₹<span id="pay-amount">299</span></div>
+      <!-- Order summary card -->
+      <div style="background:linear-gradient(135deg,var(--midnight),#0e2138);border-radius:14px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:11px;color:rgba(205,217,235,.6);text-transform:uppercase;letter-spacing:.1em;font-weight:700;">Order Summary</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-top:4px;" id="pay-domain-label">Internship Program</div>
+          <div style="font-size:12px;color:rgba(205,217,235,.6);margin-top:2px;">avRoN Technologies · Basic Package</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:rgba(205,217,235,.6);text-transform:uppercase;letter-spacing:.1em;font-weight:700;">Total</div>
+          <div style="font-family:'Sora',sans-serif;font-size:32px;font-weight:800;color:#fff;letter-spacing:-1px;">₹<span id="pay-amount">299</span></div>
+        </div>
       </div>
 
-      <div class="fg"><label>UTR / Transaction Reference Number <span class="req">*</span></label>
-        <input type="text" id="utr" class="fi" placeholder="e.g. 407812345678" style="text-transform:uppercase;" data-testid="reg-utr">
-        <div class="fi-help">After paying, copy the UTR from your bank app's transaction history.</div>
+      <!-- Pay button -->
+      <button id="rzp-pay-btn" onclick="openRazorpay()" style="width:100%;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border:none;padding:18px 20px;border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:12px;transition:all .2s;box-shadow:0 6px 24px rgba(37,99,235,.4);margin-bottom:14px;">
+        <span id="rzp-btn-txt">🔒 Pay ₹<span id="rzp-amount-txt">299</span> Securely</span>
+        <div class="spin" id="rzp-spin" style="display:none;"></div>
+      </button>
+
+      <!-- Trust row -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+        <span style="font-size:11.5px;color:var(--mut);">🔒 256-bit SSL</span>
+        <span style="color:var(--line);">·</span>
+        <span style="font-size:11.5px;color:var(--mut);">PCI-DSS Compliant</span>
+        <span style="color:var(--line);">·</span>
+        <span style="font-size:11.5px;color:var(--mut);">Powered by Razorpay</span>
       </div>
 
-      <div class="fg"><label>Payment Screenshot <span class="req">*</span></label>
-        <input type="file" id="screenshot" class="fi" accept="image/*" data-testid="reg-screenshot">
-        <div class="fi-help">Upload a clear screenshot of the successful UPI transaction.</div>
+      <!-- What happens next info -->
+      <div style="background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:12px;font-weight:700;color:var(--midnight);margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase;">What happens after payment</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);">
+            <span style="width:22px;height:22px;background:var(--midnight);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">1</span>
+            Internship activates instantly — no manual review needed
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);">
+            <span style="width:22px;height:22px;background:var(--midnight);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">2</span>
+            Official Offer Letter PDF sent to your email
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);">
+            <span style="width:22px;height:22px;background:var(--midnight);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">3</span>
+            Login to your portal to access curriculum &amp; tasks
+          </div>
+        </div>
       </div>
 
-      <div class="actions">
+      <div class="actions" style="margin-top:20px;">
         <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
-        <button class="btn btn-primary" id="step3-submit" onclick="submitApplication()" data-testid="step3-submit-btn">
-          <span id="step3-txt">Submit Application</span>
-          <div class="spin" id="step3-spin"></div>
-        </button>
       </div>
     </div>
 
@@ -337,7 +366,7 @@ select.fi{cursor:pointer;}
       <div class="success">
         <div class="success-ic">✓</div>
         <h2>Application Received</h2>
-        <p>Thank you. Your registration is confirmed and a welcome email is on its way to your inbox.<br>Our admin team will review your payment shortly and email you the official Offer Letter once approved.</p>
+        <p id="step4-msg">🎉 Payment confirmed! Your internship is now active. Check your email for the Offer Letter.</p>
         <div class="ref" id="cert-ref">—</div>
         <div class="actions" style="justify-content:center;margin-top:30px;">
           <a href="/portal" class="btn btn-primary" data-testid="success-portal-btn">Go to Portal →</a>
@@ -487,7 +516,6 @@ function recomputeEndDate(){
 }
 
 async function next2(){
-  // Validate
   const fields = ['fullName','email','mobile','domain','duration','startDate','endDate'];
   for(const f of fields){
     const v = document.getElementById(f).value.trim();
@@ -496,92 +524,136 @@ async function next2(){
   const email = document.getElementById('email').value.trim();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('Enter a valid email.', true);return;}
   if(!/^\d{10}$/.test(document.getElementById('mobile').value.trim())){showToast('Mobile must be exactly 10 digits.', true);return;}
-  // Load UPI QR
-  try{
-    const res = await fetch('/api/upi-qr?amount=' + pkgPrice);
-    const d = await res.json();
-    if(d.success){
-      document.getElementById('qrBox').innerHTML = `<img src="${d.qr}" alt="UPI QR">`;
-      document.getElementById('upi-id').textContent = d.upiId;
-    }
-  }catch{}
+
+  // Update amount display
   document.getElementById('pay-amount').textContent = pkgPrice;
+  document.getElementById('rzp-amount-txt').textContent = pkgPrice;
+  const domainLabel = document.getElementById('pay-domain-label');
+  if (domainLabel) domainLabel.textContent = document.getElementById('domain').value + ' Internship';
+
   goStep(3);
 }
 
-async function submitApplication(){
-  const utr = document.getElementById('utr').value.trim();
-  const sc = document.getElementById('screenshot').files[0];
-  if(!utr || utr.length < 6){showToast('Enter a valid UTR.', true); return;}
-  if(!sc){showToast('Please attach your payment screenshot.', true); return;}
+// ── Open Razorpay inline modal (no redirect, no new tab) ──────────────────────
+async function openRazorpay(){
+  const btn  = document.getElementById('rzp-pay-btn');
+  const txt  = document.getElementById('rzp-btn-txt');
+  const spin = document.getElementById('rzp-spin');
+  btn.disabled = true; txt.style.display='none'; spin.style.display='inline-block';
 
-  const btn = document.getElementById('step3-submit'),
-        sp  = document.getElementById('step3-spin'),
-        bt  = document.getElementById('step3-txt');
-  btn.disabled = true; sp.style.display='block'; bt.textContent='Submitting…';
+  const RZP_KEY = 'rzp_live_T8BbR4l7tCCadG';
 
-  const months = +document.getElementById('duration').value;
-  const durationLabel = months + ' Months';
-  const pkgLabel = pkgSelected === 'complete'
-    ? 'Complete Certification Bundle (₹1099)'
-    : 'Basic Package (₹299)';
+  const name   = document.getElementById('fullName').value.trim();
+  const email  = document.getElementById('email').value.trim();
+  const mobile = document.getElementById('mobile').value.trim();
+  const domain = document.getElementById('domain').value;
 
-  // 1) Register
-  const fd = new FormData();
-  fd.append('fullName',  document.getElementById('fullName').value.trim());
-  fd.append('email',     document.getElementById('email').value.trim().toLowerCase());
-  fd.append('mobile',    document.getElementById('mobile').value.trim());
-  fd.append('gender',    document.getElementById('gender').value);
-  fd.append('college',   document.getElementById('college').value);
-  fd.append('course',    document.getElementById('course').value);
-  fd.append('domain',    document.getElementById('domain').value);
-  fd.append('duration',  durationLabel);
-  fd.append('startDate', document.getElementById('startDate').value);
-  fd.append('endDate',   document.getElementById('endDate').value);
-  fd.append('package',   pkgLabel);
-  fd.append('amount',    pkgPrice);
+  try {
+    // Step 1 — Register the student first (if not already done)
+    if (!certIdRef) {
+      const months       = +document.getElementById('duration').value;
+      const durationLabel = months + ' Months';
+      const pkgLabel     = pkgSelected === 'complete'
+        ? 'Complete Certification Bundle (₹1099)'
+        : 'Basic Package (₹' + pkgPrice + ')';
 
-  try{
-    const res = await fetch('/api/auth/register', { method:'POST', body: fd });
-    const data = await res.json();
-    if(!data.success){
-      showToast(data.message || 'Registration failed.', true);
-      btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Application';
+      const fd = new FormData();
+      fd.append('fullName',  name);
+      fd.append('email',     email.toLowerCase());
+      fd.append('mobile',    mobile);
+      fd.append('gender',    document.getElementById('gender').value);
+      fd.append('college',   document.getElementById('college').value);
+      fd.append('course',    document.getElementById('course').value);
+      fd.append('domain',    domain);
+      fd.append('duration',  durationLabel);
+      fd.append('startDate', document.getElementById('startDate').value);
+      fd.append('endDate',   document.getElementById('endDate').value);
+      fd.append('package',   pkgLabel);
+      fd.append('amount',    pkgPrice);
+
+      const regRes  = await fetch('/api/auth/register', { method: 'POST', body: fd });
+      const regData = await regRes.json();
+      if (!regData.success) {
+        showToast(regData.message || 'Registration failed. Try again.', true);
+        btn.disabled=false; txt.style.display=''; spin.style.display='none';
+        return;
+      }
+      certIdRef = regData.certId;
+    }
+
+    // Step 2 — Create Razorpay order on backend
+    const orderRes  = await fetch('/api/payment/razorpay/create-order-public', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.toLowerCase(), certId: certIdRef }),
+    });
+    const orderData = await orderRes.json();
+    if (!orderData.success) {
+      showToast(orderData.message || 'Could not create order. Try again.', true);
+      btn.disabled=false; txt.style.display=''; spin.style.display='none';
       return;
     }
-    certIdRef = data.certId;
 
-    // 2) Get a token via OTP — request OTP silently. Student receives it via
-    // email. For now we don't ask for OTP here (kept simple) — student logs
-    // into the portal separately to submit payment.
-    // Actually we'll submit payment using the admin-less direct endpoint:
-    // attempt a tokenless payment submission via a temporary endpoint.
-    // Simpler: just record the UTR + screenshot via a separate "pre-login
-    // payment" endpoint — but for now, just collect and tell the student to
-    // login to verify.
+    // Step 3 — Open Razorpay modal
+    if (typeof Razorpay === 'undefined') throw new Error('Razorpay SDK not loaded');
 
-    // We can't auth-submit payment from this anonymous page without OTP, so
-    // we attach the UTR + screenshot directly to the registration through
-    // a dedicated public endpoint:
-    const fd2 = new FormData();
-    fd2.append('email', document.getElementById('email').value.trim().toLowerCase());
-    fd2.append('certId', certIdRef);
-    fd2.append('utrNumber', utr);
-    if(sc) fd2.append('paymentScreenshot', sc);
-    fd2.append('amount', pkgPrice);
+    const options = {
+      key: RZP_KEY,
+      amount: orderData.amount * 100,
+      currency: 'INR',
+      order_id: orderData.orderId,
+      name: 'avRoN Technologies',
+      description: domain + ' Internship',
+      image: '/logo.png',
+      prefill: { name, email, contact: mobile },
+      theme: { color: '#0B192C' },
+      modal: {
+        backdropclose: false,
+        ondismiss: function() {
+          btn.disabled=false; txt.style.display=''; spin.style.display='none';
+        }
+      },
+      handler: async function(response) {
+        // Step 4 — Verify payment on backend → auto-activates internship
+        try {
+          const verRes  = await fetch('/api/payment/razorpay/verify-public', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature,
+              email:               email.toLowerCase(),
+              certId:              certIdRef,
+            }),
+          });
+          const verData = await verRes.json();
+          if (verData.success) {
+            document.getElementById('cert-ref').textContent = certIdRef;
+            document.getElementById('step4-msg').textContent = '🎉 Payment confirmed! Your internship is now active. Check your email for the Offer Letter.';
+            goStep(4);
+          } else {
+            showToast(verData.message || 'Verification failed. Contact support.', true);
+          }
+        } catch(e) {
+          showToast('Payment done but verification failed. Contact support with ID: ' + response.razorpay_payment_id, true);
+        }
+        btn.disabled=false; txt.style.display=''; spin.style.display='none';
+      }
+    };
 
-    const payRes = await fetch('/api/student/submit-payment-public', { method:'POST', body: fd2 });
-    const payData = await payRes.json();
-    if(!payData.success){
-      showToast(payData.message || 'Payment submission failed. Please login to your portal and resubmit.', true);
-    }
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(resp){
+      showToast('Payment failed: ' + (resp.error?.description || 'Please try again.'), true);
+      btn.disabled=false; txt.style.display=''; spin.style.display='none';
+    });
+    btn.disabled=false; txt.style.display=''; spin.style.display='none';
+    rzp.open();
 
-    // Go to success regardless — registration is done, payment can be resubmitted from portal
-    document.getElementById('cert-ref').textContent = certIdRef;
-    goStep(4);
-  }catch(err){
-    showToast('Network error: ' + err.message, true);
-    btn.disabled=false; sp.style.display='none'; bt.textContent='Submit Application';
+  } catch(e) {
+    console.error('Razorpay error:', e);
+    showToast('Something went wrong. Please try again.', true);
+    btn.disabled=false; txt.style.display=''; spin.style.display='none';
   }
 }
 </script>

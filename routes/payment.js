@@ -4,7 +4,6 @@ const Registration = require('../models/Registration');
 const User = require('../models/User');
 const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
-const { generateOfferLetterPDF } = require('../utils/pdfGenerator');
 const { logActivity } = require('../utils/activityLogger');
 
 const router = express.Router();
@@ -69,6 +68,112 @@ router.post('/razorpay/create-order', authStudent, async (req, res) => {
   } catch (err) {
     console.error('Razorpay order error:', err);
     res.status(500).json({ success: false, message: 'Failed to create payment order.' });
+  }
+});
+
+// ── Create Razorpay order (public — no auth, uses email + certId) ──────────────
+router.post('/razorpay/create-order-public', async (req, res) => {
+  try {
+    if (!isRazorpayEnabled()) {
+      return res.status(400).json({ success: false, message: 'Razorpay is not configured.' });
+    }
+
+    const { email, certId } = req.body;
+    if (!email || !certId) {
+      return res.status(400).json({ success: false, message: 'Email and certId are required.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    const reg = await Registration.findOne({
+      user: user._id, certId,
+      status: { $nin: ['certificate_sent', 'rejected', 'payment_submitted', 'payment_verified', 'active'] },
+    });
+    if (!reg) return res.status(404).json({ success: false, message: 'No registration awaiting payment.' });
+
+    const Razorpay = require('razorpay');
+    const rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const order = await rzp.orders.create({
+      amount: reg.amount * 100,
+      currency: 'INR',
+      receipt: reg.certId,
+      notes: { certId: reg.certId, userId: user._id.toString() },
+    });
+
+    reg.payment.gatewayOrderId = order.id;
+    reg.payment.gatewayProvider = 'razorpay';
+    reg.payment.method = 'razorpay';
+    await reg.save();
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: reg.amount,
+      currency: 'INR',
+      keyId: process.env.RAZORPAY_KEY_ID,
+      name: 'avRoN Technologies',
+      description: `${reg.domain} Internship`,
+      prefill: { name: user.fullName, email: user.email, contact: user.mobile || '' },
+    });
+  } catch (err) {
+    console.error('Razorpay public order error:', err);
+    res.status(500).json({ success: false, message: 'Failed to create payment order.' });
+  }
+});
+
+// ── Verify Razorpay payment (public — no auth, uses email + certId) ────────────
+router.post('/razorpay/verify-public', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, certId } = req.body;
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !email || !certId) {
+      return res.status(400).json({ success: false, message: 'Missing payment details.' });
+    }
+
+    // Verify HMAC signature — impossible to fake without the secret key
+    const body     = razorpay_order_id + '|' + razorpay_payment_id;
+    const expected = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body).digest('hex');
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: 'Invalid payment signature.' });
+    }
+
+    // Find registration by email + certId
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    const reg = await Registration.findOne({
+      user: user._id, certId,
+      'payment.gatewayOrderId': razorpay_order_id,
+    }).populate('user');
+    if (!reg) return res.status(404).json({ success: false, message: 'Order not found.' });
+
+    if (['active', 'payment_verified', 'completed', 'certificate_sent'].includes(reg.status)) {
+      return res.json({ success: true, message: 'Payment already confirmed.', certId });
+    }
+
+    await activatePayment(reg, {
+      paymentId: razorpay_payment_id,
+      utrNumber: razorpay_payment_id,  // Razorpay payment ID stored as UTR
+      verifiedBy: 'Razorpay (Auto)',
+      method: 'razorpay',
+    });
+
+    await logActivity({
+      action: 'auto_payment_verified',
+      targetId: reg._id,
+      targetLabel: user.fullName,
+      details: { provider: 'razorpay', paymentId: razorpay_payment_id, certId },
+    });
+
+    res.json({ success: true, message: 'Payment confirmed! Your internship is now active.', certId });
+  } catch (err) {
+    console.error('Razorpay public verify error:', err);
+    res.status(500).json({ success: false, message: 'Payment verification failed.' });
   }
 });
 
@@ -172,15 +277,7 @@ async function activatePayment(reg, { paymentId, utrNumber, verifiedBy, method }
   reg.tasksCompletedCount = reg.tasks.filter(t => t.completed).length;
 
   await reg.save();
-
-  const user = (reg.user && reg.user.email) ? reg.user : await User.findById(reg.user);
-  // Background — never blocks the caller (which is usually a webhook handler).
-  setImmediate(async () => {
-    try {
-      const offerBuf = await generateOfferLetterPDF(user, reg);
-      queueEmail('offerLetter', { user, reg, pdfBuffer: offerBuf });
-    } catch (e) { console.error('Offer Letter PDF error:', e.message); }
-  });
+  // Offer letter is sent when student logs in for the first time — not here
 }
 
 module.exports = router;

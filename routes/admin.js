@@ -285,7 +285,7 @@ router.post('/send-certificate/:id', async (req, res) => {
     }
 
     const certBuf = await generateCertificatePDF(reg.user, reg);
-    queueEmail('certificate', { user: reg.user, reg, pdfBuffer: certBuf });
+    // Certificate is available for student to download from portal — no email sent
 
     reg.status = 'certificate_sent';
     reg.sentAt = new Date();
@@ -435,7 +435,7 @@ router.post('/bulk-send-certificates', async (req, res) => {
         }
 
         const certBuf = await generateCertificatePDF(reg.user, reg);
-        queueEmail('certificate', { user: reg.user, reg, pdfBuffer: certBuf });
+        // Certificate available for download from portal — no email sent
 
         reg.status = 'certificate_sent';
         reg.sentAt = new Date();

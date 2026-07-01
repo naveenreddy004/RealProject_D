@@ -178,15 +178,8 @@ router.post('/complete-task', authStudent, async (req, res) => {
   }
 });
 
-// ── MARK INTERNSHIP COMPLETE — DEPRECATED ────────────────────────────────────
-// Students no longer self-issue certificates. Admin must approve payment, which
-// triggers certificate issuance from routes/admin.js → POST /approve-payment.
-router.post('/mark-complete', authStudent, async (req, res) => {
-  return res.status(403).json({
-    success: false,
-    message: 'Certificates are now issued by our admin team after payment review. No action required from your side.',
-  });
-});
+// ── MARK INTERNSHIP COMPLETE — DEPRECATED, kept as stub ─────────────────────
+// Removed — students no longer self-issue certificates.
 
 // ── DOWNLOAD CERTIFICATE PDF by registration ID ───────────────────────────────
 router.get('/certificate/:regId', authStudent, async (req, res) => {

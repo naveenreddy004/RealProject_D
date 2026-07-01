@@ -440,7 +440,7 @@
             <!-- ══ PAYMENTS (side-by-side review like change2) ══ -->
             <div class="view" id="view-payments">
                 <div class="alert-box" id="pay-alert" style="display:none;">
-                    <div><h3>⚠️ Payments Awaiting Verification</h3><p style="font-size:12.5px;color:#78350f;margin-top:3px;">Check each UTR in your UPI app, then approve or reject.</p></div>
+                    <div><h3>⚠️ Payments Awaiting Verification</h3><p style="font-size:12.5px;color:#78350f;margin-top:3px;">These are UPI manual payments — check each UTR in your UPI app, then approve or reject. Razorpay payments are auto-verified.</p></div>
                     <span class="alert-badge" id="pay-alert-count">0</span>
                 </div>
                 <div class="tbl-card" style="margin-bottom:14px;">
@@ -914,10 +914,13 @@ function closeSidebar(){
             <div style="flex:1;min-width:0;">
               <div class="rw-nm">${r.registrantName||r.user?.fullName||'—'}</div>
               <div class="rw-info">${r.domain} · ₹${r.payment?.amount||299}</div>
-              <div class="rw-utr">UTR ${r.payment?.utrNumber||'—'}</div>
+              <div class="rw-utr">${r.payment?.method==='razorpay'?'⚡ Razorpay (Auto)':'UTR '+( r.payment?.utrNumber||'—')}</div>
               <div class="rw-when">${fmt(r.payment?.submittedAt)}</div>
             </div>
-            <span class="badge b-${r.status}" style="font-size:10px;margin-top:4px;">${r.status.replace(/_/g,' ')}</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <span class="badge b-${r.status}" style="font-size:10px;">${r.status.replace(/_/g,' ')}</span>
+              ${r.payment?.method==='razorpay'?'<span style="font-size:9px;font-weight:700;color:#2563eb;background:#eff6ff;padding:2px 7px;border-radius:10px;">RAZORPAY</span>':'<span style="font-size:9px;font-weight:700;color:#b45309;background:#fffbeb;padding:2px 7px;border-radius:10px;">UPI</span>'}
+            </div>
           </div>`).join('');
         if(!selPayId&&rows[0])selPay(rows[0]._id);
         else if(selPayId)selPay(selPayId);
@@ -940,17 +943,22 @@ function closeSidebar(){
           <div class="rd-row"><span class="lbl">Duration</span><span class="val">${r.duration||'—'}</span></div>
           <div class="rd-row"><span class="lbl">Period</span><span class="val">${fmt(r.startDate)} – ${fmt(r.endDate)}</span></div>
           <div class="rd-row"><span class="lbl">Amount</span><span class="val">₹${r.payment?.amount||299}</span></div>
-          <div class="rd-row"><span class="lbl">UTR Number</span><span class="val mono">${r.payment?.utrNumber||'—'}</span></div>
+          <div class="rd-row"><span class="lbl">Payment Method</span><span class="val">${r.payment?.method==='razorpay'?'⚡ Razorpay (Auto-verified)':r.payment?.method==='upi_manual'?'UPI Manual':r.payment?.method||'—'}</span></div>
+          <div class="rd-row"><span class="lbl">UTR / Payment ID</span><span class="val mono">${r.payment?.utrNumber||'—'}</span></div>
           <div class="rd-row"><span class="lbl">Submitted</span><span class="val">${fmtT(r.payment?.submittedAt)}</span></div>
           ${r.payment?.notes?`<div class="rd-row"><span class="lbl">Notes</span><span class="val">${r.payment.notes}</span></div>`:''}
         </div>
         <div style="font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px;">
   Payment Proof
 </div>
-        ${r.status==='payment_submitted'?`
+        ${r.status==='payment_submitted'&&r.payment?.method!=='razorpay'?`
         <div class="rd-actions">
           <button class="btn-reject-pay" onclick="rejectPay('${r._id}')">✕ Reject</button>
           <button class="btn-approve" onclick="verifyPay('${r._id}')">✓ Approve Payment</button>
+        </div>`:''}
+        ${r.status==='payment_submitted'&&r.payment?.method==='razorpay'?`
+        <div style="text-align:center;padding:14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:13px;color:#1d4ed8;font-weight:600;">
+          ⚡ Razorpay payment — verified automatically. No action needed.
         </div>`:''}
         ${r.status!=='payment_submitted'?`<div style="text-align:center;padding:12px;background:var(--soft);font-size:13px;color:var(--mut);">Status: <span class="badge b-${r.status}">${r.status.replace(/_/g,' ')}</span></div>`:''}
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
