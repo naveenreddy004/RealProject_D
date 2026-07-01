@@ -75,9 +75,6 @@ router.post('/register', upload.single('profilePhoto'), async (req, res) => {
     reg.initTasks();
     await reg.save();
 
-    // Respond IMMEDIATELY — single welcome email is dispatched in background.
-    queueEmail('confirmation', { user, reg });
-
     // Push registration notification
     pushNotification(user._id, {
       type: 'success',

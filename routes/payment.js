@@ -278,6 +278,13 @@ async function activatePayment(reg, { paymentId, utrNumber, verifiedBy, method }
 
   await reg.save();
   // Offer letter is sent when student logs in for the first time — not here
+  // Confirmation email fires here — payment is verified, internship is active
+  const user = (reg.user && reg.user.email) ? reg.user : await User.findById(reg.user);
+  setImmediate(async () => {
+    try {
+      queueEmail('confirmation', { user, reg });
+    } catch (e) { console.error('Confirmation email error:', e.message); }
+  });
 }
 
 module.exports = router;
