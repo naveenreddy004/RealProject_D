@@ -13,10 +13,6 @@ function isRazorpayEnabled() {
   return !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
 }
 
-function isCashfreeEnabled() {
-  return !!(process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY);
-}
-
 // ── Payment gateway config (public) ───────────────────────────────────────────
 router.get('/config', (req, res) => {
   res.json({
@@ -24,7 +20,6 @@ router.get('/config', (req, res) => {
     gateways: {
       upi: true,
       razorpay: isRazorpayEnabled(),
-      cashfree: isCashfreeEnabled(),
     },
     razorpayKeyId: isRazorpayEnabled() ? process.env.RAZORPAY_KEY_ID : null,
   });
@@ -156,174 +151,6 @@ router.post('/razorpay/webhook', async (req, res) => {
   } catch (err) {
     console.error('Razorpay webhook error:', err);
     res.status(500).json({ success: false });
-  }
-});
-
-// ── Create Cashfree order ───────────────────────────────────────────────────────
-router.post('/cashfree/create-order', authStudent, async (req, res) => {
-  try {
-    if (!isCashfreeEnabled()) {
-      return res.status(400).json({ success: false, message: 'Cashfree is not configured.' });
-    }
-
-    const reg = await Registration.findOne({
-      user: req.user._id,
-      status: { $nin: ['certificate_sent', 'rejected', 'payment_submitted', 'payment_verified', 'active'] },
-    });
-    if (!reg) return res.status(404).json({ success: false, message: 'No registration awaiting payment.' });
-
-    const orderId = `CF_${reg.certId}_${Date.now()}`;
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-    const isProd = process.env.CASHFREE_ENV === 'production';
-    const cfBase = isProd ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
-
-    const response = await fetch(`${cfBase}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
-      },
-      body: JSON.stringify({
-        order_id: orderId,
-        order_amount: reg.amount,
-        order_currency: 'INR',
-        customer_details: {
-          customer_id: req.user._id.toString(),
-          customer_email: req.user.email,
-          customer_phone: req.user.mobile || '9999999999',
-          customer_name: req.user.fullName,
-        },
-        order_meta: {
-          return_url: `${baseUrl}/dashboard?payment=cashfree&order_id=${orderId}`,
-          notify_url: `${baseUrl}/api/payment/cashfree/webhook`,
-        },
-        order_note: reg.certId,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Cashfree order error:', data);
-      return res.status(500).json({ success: false, message: data.message || 'Cashfree order failed.' });
-    }
-
-    reg.payment.gatewayOrderId = orderId;
-    reg.payment.gatewayProvider = 'cashfree';
-    reg.payment.method = 'cashfree';
-    await reg.save();
-
-    res.json({
-      success: true,
-      orderId,
-      paymentSessionId: data.payment_session_id,
-      amount: reg.amount,
-      cashfreeEnv: isProd ? 'production' : 'sandbox',
-    });
-  } catch (err) {
-    console.error('Cashfree create order error:', err);
-    res.status(500).json({ success: false, message: 'Failed to create Cashfree order.' });
-  }
-});
-
-// ── Cashfree webhook ────────────────────────────────────────────────────────────
-router.post('/cashfree/webhook', async (req, res) => {
-  try {
-    // ── Signature verification ──────────────────────────────────────────────
-    const webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      console.error('CASHFREE_WEBHOOK_SECRET is not set — rejecting webhook.');
-      return res.status(400).json({ success: false, message: 'Webhook secret not configured.' });
-    }
-    const ts        = req.headers['x-webhook-timestamp'];
-    const signature = req.headers['x-webhook-signature'];
-    if (!ts || !signature) {
-      return res.status(400).json({ success: false, message: 'Missing webhook headers.' });
-    }
-    const rawBody  = JSON.stringify(req.body);
-    const expected = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(ts + rawBody)
-      .digest('base64');
-    if (signature !== expected) {
-      return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
-    }
-
-    const { data } = req.body;
-    if (!data || data.order?.order_status !== 'PAID') {
-      return res.json({ success: true });
-    }
-
-    const orderId = data.order.order_id;
-    const paymentId = data.payment?.cf_payment_id || data.payment?.payment_id || orderId;
-
-    const reg = await Registration.findOne({ 'payment.gatewayOrderId': orderId }).populate('user');
-    if (reg && !['active', 'payment_verified', 'completed', 'certificate_sent'].includes(reg.status)) {
-      await activatePayment(reg, {
-        paymentId,
-        utrNumber: String(paymentId),
-        verifiedBy: 'Cashfree Webhook',
-        method: 'cashfree',
-      });
-      await logActivity({
-        action: 'auto_payment_verified',
-        targetId: reg._id,
-        targetLabel: reg.user?.fullName,
-        details: { provider: 'cashfree', paymentId, certId: reg.certId },
-      });
-    }
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Cashfree webhook error:', err);
-    res.status(500).json({ success: false });
-  }
-});
-
-// ── Cashfree verify (return URL callback) ─────────────────────────────────────
-router.post('/cashfree/verify', authStudent, async (req, res) => {
-  try {
-    const { orderId } = req.body;
-    if (!orderId) return res.status(400).json({ success: false, message: 'Order ID required.' });
-
-    const isProd = process.env.CASHFREE_ENV === 'production';
-    const cfBase = isProd ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
-
-    const response = await fetch(`${cfBase}/orders/${orderId}`, {
-      headers: {
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
-      },
-    });
-    const data = await response.json();
-
-    if (data.order_status !== 'PAID') {
-      return res.status(400).json({ success: false, message: 'Payment not completed yet.' });
-    }
-
-    const reg = await Registration.findOne({
-      user: req.user._id,
-      'payment.gatewayOrderId': orderId,
-    }).populate('user');
-    if (!reg) return res.status(404).json({ success: false, message: 'Order not found.' });
-
-    if (['active', 'payment_verified', 'completed', 'certificate_sent'].includes(reg.status)) {
-      return res.json({ success: true, message: 'Payment already confirmed.' });
-    }
-
-    const paymentId = data.cf_order_id || orderId;
-    await activatePayment(reg, {
-      paymentId,
-      utrNumber: String(paymentId),
-      verifiedBy: 'Cashfree (Auto)',
-      method: 'cashfree',
-    });
-
-    res.json({ success: true, message: 'Payment confirmed! Your internship is now active.' });
-  } catch (err) {
-    console.error('Cashfree verify error:', err);
-    res.status(500).json({ success: false, message: 'Payment verification failed.' });
   }
 });
 

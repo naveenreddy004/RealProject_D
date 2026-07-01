@@ -12,21 +12,15 @@
 
 const {
   sendConfirmationEmail, sendOTPEmail, sendPasswordResetOTPEmail, sendOfferLetterEmail,
-  sendPortalInviteEmail, sendPaymentReceivedEmail, sendPaymentVerifiedEmail,
-  sendAdminPaymentAlert, sendCertificateEmail, sendPaymentRejectedEmail,
+  sendPaymentRejectedEmail,
 } = require('./emailService');
 
 const handlers = {
-  confirmation:      (p) => sendConfirmationEmail(p.user, p.reg),
-  otp:               (p) => sendOTPEmail(p.user, p.otp),
-  passwordResetOtp:  (p) => sendPasswordResetOTPEmail(p.user, p.otp),
-  offerLetter:       (p) => sendOfferLetterEmail(p.user, p.reg, p.pdfBuffer),
-  paymentRejected:   (p) => sendPaymentRejectedEmail(p.user, p.reg, p.reason),
-  portalInvite:      (p) => sendPortalInviteEmail(p.user, p.reg),
-  paymentReceived:   (p) => sendPaymentReceivedEmail(p.user, p.reg),
-  paymentVerified:   (p) => sendPaymentVerifiedEmail(p.user, p.reg),
-  adminPaymentAlert: (p) => sendAdminPaymentAlert(p.user, p.reg),
-  certificate:       (p) => sendCertificateEmail(p.user, p.reg, p.pdfBuffer),
+  confirmation:     (p) => sendConfirmationEmail(p.user, p.reg),
+  otp:              (p) => sendOTPEmail(p.user, p.otp),
+  passwordResetOtp: (p) => sendPasswordResetOTPEmail(p.user, p.otp),
+  offerLetter:      (p) => sendOfferLetterEmail(p.user, p.reg, p.pdfBuffer),
+  paymentRejected:  (p) => sendPaymentRejectedEmail(p.user, p.reg, p.reason),
 };
 
 let emailQueue = null;

@@ -346,7 +346,6 @@ async function sendTicketEmail(user, ticket) {
   console.log(`✉️ Ticket ${ticket.id} emailed to support and confirmed to ${user.email}`);
 }
 
-const noop = async () => {};
 module.exports = {
   sendConfirmationEmail,
   sendOfferLetterEmail,
@@ -355,9 +354,4 @@ module.exports = {
   sendPasswordResetOTPEmail,
   sendTicketEmail,
   sendRevocationEmail,
-  sendCertificateEmail: noop,
-  sendPaymentVerifiedEmail: noop,
-  sendPortalInviteEmail: noop,
-  sendPaymentReceivedEmail: noop,
-  sendAdminPaymentAlert: noop,
 };

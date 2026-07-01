@@ -294,6 +294,8 @@ app.get('/verify',          (req, res) => res.sendFile(path.join(__dirname, 'pub
 app.get('/admin',           (req, res) => res.redirect('/admin/login'));
 app.get('/admin/login',     (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html')));
+app.get('/refund-policy',  (req, res) => res.sendFile(path.join(__dirname, 'public', 'refund-policy.html')));
+app.get('/privacy-policy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'refund-policy.html'))); // placeholder until privacy page is created
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {

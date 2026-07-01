@@ -44,7 +44,7 @@ const registrationSchema = new mongoose.Schema({
     amount:            { type: Number, default: 299 },
     upiId:             { type: String, default: null },
     notes:             { type: String, default: null },
-    method:            { type: String, enum: ['upi_manual', 'razorpay', 'cashfree', null], default: null },
+    method:            { type: String, enum: ['upi_manual', 'razorpay', null], default: null },
     gatewayOrderId:    { type: String, default: null },
     gatewayPaymentId:  { type: String, default: null },
     gatewayProvider:   { type: String, default: null },
