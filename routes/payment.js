@@ -5,6 +5,7 @@ const User = require('../models/User');
 const { authStudent } = require('../middleware/auth');
 const { queueEmail } = require('../utils/emailQueue');
 const { logActivity } = require('../utils/activityLogger');
+const { pushNotification } = require('../utils/notify');
 
 const router = express.Router();
 
@@ -280,6 +281,13 @@ async function activatePayment(reg, { paymentId, utrNumber, verifiedBy, method }
   // Offer letter is sent when student logs in for the first time — not here
   // Confirmation email fires here — payment is verified, internship is active
   const user = (reg.user && reg.user.email) ? reg.user : await User.findById(reg.user);
+  // Push in-app notification
+  pushNotification(user._id, {
+    type: 'success',
+    title: '✅ Payment Confirmed!',
+    message: `Your payment for ${reg.domain} has been verified. Your internship is now active! Login to your portal to get started.`,
+    regId: reg._id,
+  });
   setImmediate(async () => {
     try {
       queueEmail('confirmation', { user, reg });
