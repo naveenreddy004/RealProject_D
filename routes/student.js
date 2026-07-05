@@ -696,6 +696,37 @@ router.get('/badges', authStudent, async (req, res) => {
   }
 });
 
+const DailyAssignment = require('../models/DailyAssignment');
+
+// ── GET DAILY ASSIGNMENT PROBLEMS (today + past days only) ───────────────────
+router.get('/assignments/problems', authStudent, async (req, res) => {
+  try {
+    const { domain } = req.query;
+    const reg = await Registration.findOne({
+      user: req.user._id,
+      ...(domain ? { domain } : {}),
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    }).sort({ createdAt: -1 });
+
+    if (!reg) return res.json({ success: true, days: [], todayDay: 1 });
+
+    // Calculate today's day
+    const startDate = new Date(reg.startDate);
+    const now       = new Date();
+    const elapsed   = Math.floor((now - startDate) / 86400000) + 1;
+    const todayDay  = Math.max(1, Math.min(elapsed, 45));
+
+    // Fetch only unlocked days from DB (day 1 through todayDay)
+    const days = await DailyAssignment.find({
+      day: { $lte: todayDay }
+    }).sort({ day: 1 }).lean();
+
+    res.json({ success: true, days, todayDay, totalDays: 45 });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch assignment problems.' });
+  }
+});
+
 // ── GET ASSIGNMENT PROGRESS ───────────────────────────────────────────────────
 router.get('/assignments', authStudent, async (req, res) => {
   try {
