@@ -236,6 +236,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:200;}
 .sidebar-overlay.show{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
 .fade{animation:fadeIn .2s ease;}
 @media(max-width:768px){
   .app{grid-template-columns:1fr;grid-template-rows:56px 1fr;}
@@ -284,7 +285,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
   <main class="main" id="main"></main>
 
 </div>
-<script src="/course-data-java-full-stack.js"></script>
 <script>
 
 // ── GUARD: auth + bundle check ────────────────────────────────────────────────
@@ -355,20 +355,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 })();
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-const DATA = JAVA_FULLSTACK;
+let DATA = null; // loaded from DB via /api/courses/content/java-full-stack
 const DOMAIN = 'Java Full Stack Developer';
 const _token = localStorage.getItem('cp_token');
 
-// Per-week progress — loaded from DB on init, saved on every meaningful action
+// Per-week progress — initialized after DATA loads
 const progress = {};
-DATA.weeks.forEach(w => {
-  progress[w.id] = {
-    topicStatus: Object.fromEntries(w.topics.map((t,i) => [t.id, i===0?'current':'locked'])),
-    weekQuizDone: false,
-    projectDone: false,
-    projectLink: ''
-  };
-});
 
 let curWeek   = 1;
 let view      = 'week';
@@ -379,7 +371,7 @@ let _progressLoaded = false;
 
 // ── PERSIST HELPERS ───────────────────────────────────────────────────────────
 function saveProgress(completedWeek) {
-  if (!_progressLoaded) return; // don't overwrite DB before we've loaded
+  if (!_progressLoaded || !DATA) return;
   const payload = {};
   DATA.weeks.forEach(w => { payload[w.id] = progress[w.id]; });
   const body = { domain: DOMAIN, progress: payload };
@@ -391,21 +383,73 @@ function saveProgress(completedWeek) {
   }).catch(() => {});
 }
 
+// Show loading state while fetching from DB
+function showLoadingState() {
+  const main = document.getElementById('main');
+  if (main) main.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:#9eb2c8;">
+    <div style="width:36px;height:36px;border:3px solid rgba(96,139,193,.2);border-top-color:#608BC1;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+    <div style="font-size:14px;">Loading course content…</div>
+  </div>`;
+}
+
 async function loadProgress() {
+  showLoadingState();
   try {
-    const res  = await fetch('/api/student/course-progress?domain=' + encodeURIComponent(DOMAIN), {
+    // 1. Load course content from DB
+    const courseRes = await fetch('/api/courses/content/java-full-stack', {
       headers: { 'Authorization': 'Bearer ' + _token },
     });
-    const data = await res.json();
-    if (data.success && data.progress && Object.keys(data.progress).length) {
-      // Merge saved progress into in-memory state
+    const courseData = await courseRes.json();
+
+    if (!courseData.success || !courseData.weeks) {
+      // Fallback: try loading from static file if DB seed hasn't run yet
+      if (typeof JAVA_FULLSTACK !== 'undefined') {
+        DATA = JAVA_FULLSTACK;
+      } else {
+        document.getElementById('main').innerHTML = `<div style="padding:40px;text-align:center;color:#fb7185;">
+          Course content not found. Please contact support.
+        </div>`;
+        return;
+      }
+    } else {
+      DATA = courseData;
+    }
+
+    // 2. Initialize progress state from DATA
+    DATA.weeks.forEach(w => {
+      progress[w.id] = {
+        topicStatus: Object.fromEntries(w.topics.map((t,i) => [t.id, i===0?'current':'locked'])),
+        weekQuizDone: false,
+        projectDone: false,
+        projectLink: ''
+      };
+    });
+
+    // 3. Load saved progress from DB and merge
+    const progRes  = await fetch('/api/student/course-progress?domain=' + encodeURIComponent(DOMAIN), {
+      headers: { 'Authorization': 'Bearer ' + _token },
+    });
+    const progData = await progRes.json();
+    if (progData.success && progData.progress && Object.keys(progData.progress).length) {
       DATA.weeks.forEach(w => {
-        if (data.progress[w.id]) {
-          progress[w.id] = data.progress[w.id];
+        if (progData.progress[w.id]) {
+          progress[w.id] = progData.progress[w.id];
         }
       });
     }
-  } catch (_) {}
+  } catch (e) {
+    console.error('loadProgress error:', e);
+    // Fallback to static data if available
+    if (typeof JAVA_FULLSTACK !== 'undefined' && !DATA) {
+      DATA = JAVA_FULLSTACK;
+      DATA.weeks.forEach(w => {
+        progress[w.id] = {
+          topicStatus: Object.fromEntries(w.topics.map((t,i) => [t.id, i===0?'current':'locked'])),
+          weekQuizDone: false, projectDone: false, projectLink: ''
+        };
+      });
+    }
+  }
   _progressLoaded = true;
   render();
 }
