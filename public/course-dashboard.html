@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Course Dashboard — avRoN Tech</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  /* ── Base surfaces ─────────────────────────── */
+  --bg:#0B192C;
+  --bg2:#0e2138;
+  --bg3:#152844;
+  --bg4:#1a3050;
+  --card:#0e2138;
+  --border:rgba(96,139,193,.15);
+  --border2:rgba(96,139,193,.25);
+
+  /* ── Accent — electric blue ────────────────── */
+  --accent:#608BC1;
+  --accent2:#7da8d8;
+  --accent-bg:rgba(96,139,193,.12);
+  --accent-glow:rgba(96,139,193,.25);
+
+  /* ── Text ──────────────────────────────────── */
+  --text:#f0f4fa;
+  --text2:#cdd9eb;
+  --text3:#9eb2c8;
+  --muted:#5a7396;
+
+  /* ── Semantic ──────────────────────────────── */
+  --ok:#22c55e;--ok-bg:rgba(34,197,94,.12);--ok-border:rgba(34,197,94,.3);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,.12);--warn-border:rgba(245,158,11,.3);
+  --danger:#f87171;--danger-bg:rgba(248,113,113,.12);--danger-border:rgba(248,113,113,.3);
+  --quiz:#818cf8;--quiz-bg:rgba(129,140,248,.12);--quiz-border:rgba(129,140,248,.3);
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+.app{display:grid;grid-template-rows:56px 1fr;grid-template-columns:300px 1fr;height:100vh;overflow:hidden;}
+
+/* TOPBAR — Udemy-style */
+.topbar{grid-column:1/-1;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px;border-bottom:1px solid var(--border);}
+.tb-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.tb-brand img{width:32px;height:32px;object-fit:contain;}
+.tb-brand-name{font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:#fff;}
+.tb-brand-name span{color:var(--accent);}
+.tb-center{flex:1;max-width:500px;}
+.tb-progress-bar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.tb-progress-fill{height:8px;background:var(--accent);border-radius:4px;transition:width .5s;}
+.tb-progress-label{font-size:11px;color:var(--muted);margin-top:4px;}
+.tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:4px;padding:6px 14px;font-size:12px;font-weight:700;}
+.chip-prog{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent2);}
+.chip-back{background:transparent;border:1px solid var(--border2);color:var(--muted);cursor:pointer;text-decoration:none;transition:all .15s;border-radius:4px;}
+.chip-back:hover{border-color:var(--text);color:var(--text);}
+
+/* SIDEBAR — Course curriculum style */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.sb-course-title{padding:20px 20px 12px;border-bottom:1px solid var(--border);}
+.sb-course-label{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;}
+.sb-course-name{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
+.sb-section{padding:0;}
+.week-btn{width:100%;display:flex;align-items:center;gap:0;padding:0;cursor:pointer;background:none;border:none;text-align:left;font-family:inherit;transition:background .15s;border-bottom:1px solid var(--border);}
+.week-btn:hover:not([disabled]){background:rgba(96,139,193,.07);}
+.week-btn.active{background:var(--accent-bg);border-left:3px solid var(--accent);}
+.week-btn[disabled]{opacity:.4;cursor:not-allowed;}
+.week-btn-inner{display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;}
+.wi{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:2px solid var(--border2);}
+.wi-done{border-color:var(--ok);background:var(--ok);color:#fff;}
+.wi-prog{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2);}
+.wi-lock{border-color:var(--border2);color:var(--muted);}
+.wb-info{flex:1;min-width:0;}
+.wb-title{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.35;}
+.week-btn[disabled] .wb-title{color:var(--muted);}
+.wb-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.sb-footer{padding:16px;border-top:1px solid var(--border);margin-top:auto;background:var(--bg);}
+.sb-prog-bar{height:8px;background:var(--bg3);border-radius:4px;margin-bottom:6px;overflow:hidden;}
+.sb-prog-fill{height:8px;background:var(--accent);border-radius:4px;transition:width .5s;}
+.sb-prog-label{font-size:11px;color:var(--muted);font-weight:600;}
+
+.main{overflow-y:auto;background:var(--bg);}
+
+/* WEEK VIEW */
+.week-view{padding:0;}
+.wv-hero{background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);padding:36px 36px 28px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.wv-hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23608BC1' fill-opacity="0.05"%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;}
+.wv-tag-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.wv-tag-pill{font-size:11px;font-weight:700;color:var(--accent2);background:var(--accent-bg);border:1px solid var(--border2);padding:3px 10px;border-radius:4px;}
+.wv-title{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;color:var(--text);margin-bottom:14px;line-height:1.2;}
+.wv-meta{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;}
+.wv-tag{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.prog-row{display:flex;align-items:center;gap:14px;}
+.prog-bar{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.prog-fill{height:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .6s;}
+.prog-label{font-size:12.5px;font-weight:700;color:var(--accent2);white-space:nowrap;}
+
+/* TOPIC LIST */
+.topic-grid{padding:0;display:flex;flex-direction:column;gap:0;}
+.topic-row{display:flex;align-items:center;gap:16px;padding:15px 28px;background:transparent;border:none;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;text-align:left;font-family:inherit;width:100%;}
+.topic-row:hover:not([disabled]){background:rgba(96,139,193,.06);}
+.topic-row:first-child{border-top:1px solid var(--border);}
+.topic-row.current .tr-title{color:var(--accent2);}
+.topic-row[disabled]{opacity:.38;cursor:not-allowed;}
+.tr-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;border:2px solid var(--border2);}
+.tr-num-done{border-color:var(--ok);background:var(--ok);color:#fff;}
+.tr-num-curr{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2);}
+.tr-num-lock{border-color:var(--border2);color:var(--muted);}
+.tr-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tr-check.done{border-color:var(--ok);background:var(--ok);color:#fff;font-size:11px;}
+.tr-info{flex:1;min-width:0;}
+.tr-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;}
+.topic-row[disabled] .tr-title{color:var(--muted);}
+.tr-sub{font-size:12px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;}
+.tr-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:3px;flex-shrink:0;}
+.badge-done{background:var(--ok-bg);color:var(--ok);}
+.badge-curr{background:var(--accent-bg);color:var(--accent2);}
+.badge-lock{background:rgba(255,255,255,.06);color:var(--muted);}
+.badge-quiz{background:var(--quiz-bg);color:var(--quiz);}
+.badge-proj{background:var(--warn-bg);color:var(--warn);}
+.tr-arrow{font-size:16px;color:var(--muted);flex-shrink:0;transition:all .2s;}
+.topic-row:hover:not([disabled]) .tr-arrow{color:var(--text);transform:translateX(3px);}
+.divider{height:1px;background:var(--border);margin:6px 0;}
+
+/* TOPIC PAGE */
+.topic-page{padding:0;}
+.tp-back{display:inline-flex;align-items:center;gap:8px;padding:18px 28px 0;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;transition:color .15s;}
+.tp-back:hover{color:var(--text);}
+.tp-header{padding:24px 28px 20px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.tp-breadcrumb{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.tp-title{font-family:'Sora',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1.2;}
+.tp-meta{display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap;}
+.tp-meta-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.tp-video-bar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tp-video-icon{width:40px;height:40px;background:#ff0000;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tp-video-info{flex:1;min-width:0;}
+.tp-video-title{font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tp-video-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.btn-yt{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;background:#ff0000;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;flex-shrink:0;transition:all .2s;box-shadow:0 2px 12px rgba(255,0,0,.3);}
+.btn-yt:hover{background:#cc0000;transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,0,0,.4);}
+.tp-body{padding:28px;max-width:860px;}
+.tp-section{margin-bottom:32px;}
+.tp-section h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.tp-section p{font-size:14px;color:var(--text2);line-height:2;white-space:pre-line;}
+.code-block{background:#070f1c;border:1px solid var(--border2);border-radius:8px;padding:22px 24px;margin:16px 0;overflow-x:auto;position:relative;}
+.code-block::before{content:'Java';position:absolute;top:10px;right:16px;font-size:9px;font-weight:800;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;}
+.code-block pre{font-family:'JetBrains Mono',monospace;font-size:13px;color:#e2e8f0;line-height:1.8;}
+.kw{color:#c084fc;}.str{color:#86efac;}.cmt{color:#6b7280;font-style:italic;}.cls{color:#fde68a;}
+.task-box{background:var(--ok-bg);border:1px solid var(--ok-border);border-left:4px solid var(--ok);border-radius:8px;padding:20px 22px;margin:20px 0;}
+.task-title{font-size:13.5px;font-weight:800;color:var(--ok);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.task-body{font-size:13.5px;color:var(--text2);line-height:2;white-space:pre-line;}
+.task-hint{background:rgba(29,194,149,.07);border:1px solid var(--ok-border);border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--ok);margin-top:12px;}
+.res-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.res-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:6px;font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;transition:all .2s;}
+.res-link:hover{background:rgba(96,139,193,.2);border-color:var(--accent);color:var(--text);transform:translateY(-1px);}
+.tp-footer{padding:18px 28px;border-top:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.tp-footer-note{font-size:12.5px;color:var(--muted);}
+
+/* QUIZ */
+.quiz-wrap{padding:24px 28px;max-width:800px;}
+.quiz-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;}
+.quiz-head{padding:20px 24px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.quiz-icon{width:44px;height:44px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px var(--accent-glow);}
+.quiz-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;color:var(--text);}
+.quiz-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.quiz-body{padding:24px;}
+.q-item{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border);}
+.q-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.q-num{display:inline-block;background:var(--accent);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:4px;margin-right:8px;}
+.q-text{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.6;margin-top:4px;}
+.q-opts{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.q-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--muted);transition:all .15s;}
+.q-opt:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--text);}
+.q-opt.sel{border-color:var(--accent);background:var(--accent-bg);color:var(--text);}
+.q-opt.correct{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);}
+.q-opt.wrong{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);}
+.q-opt input{accent-color:var(--accent);flex-shrink:0;width:16px;height:16px;}
+.quiz-result-wrap{text-align:center;padding:40px 24px;}
+.qr-score{font-family:'Sora',sans-serif;font-size:72px;font-weight:800;margin-bottom:8px;line-height:1;}
+.qr-pass{color:var(--ok);}
+.qr-fail{color:var(--danger);}
+.qr-msg{font-size:15px;color:var(--muted);margin-bottom:10px;}
+.qr-badge{display:inline-block;font-size:13px;font-weight:700;padding:6px 20px;border-radius:4px;margin-bottom:24px;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);}
+.qr-badge.fail{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border);}
+.q-review{text-align:left;margin:20px 0;}
+.q-review-item{padding:12px 16px;border-radius:8px;margin-bottom:8px;font-size:13px;line-height:1.7;border:1px solid transparent;}
+.q-review-item.ok{background:var(--ok-bg);border-color:var(--ok-border);color:#d4d4d4;}
+.q-review-item.bad{background:var(--danger-bg);border-color:var(--danger-border);color:#d4d4d4;}
+.exp{color:var(--muted);font-size:12px;margin-top:5px;font-style:italic;}
+.quiz-footer{padding:16px 24px;border-top:1px solid var(--border);background:var(--bg3);display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+
+/* PROJECT */
+.proj-wrap{padding:24px 28px;max-width:800px;}
+.proj-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;}
+.proj-head{padding:20px 24px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.proj-icon{width:44px;height:44px;background:var(--warn);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.proj-title{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;color:var(--text);}
+.proj-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.proj-body{padding:24px;}
+.proj-desc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px 18px;font-size:13.5px;color:var(--text2);line-height:1.9;margin-bottom:18px;}
+.proj-reqs h4{font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em;}
+.proj-reqs ul{padding-left:20px;margin-bottom:20px;}
+.proj-reqs ul li{font-size:13.5px;color:var(--text2);line-height:2;margin-bottom:5px;}
+.gh-label{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:7px;display:block;}
+.gh-input{width:100%;padding:12px 16px;border:1.5px solid var(--border2);border-radius:8px;font-size:13.5px;font-family:'JetBrains Mono',monospace;background:var(--bg3);color:var(--text);outline:none;transition:all .2s;}
+.gh-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+.status-box{margin-top:14px;padding:13px 18px;border-radius:8px;font-size:13px;font-weight:600;}
+.status-pending{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn);}
+.status-ok{background:var(--ok-bg);border:1px solid var(--ok-border);color:var(--ok);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;border:none;border-radius:6px;transition:all .2s;text-decoration:none;}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow);}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-ok{background:var(--ok);color:#fff;}
+.btn-ok:hover{background:#17a87e;transform:translateY(-1px);}
+.btn-purple{background:var(--quiz);color:#fff;box-shadow:0 2px 10px var(--accent-glow);}
+.btn-purple:hover{background:#6366f1;transform:translateY(-1px);}
+.btn-warn{background:var(--warn);color:#0B192C;}
+.btn-outline{background:transparent;color:var(--muted);border:1.5px solid var(--border2);}
+.btn-outline:hover{border-color:var(--text);color:var(--text);}
+.btn-sm{padding:8px 18px;font-size:13px;}
+
+/* LOCKED */
+.locked-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;text-align:center;}
+.lock-icon{font-size:56px;opacity:.15;margin-bottom:18px;}
+.lock-title{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;color:var(--muted);}
+.lock-sub{font-size:13.5px;color:var(--muted);margin-top:8px;max-width:320px;line-height:1.65;}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+/* MOBILE NAV */
+.ham-btn{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;flex-shrink:0;margin-right:2px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:200;}
+.sidebar-overlay.show{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade{animation:fadeIn .2s ease;}
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;grid-template-rows:56px 1fr;}
+  .ham-btn{display:flex;align-items:center;justify-content:center;}
+  .sidebar{
+    display:flex !important; /* override the previous display:none */
+    position:fixed;top:0;left:-320px;width:300px;height:100vh;
+    z-index:300;transition:left .28s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:4px 0 24px rgba(0,0,0,.4);
+  }
+  .sidebar.open{left:0;}
+  .tb-center{display:none;}
+  .chip-prog{display:none;}
+  .topic-grid,.quiz-wrap,.proj-wrap{padding:14px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+  <header class="topbar">
+    <div class="tb-brand">
+      <!-- hamburger — mobile only -->
+      <button class="ham-btn" id="hamBtn" onclick="toggleMobileSidebar()" aria-label="Menu">☰</button>
+      <img src="/logo.png" alt="avRoN">
+      <div class="tb-brand-name">av<span>R</span>o<span>N</span> Tech</div>
+    </div>
+    <div class="tb-center">
+      <div class="tb-progress-bar"><div class="tb-progress-fill" id="tb-prog-fill" style="width:0%"></div></div>
+      <div class="tb-progress-label" id="tb-prog">Loading...</div>
+    </div>
+    <div class="tb-right">
+      <span class="chip chip-prog" id="tb-prog-week">Week 1 / 9</span>
+      <a href="/student-menu.html" class="chip chip-back" id="back-btn">← Portal</a>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <main class="main" id="main"></main>
+
+</div>
+<script src="/course-data-java-full-stack.js"></script>
+<script>
+
+// ── GUARD: auth + bundle check ────────────────────────────────────────────────
+(function(){
+  const token = localStorage.getItem('cp_token');
+  if (!token) { location.href = '/portal'; return; }
+
+  const params = new URLSearchParams(location.search);
+  const domain = params.get('domain') || '';
+  const isJava = /java.full.stack/i.test(domain) || domain === '';
+
+  if (!isJava) {
+    showBlock('🚧', 'Dashboard Coming Soon',
+      `The interactive course dashboard for <b style="color:#608BC1;">${domain || 'this domain'}</b> is being built. Check back soon!`,
+      null);
+    return;
+  }
+
+  // Hide app until access is verified
+  document.querySelector('.app').style.display = 'none';
+
+  fetch('/api/student/dashboard', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(r => {
+      if (r.status === 401) { location.href = '/portal'; throw new Error('unauth'); }
+      return r.json();
+    })
+    .then(data => {
+      if (!data.success) { location.href = '/student-menu.html'; return; }
+      const regs = data.registrations || (data.registration ? [data.registration] : []);
+      const javaReg = regs.find(r =>
+        /java.full.stack/i.test(r.domain || '') &&
+        ['payment_verified','active','completed','certificate_sent'].includes(r.status)
+      );
+      if (!javaReg) {
+        showBlock('🔒', 'Enrollment Not Active',
+          'Complete your payment to unlock the Course Dashboard.',
+          { label: '← Back to Portal', href: '/student-menu.html' });
+        return;
+      }
+      const isComplete = (javaReg.package && /complete/i.test(javaReg.package)) || Number(javaReg.amount) >= 1099;
+      if (!isComplete) {
+        showBlock('🔒', 'Complete Bundle Required',
+          'The Course Dashboard is exclusive to the <b style="color:#608BC1;">₹1099 Complete Certification Bundle</b>.',
+          { label: '⬆ Upgrade to ₹1099', href: '/register.html?package=complete&domain=Java%20Full%20Stack%20Developer' });
+        return;
+      }
+      // Access granted — mark attendance then show the app
+      fetch('/api/student/attendance/mark', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: 'Java Full Stack Developer' }),
+      }).catch(() => {}); // fire-and-forget, never block the UI
+
+      document.querySelector('.app').style.display = 'grid';
+    })
+    .catch(e => { if (e.message !== 'unauth') location.href = '/student-menu.html'; });
+
+  function showBlock(icon, title, body, cta) {
+    const back = `<a href="/student-menu.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:6px;font-weight:700;font-size:14px;text-decoration:none;">← Back to Portal</a>`;
+    const ctaBtn = cta ? `<a href="${cta.href}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#608BC1;color:#fff;border-radius:6px;font-weight:700;font-size:14px;text-decoration:none;">${cta.label}</a>` : '';
+    document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0B192C;font-family:Inter,sans-serif;text-align:center;padding:32px;">
+      <div style="font-size:52px;margin-bottom:18px;">${icon}</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:10px;">${title}</div>
+      <div style="font-size:14px;max-width:400px;line-height:1.75;color:#9b9b9b;">${body}</div>
+      <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;justify-content:center;">${back}${ctaBtn}</div>
+    </div>`;
+  }
+})();
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const DATA = JAVA_FULLSTACK;
+const DOMAIN = 'Java Full Stack Developer';
+const _token = localStorage.getItem('cp_token');
+
+// Per-week progress — loaded from DB on init, saved on every meaningful action
+const progress = {};
+DATA.weeks.forEach(w => {
+  progress[w.id] = {
+    topicStatus: Object.fromEntries(w.topics.map((t,i) => [t.id, i===0?'current':'locked'])),
+    weekQuizDone: false,
+    projectDone: false,
+    projectLink: ''
+  };
+});
+
+let curWeek   = 1;
+let view      = 'week';
+let curTopic  = null;
+let quizState = { answers:{}, submitted:false };
+let weekQuizState = { answers:{}, submitted:false };
+let _progressLoaded = false;
+
+// ── PERSIST HELPERS ───────────────────────────────────────────────────────────
+function saveProgress(completedWeek) {
+  if (!_progressLoaded) return; // don't overwrite DB before we've loaded
+  const payload = {};
+  DATA.weeks.forEach(w => { payload[w.id] = progress[w.id]; });
+  const body = { domain: DOMAIN, progress: payload };
+  if (completedWeek) body.completedWeek = completedWeek;
+  fetch('/api/student/course-progress', {
+    method: 'PUT',
+    headers: { 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
+async function loadProgress() {
+  try {
+    const res  = await fetch('/api/student/course-progress?domain=' + encodeURIComponent(DOMAIN), {
+      headers: { 'Authorization': 'Bearer ' + _token },
+    });
+    const data = await res.json();
+    if (data.success && data.progress && Object.keys(data.progress).length) {
+      // Merge saved progress into in-memory state
+      DATA.weeks.forEach(w => {
+        if (data.progress[w.id]) {
+          progress[w.id] = data.progress[w.id];
+        }
+      });
+    }
+  } catch (_) {}
+  _progressLoaded = true;
+  render();
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+const week  = id => DATA.weeks.find(w => w.id === id);
+const topic = (wid,tid) => { const w = week(wid); return w ? w.topics.find(t => t.id===tid) : null; };
+const prog  = id => progress[id];
+
+function weekStatus(id) {
+  if (id === 1) return 'inprogress';
+  // Unlock week N if week N-1 project is done
+  if (prog(id-1) && prog(id-1).projectDone) return 'inprogress';
+  // also show current week as inprogress
+  const p = prog(id);
+  if (!p) return 'locked';
+  const hasActivity = Object.values(p.topicStatus).some(s => s !== 'locked');
+  return hasActivity ? 'inprogress' : 'locked';
+}
+
+function weekDone(id) {
+  const p = prog(id); if (!p) return 0;
+  return Object.values(p.topicStatus).filter(s=>s==='completed').length;
+}
+
+function totalDone() {
+  return DATA.weeks.filter(w => prog(w.id) && prog(w.id).projectDone).length;
+}
+
+// ── RENDER SIDEBAR ────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const el = document.getElementById('sidebar');
+  const done = totalDone();
+  const pct  = Math.round(done / DATA.weeks.length * 100);
+
+  let html = `<div class="sb-course-title">
+    <div class="sb-course-label">Course Content</div>
+    <div class="sb-course-name">Java Full Stack Developer</div>
+  </div>`;
+  DATA.weeks.forEach(w => {
+    const st  = weekStatus(w.id);
+    const d   = weekDone(w.id);
+    const active = w.id === curWeek;
+    const wiCls  = d === w.topics.length ? 'wi-done' : st==='inprogress' ? 'wi-prog' : 'wi-lock';
+    const icon   = d === w.topics.length ? '✓' : st==='inprogress' ? w.id : '🔒';
+    html += `
+    <button class="week-btn ${active?'active':''}" onclick="selectWeek(${w.id})" ${st==='locked'?'disabled':''}>
+      <div class="week-btn-inner">
+        <div class="wi ${wiCls}">${icon}</div>
+        <div class="wb-info">
+          <div class="wb-title">Week ${w.id}: ${w.title}</div>
+          <div class="wb-sub">${d}/${w.topics.length} completed</div>
+        </div>
+      </div>
+    </button>`;
+  });
+
+  html += `
+  <div class="sb-footer">
+    <div class="sb-prog-bar"><div class="sb-prog-fill" style="width:${pct}%"></div></div>
+    <div class="sb-prog-label">${done}/${DATA.weeks.length} weeks · ${pct}% complete</div>
+  </div>`;
+
+  el.innerHTML = html;
+  const weekChipSb = document.getElementById('tb-prog-week');
+  if(weekChipSb) weekChipSb.textContent = `Week ${curWeek} / ${DATA.weeks.length}`;
+}
+
+// ── RENDER MAIN ───────────────────────────────────────────────────────────────
+function render() {
+  renderSidebar();
+  const pct = Math.round(totalDone() / DATA.weeks.length * 100);
+  const fill = document.getElementById('tb-prog-fill');
+  const label = document.getElementById('tb-prog');
+  const weekChip = document.getElementById('tb-prog-week');
+  if(fill) fill.style.width = pct+'%';
+  if(label) label.textContent = pct+'% complete · '+totalDone()+'/'+DATA.weeks.length+' weeks';
+  if(weekChip) weekChip.textContent = `Week ${curWeek} / ${DATA.weeks.length}`;
+  const el = document.getElementById('main');
+  if      (view==='week')    el.innerHTML = renderWeekView();
+  else if (view==='topic')   el.innerHTML = renderTopicPage();
+  else if (view==='quiz')    el.innerHTML = renderQuizPage();
+  else if (view==='weekquiz')el.innerHTML = renderWeekQuizPage();
+  else if (view==='project') el.innerHTML = renderProjectPage();
+}
+
+// ── WEEK VIEW ─────────────────────────────────────────────────────────────────
+function renderWeekView() {
+  const w  = week(curWeek);
+  const p  = prog(curWeek);
+  const st = weekStatus(curWeek);
+  if (st === 'locked') return `
+    <div class="locked-state fade">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">Week ${curWeek} is Locked</div>
+      <div class="lock-sub">Complete Week ${curWeek-1} mini project to unlock this week.</div>
+    </div>`;
+
+  const done  = weekDone(curWeek);
+  const pct   = Math.round(done / w.topics.length * 100);
+  const wqUnlocked = done === w.topics.length;
+  const projUnlocked = p.weekQuizDone;
+
+  let topicsHTML = w.topics.map(t => {
+    const ts = p.topicStatus[t.id] || 'locked';
+    const numCls = ts==='completed'?'tr-num-done':ts==='current'?'tr-num-curr':'tr-num-lock';
+    const num    = ts==='completed' ? '✓' : t.id;
+    const bdgCls = ts==='completed'?'badge-done':ts==='current'?'badge-curr':'badge-lock';
+    const bdgTxt = ts==='completed'?'Done':ts==='current'?'In Progress':'Locked';
+    const disabled = ts==='locked' ? 'disabled' : '';
+    return `
+    <button class="topic-row ${ts}" onclick="openTopic(${t.id})" ${disabled}>
+      <div class="tr-num ${numCls}">${num}</div>
+      <div class="tr-info">
+        <div class="tr-title">${t.title}</div>
+        <div class="tr-sub">${t.quiz.length} quiz questions · ${t.content.sections.length} sections</div>
+      </div>
+      <span class="tr-badge ${bdgCls}">${bdgTxt}</span>
+      <span class="tr-arrow">›</span>
+    </button>`;
+  }).join('');
+
+  // Week quiz row
+  const wqDis  = wqUnlocked ? '' : 'disabled';
+  const wqBdg  = p.weekQuizDone ? 'badge-done' : wqUnlocked ? 'badge-quiz' : 'badge-lock';
+  const wqTxt  = p.weekQuizDone ? 'Passed' : wqUnlocked ? 'Take Quiz' : 'Locked';
+  topicsHTML += `<div class="divider"></div>
+  <button class="topic-row" onclick="openWeekQuiz()" ${wqDis}>
+    <div class="tr-num ${p.weekQuizDone?'tr-num-done':'tr-num-curr'}">📝</div>
+    <div class="tr-info">
+      <div class="tr-title">Week ${curWeek} Assessment Quiz</div>
+      <div class="tr-sub">${w.weekQuiz.length} questions · Score ≥80% to unlock project</div>
+    </div>
+    <span class="tr-badge ${wqBdg}">${wqTxt}</span>
+    <span class="tr-arrow">›</span>
+  </button>`;
+
+  // Mini project row
+  const prDis  = projUnlocked ? '' : 'disabled';
+  const prBdg  = p.projectDone ? 'badge-done' : projUnlocked ? 'badge-proj' : 'badge-lock';
+  const prTxt  = p.projectDone ? 'Submitted' : projUnlocked ? 'Submit' : 'Locked';
+  topicsHTML += `
+  <button class="topic-row" onclick="openProject()" ${prDis}>
+    <div class="tr-num ${p.projectDone?'tr-num-done':'tr-num-curr'}">🎯</div>
+    <div class="tr-info">
+      <div class="tr-title">Mini Project — ${w.miniProject.title}</div>
+      <div class="tr-sub">Submit GitHub repo to complete Week ${curWeek}</div>
+    </div>
+    <span class="tr-badge ${prBdg}">${prTxt}</span>
+    <span class="tr-arrow">›</span>
+  </button>`;
+
+  return `
+  <div class="week-view fade">
+    <div class="wv-head">
+      <div class="wv-eyebrow">Week ${curWeek} · Java Full Stack Developer</div>
+      <div class="wv-title">${w.title}</div>
+      <div class="wv-meta">
+        <span class="wv-tag">📖 ${w.topics.length} Topics</span>
+        <span class="wv-tag">📝 ${w.weekQuiz.length} Week Quiz</span>
+        <span class="wv-tag">🎯 Mini Project</span>
+      </div>
+      <div class="prog-row">
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-label">${done}/${w.topics.length} done</div>
+      </div>
+    </div>
+    <div class="topic-grid">${topicsHTML}</div>
+  </div>`;
+}
+
+// ── TOPIC PAGE ────────────────────────────────────────────────────────────────
+function renderTopicPage() {
+  const t  = topic(curWeek, curTopic);
+  const w  = week(curWeek);
+  const p  = prog(curWeek);
+  if (!t) return '';
+  const ts = p.topicStatus[t.id] || 'current';
+
+  // Video bar
+  const vidBar = t.video ? `
+  <div class="tp-video-bar">
+    <div class="tp-video-icon">▶</div>
+    <div class="tp-video-info">
+      <div class="tp-video-title">${t.video.title}</div>
+      <div class="tp-video-meta">${t.video.channel} · ${t.video.duration}</div>
+    </div>
+    <a class="btn-yt" href="https://www.youtube.com/watch?v=${t.video.youtubeId}" target="_blank">
+      ▶ Watch on YouTube
+    </a>
+  </div>` : '';
+
+  // Sections
+  const sectionsHTML = t.content.sections.map(s => {
+    if (s.code) return `
+      <div class="tp-section">
+        <h3>${s.heading || 'Code Example'}</h3>
+        <div class="code-block"><pre>${s.code}</pre></div>
+      </div>`;
+    return `
+      <div class="tp-section">
+        <h3>${s.heading}</h3>
+        <p>${s.text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</p>
+      </div>`;
+  }).join('');
+
+  // Practice task
+  const taskHTML = t.content.practiceTask ? `
+  <div class="task-box">
+    <div class="task-title">💻 ${t.content.practiceTask.title}</div>
+    <div class="task-body">${t.content.practiceTask.instructions}</div>
+    <div class="task-hint">💡 Hint: ${t.content.practiceTask.hint}</div>
+  </div>` : '';
+
+  // Resources
+  const resHTML = t.content.resources && t.content.resources.length ? `
+  <div class="tp-section">
+    <h3>📚 Resources</h3>
+    <div class="res-row">
+      ${t.content.resources.map(r=>`<a class="res-link" href="${r.url}" target="_blank">${r.label} ↗</a>`).join('')}
+    </div>
+  </div>` : '';
+
+  const footerAction = ts === 'completed'
+    ? `<span style="color:var(--ok);font-weight:700;font-size:13px;">✓ Completed — Quiz Passed</span>`
+    : `<button class="btn btn-ok" onclick="openQuiz()">✓ Done — Take Quiz →</button>`;
+
+  return `
+  <div class="topic-page fade">
+    <button class="tp-back" onclick="goBack()">← Back to Week ${curWeek}</button>
+    <div class="tp-header">
+      <div class="tp-breadcrumb">Week ${curWeek}: ${w.title}</div>
+      <div class="tp-title">${t.title}</div>
+    </div>
+    ${vidBar}
+    <div class="tp-body">
+      ${sectionsHTML}
+      ${taskHTML}
+      ${resHTML}
+    </div>
+    <div class="tp-footer">
+      <span class="tp-footer-note">Study the material, then take the quiz to proceed.</span>
+      ${footerAction}
+    </div>
+  </div>`;
+}
+
+// ── TOPIC QUIZ PAGE ───────────────────────────────────────────────────────────
+function renderQuizPage() {
+  const t = topic(curWeek, curTopic);
+  if (!t) return '';
+
+  if (quizState.submitted) {
+    const correct = t.quiz.filter((q,i) => quizState.answers[i]===q.ans).length;
+    const pct     = Math.round(correct/t.quiz.length*100);
+    const pass    = pct >= 80;
+
+    const reviewHTML = t.quiz.map((q,i) => {
+      const chosen  = quizState.answers[i];
+      const correct_ans = q.ans;
+      const ok = chosen === correct_ans;
+      return `
+      <div class="q-review-item ${ok?'ok':'bad'}">
+        <strong>Q${i+1}:</strong> ${q.q}<br>
+        <span style="color:${ok?'var(--ok)':'var(--danger)'}">
+          Your answer: ${q.opts[chosen]!==undefined?q.opts[chosen]:'Not answered'}
+        </span>
+        ${!ok?`<br><span style="color:var(--ok)">✓ Correct: ${q.opts[correct_ans]}</span>`:''}
+        ${q.explanation?`<div class="exp">💡 ${q.explanation}</div>`:''}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="quiz-wrap fade">
+      <button class="tp-back" onclick="goBack()">← Back to Topic</button>
+      <div class="quiz-card">
+        <div class="quiz-head">
+          <div class="quiz-icon">${pass?'🎉':'😔'}</div>
+          <div>
+            <div class="quiz-title">${pass?'Quiz Passed!':'Quiz Failed'}</div>
+            <div class="quiz-sub">${pass?'Next topic unlocked.':'Score below 80% — try again.'}</div>
+          </div>
+        </div>
+        <div class="quiz-body">
+          <div class="quiz-result-wrap">
+            <div class="qr-score ${pass?'qr-pass':'qr-fail'}">${pct}%</div>
+            <div class="qr-msg">${correct} out of ${t.quiz.length} correct</div>
+            <div class="qr-badge ${pass?'':'fail'}">${pass?'✓ Passed — ≥80%':'✗ Need 80% to pass'}</div>
+          </div>
+          <div class="q-review">${reviewHTML}</div>
+        </div>
+        <div class="quiz-footer">
+          ${pass
+            ? `<button class="btn btn-ok" onclick="passQuiz()">Continue →</button>`
+            : `<button class="btn btn-outline btn-sm" onclick="goBack()">Back to Topic</button>
+               <button class="btn btn-purple btn-sm" onclick="retryQuiz()">Retry Quiz</button>`}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const questionsHTML = t.quiz.map((q, qi) => `
+    <div class="q-item">
+      <div class="q-text"><span class="q-num">Q${qi+1}</span>${q.q}</div>
+      <div class="q-opts">
+        ${q.opts.map((opt,oi) => `
+        <label class="q-opt ${quizState.answers[qi]===oi?'sel':''}">
+          <input type="radio" name="q${qi}" value="${oi}" onchange="pickAnswer(${qi},${oi})">
+          ${opt}
+        </label>`).join('')}
+      </div>
+    </div>`).join('');
+
+  return `
+  <div class="quiz-wrap fade">
+    <button class="tp-back" onclick="goBack()">← Back to Topic</button>
+    <div class="quiz-card">
+      <div class="quiz-head">
+        <div class="quiz-icon">📝</div>
+        <div>
+          <div class="quiz-title">Topic Quiz — ${t.title}</div>
+          <div class="quiz-sub">Score ≥80% (${Math.ceil(t.quiz.length*.8)}/${t.quiz.length}) to unlock next topic</div>
+        </div>
+      </div>
+      <div class="quiz-body">${questionsHTML}</div>
+      <div class="quiz-footer">
+        <span style="font-size:12px;color:var(--mut);">Answer all ${t.quiz.length} questions</span>
+        <button class="btn btn-purple btn-sm" onclick="submitQuiz()">Submit Quiz →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── WEEK QUIZ PAGE ────────────────────────────────────────────────────────────
+function renderWeekQuizPage() {
+  const w = week(curWeek);
+  const p = prog(curWeek);
+  if (!w) return '';
+
+  if (weekQuizState.submitted) {
+    const correct = w.weekQuiz.filter((q,i) => weekQuizState.answers[i]===q.ans).length;
+    const pct     = Math.round(correct/w.weekQuiz.length*100);
+    const pass    = pct >= 80;
+    if (pass && !p.weekQuizDone) { p.weekQuizDone = true; saveProgress(); }
+
+    const reviewHTML = w.weekQuiz.map((q,i) => {
+      const chosen = weekQuizState.answers[i];
+      const ok = chosen === q.ans;
+      return `
+      <div class="q-review-item ${ok?'ok':'bad'}">
+        <strong>Q${i+1}:</strong> ${q.q}<br>
+        <span style="color:${ok?'var(--ok)':'var(--danger)'}">
+          Your answer: ${q.opts[chosen]!==undefined?q.opts[chosen]:'Not answered'}
+        </span>
+        ${!ok?`<br><span style="color:var(--ok)">✓ Correct: ${q.opts[q.ans]}</span>`:''}
+        ${q.explanation?`<div class="exp">💡 ${q.explanation}</div>`:''}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="quiz-wrap fade">
+      <button class="tp-back" onclick="goBack()">← Back to Week ${curWeek}</button>
+      <div class="quiz-card">
+        <div class="quiz-head">
+          <div class="quiz-icon">${pass?'🏆':'😔'}</div>
+          <div>
+            <div class="quiz-title">${pass?'Week Quiz Passed!':'Week Quiz Failed'}</div>
+            <div class="quiz-sub">${pass?'🎉 Mini Project unlocked!':'Need ≥80% to unlock the project.'}</div>
+          </div>
+        </div>
+        <div class="quiz-body">
+          <div class="quiz-result-wrap">
+            <div class="qr-score ${pass?'qr-pass':'qr-fail'}">${pct}%</div>
+            <div class="qr-msg">${correct} out of ${w.weekQuiz.length} correct</div>
+            <div class="qr-badge ${pass?'':'fail'}">${pass?'✓ Project Unlocked!':'✗ Try Again'}</div>
+          </div>
+          <div class="q-review">${reviewHTML}</div>
+        </div>
+        <div class="quiz-footer">
+          ${pass
+            ? `<button class="btn btn-ok" onclick="openProject()">Go to Mini Project →</button>`
+            : `<button class="btn btn-outline btn-sm" onclick="goBack()">Back</button>
+               <button class="btn btn-purple btn-sm" onclick="retryWeekQuiz()">Retry</button>`}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const qHTML = w.weekQuiz.map((q,qi) => `
+    <div class="q-item">
+      <div class="q-text"><span class="q-num">Q${qi+1}</span>${q.q}</div>
+      <div class="q-opts">
+        ${q.opts.map((opt,oi) => `
+        <label class="q-opt ${weekQuizState.answers[qi]===oi?'sel':''}">
+          <input type="radio" name="wq${qi}" value="${oi}" onchange="pickWeekAnswer(${qi},${oi})">
+          ${opt}
+        </label>`).join('')}
+      </div>
+    </div>`).join('');
+
+  return `
+  <div class="quiz-wrap fade">
+    <button class="tp-back" onclick="goBack()">← Back to Week ${curWeek}</button>
+    <div class="quiz-card">
+      <div class="quiz-head">
+        <div class="quiz-icon">📋</div>
+        <div>
+          <div class="quiz-title">Week ${curWeek} Assessment Quiz</div>
+          <div class="quiz-sub">${w.weekQuiz.length} questions · Score ≥80% to unlock Mini Project</div>
+        </div>
+      </div>
+      <div class="quiz-body">${qHTML}</div>
+      <div class="quiz-footer">
+        <span style="font-size:12px;color:var(--mut);">Answer all ${w.weekQuiz.length} questions</span>
+        <button class="btn btn-purple btn-sm" onclick="submitWeekQuiz()">Submit →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── PROJECT PAGE ──────────────────────────────────────────────────────────────
+function renderProjectPage() {
+  const w = week(curWeek);
+  const p = prog(curWeek);
+  if (!w) return '';
+  const mp   = w.miniProject;
+  const reqs = (mp.requirements||[]).map(r=>`<li>${r}</li>`).join('');
+
+  return `
+  <div class="proj-wrap fade">
+    <button class="tp-back" onclick="goBack()">← Back to Week ${curWeek}</button>
+    <div class="proj-card">
+      <div class="proj-head">
+        <div class="proj-icon">🎯</div>
+        <div>
+          <div class="proj-title">Mini Project — ${mp.title}</div>
+          <div class="proj-sub">Submit your GitHub link to complete Week ${curWeek}</div>
+        </div>
+      </div>
+      <div class="proj-body">
+        <div class="proj-desc">${mp.description}</div>
+        <div class="proj-reqs">
+          <h4>Requirements</h4>
+          <ul>${reqs}</ul>
+        </div>
+        <label class="gh-label">GitHub Repository Link</label>
+        <input class="gh-input" id="ghLink" placeholder="https://github.com/username/project"
+               value="${p.projectLink||''}" ${p.projectDone?'disabled':''}>
+        ${p.projectDone
+          ? `<div class="status-box status-ok">✅ Project submitted! Admin will review and mark complete.</div>
+             <button class="btn btn-ok" style="margin-top:14px;" onclick="nextWeek()">
+               ${curWeek < DATA.weeks.length ? `Continue to Week ${curWeek+1} →` : '🎓 Complete Course!'}
+             </button>`
+          : `<div class="status-box status-pending">📝 Paste your GitHub repo link and submit to complete Week ${curWeek}.</div>
+             <button class="btn btn-warn" style="margin-top:14px;" onclick="submitProject()">Submit Project →</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function selectWeek(id) {
+  const st = weekStatus(id);
+  if (st === 'locked') return;
+  curWeek = id;
+  view    = 'week';
+  curTopic = null;
+  quizState = { answers:{}, submitted:false };
+  weekQuizState = { answers:{}, submitted:false };
+  closeMobileSidebar();
+  render();
+  window.scrollTo(0,0);
+}
+
+function goBack() {
+  if (view === 'topic' || view === 'weekquiz' || view === 'project') {
+    view = 'week';
+  } else if (view === 'quiz') {
+    view = 'topic';
+  }
+  render();
+  window.scrollTo(0,0);
+}
+
+function openTopic(id) {
+  curTopic  = id;
+  view      = 'topic';
+  quizState = { answers:{}, submitted:false };
+  render();
+  window.scrollTo(0,0);
+}
+
+function openQuiz() {
+  view      = 'quiz';
+  quizState = { answers:{}, submitted:false };
+  render();
+  window.scrollTo(0,0);
+}
+
+function openWeekQuiz() {
+  const p = prog(curWeek);
+  if (weekDone(curWeek) < week(curWeek).topics.length) return;
+  view = 'weekquiz';
+  weekQuizState = { answers:{}, submitted:false };
+  render();
+  window.scrollTo(0,0);
+}
+
+function openProject() {
+  const p = prog(curWeek);
+  if (!p.weekQuizDone) return;
+  view = 'project';
+  render();
+  window.scrollTo(0,0);
+}
+
+function nextWeek() {
+  const nextId = curWeek + 1;
+  if (nextId <= DATA.weeks.length) {
+    // Unlock next week by making it accessible
+    selectWeek(nextId);
+  } else {
+    alert('🎓 Congratulations! You have completed the entire Java Full Stack Developer course!');
+  }
+}
+
+// ── QUIZ ACTIONS ──────────────────────────────────────────────────────────────
+function pickAnswer(qi, oi) {
+  quizState.answers[qi] = oi;
+  document.querySelectorAll(`[name="q${qi}"]`).forEach(r =>
+    r.closest('.q-opt').classList.toggle('sel', +r.value===oi)
+  );
+}
+
+function pickWeekAnswer(qi, oi) {
+  weekQuizState.answers[qi] = oi;
+  document.querySelectorAll(`[name="wq${qi}"]`).forEach(r =>
+    r.closest('.q-opt').classList.toggle('sel', +r.value===oi)
+  );
+}
+
+function submitQuiz() {
+  const t = topic(curWeek, curTopic);
+  if (Object.keys(quizState.answers).length < t.quiz.length) {
+    alert(`Please answer all ${t.quiz.length} questions first.`); return;
+  }
+  quizState.submitted = true;
+  render();
+  window.scrollTo(0,0);
+}
+
+function submitWeekQuiz() {
+  const w = week(curWeek);
+  if (Object.keys(weekQuizState.answers).length < w.weekQuiz.length) {
+    alert(`Please answer all ${w.weekQuiz.length} questions first.`); return;
+  }
+  weekQuizState.submitted = true;
+  render();
+  window.scrollTo(0,0);
+}
+
+function retryQuiz() {
+  quizState = { answers:{}, submitted:false };
+  render();
+  window.scrollTo(0,0);
+}
+
+function retryWeekQuiz() {
+  weekQuizState = { answers:{}, submitted:false };
+  render();
+  window.scrollTo(0,0);
+}
+
+function passQuiz() {
+  const p  = prog(curWeek);
+  const w  = week(curWeek);
+  p.topicStatus[curTopic] = 'completed';
+  const idx    = w.topics.findIndex(t => t.id === curTopic);
+  const nextT  = w.topics[idx + 1];
+  if (nextT) {
+    p.topicStatus[nextT.id] = 'current';
+    curTopic  = nextT.id;
+    view      = 'topic';
+    quizState = { answers:{}, submitted:false };
+  } else {
+    view     = 'week';
+    curTopic = null;
+  }
+  saveProgress(); // persist topic completion
+  render();
+  window.scrollTo(0,0);
+}
+
+function submitProject() {
+  const link = document.getElementById('ghLink')?.value.trim();
+  if (!link || !link.startsWith('https://github.com')) {
+    alert('Please enter a valid GitHub link (starts with https://github.com)'); return;
+  }
+  const p = prog(curWeek);
+  p.projectDone = true;
+  p.projectLink = link;
+  const w = week(curWeek);
+  // save + fire week-complete email
+  saveProgress({ num: curWeek, title: w.title });
+  render();
+  window.scrollTo(0,0);
+}
+
+// ── MOBILE SIDEBAR TOGGLE ─────────────────────────────────────────────────────
+function toggleMobileSidebar() {
+  const sb  = document.getElementById('sidebar');
+  const ov  = document.getElementById('sidebarOverlay');
+  const open = sb.classList.toggle('open');
+  ov.classList.toggle('show', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ── INIT — load saved progress from DB, then render ──────────────────────────
+loadProgress();
+</script>
+</body>
+</html>

@@ -260,7 +260,7 @@ label{display:block;font-size:12px;font-weight:700;color:#fff;margin-bottom:7px;
         <div class="success-icon">✓</div>
         <h3>You're in!</h3>
         <p id="success-msg">Welcome back. Taking you to your dashboard...</p>
-        <button data-testid="goto-dashboard-btn" class="btn-primary" onclick="location.href='/dashboard'">Go to dashboard →</button>
+        <button data-testid="goto-dashboard-btn" class="btn-primary" onclick="goToPortal(localStorage.getItem('cp_token'))">Go to dashboard →</button>
       </div>
     </div>
   </section>
@@ -307,6 +307,29 @@ function showSuccess(msg){
 }
 
 // ── Password login ────────────────────────────────────────────────────────────
+// ── Smart portal redirect ─────────────────────────────────────────────────────
+// Determines which portal to send the student to based on their package.
+// Called after every successful login/OTP/setPassword.
+async function goToPortal(token) {
+  try {
+    const res  = await fetch('/api/student/dashboard', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (data.success) {
+      const regs = data.registrations || (data.registration ? [data.registration] : []);
+      const isBundle = regs.some(r =>
+        (r.package && /complete/i.test(r.package)) || Number(r.amount) >= 1099
+      );
+      location.href = isBundle ? '/student-menu.html' : '/dashboard';
+    } else {
+      location.href = '/dashboard'; // fallback
+    }
+  } catch (_) {
+    location.href = '/dashboard'; // fallback
+  }
+}
+
 async function loginPassword(){
   const email=document.getElementById('pw-email').value.trim();
   const password=document.getElementById('pw-pass').value;
@@ -322,7 +345,7 @@ async function loginPassword(){
       localStorage.setItem('cp_token',data.token);
       localStorage.setItem('cp_user',JSON.stringify(data.user));
       showSuccess('Welcome back, '+data.user.fullName.split(' ')[0]+'!');
-      setTimeout(()=>location.href='/dashboard',1100);
+      setTimeout(()=>goToPortal(data.token),1100);
     } else if(data.requireOTP){
       switchMode('otp');document.getElementById('otp-email').value=email;
       showToast('First-time login — please use OTP',true);
@@ -381,7 +404,7 @@ async function verifyOTP(){
       localStorage.setItem('cp_user',JSON.stringify(data.user));
       if(resendInterval)clearInterval(resendInterval);
       showSuccess(data.isFirstLogin?'Welcome to avRoN! Your account is ready.':'Welcome back!');
-      setTimeout(()=>location.href='/dashboard',1300);
+      setTimeout(()=>goToPortal(data.token),1300);
     } else if(data.requirePassword){
       // Freeze the OTP value before moving to step 3 so setPassword() reuses it
       _otpForSetPw = otp;
@@ -410,7 +433,7 @@ async function setPassword(){
       localStorage.setItem('cp_token',data.token);
       localStorage.setItem('cp_user',JSON.stringify(data.user));
       showSuccess('Account ready. Off to your dashboard...');
-      setTimeout(()=>location.href='/dashboard',1300);
+      setTimeout(()=>goToPortal(data.token),1300);
     } else {
       err.textContent=data.message;err.style.display='block';
     }
@@ -434,7 +457,7 @@ async function resendOTP(){
 const t=localStorage.getItem('cp_token');
 if(t){
   fetch('/api/auth/me',{headers:{'Authorization':'Bearer '+t}})
-    .then(r=>r.json()).then(d=>{if(d.success)location.href='/dashboard';}).catch(()=>{});
+    .then(r=>r.json()).then(d=>{if(d.success)goToPortal(t);}).catch(()=>{});
 }
 </script>
 </body>

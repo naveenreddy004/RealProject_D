@@ -65,6 +65,10 @@ const registrationSchema = new mongoose.Schema({
   // Portal — tracks whether invite was sent
   portalInviteSent: { type: Boolean, default: false },
 
+  // Course progress — persisted from the interactive course dashboard
+  // Structure: { weekId: { topicStatus:{topicId:'completed'|'current'|'locked'}, weekQuizDone:bool, projectDone:bool, projectLink:str } }
+  courseProgress: { type: mongoose.Schema.Types.Mixed, default: {} },
+
 }, { timestamps: true });
 
 // Default tasks by domain

@@ -8,6 +8,7 @@ const { queueEmail } = require('../utils/emailQueue');
 const { generateCertificatePDF, generateOfferLetterPDF } = require('../utils/pdfGenerator');
 const { logActivity } = require('../utils/activityLogger');
 const { pushNotification } = require('../utils/notify');
+const { checkAndAwardBadges } = require('../utils/badgeChecker');
 
 // Normalize MongoDB Binary or Buffer to a plain Buffer
 // All routes require admin JWT
@@ -131,8 +132,9 @@ const approvePayment = async (req, res) => {
     reg.payment.verifiedAt = new Date();
     reg.payment.verifiedBy = req.admin ? req.admin.email : 'admin';
     reg.payment.approved = true;
-    // Sync payment.amount from top-level amount so revenue stats are accurate
-    if (!reg.payment.amount) reg.payment.amount = reg.amount;
+    // Always sync payment.amount from top-level amount so revenue stats are accurate
+    // The schema default of 299 on payment.amount is wrong — reg.amount has the real paid value
+    reg.payment.amount = reg.amount;
 
     // Only mark payment tasks done — student still needs to complete internship
     const payTask = reg.tasks.find(t => t.title === 'Make Payment');
@@ -275,17 +277,107 @@ router.post('/mark-complete/:id', async (req, res) => {
   }
 });
 
+// ── CHECK CERTIFICATE ELIGIBILITY ────────────────────────────────────────────
+router.get('/certificate-eligibility/:id', async (req, res) => {
+  try {
+    const Attendance = require('../models/Attendance');
+    const reg = await Registration.findById(req.params.id).populate('user');
+    if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
+
+    const isCompleteBundle = (reg.package && /complete/i.test(reg.package)) || Number(reg.amount) >= 1099;
+
+    if (!isCompleteBundle) {
+      // Basic plan — eligible as long as active/completed
+      const eligible = ['active','completed'].includes(reg.status);
+      return res.json({ success: true, isCompleteBundle: false, eligible, reason: eligible ? null : 'Status must be active or completed.' });
+    }
+
+    const cp = reg.courseProgress || {};
+    const weeksCompleted = Object.values(cp).filter(w => w && w.projectDone).length;
+
+    const startDate  = new Date(reg.startDate);
+    const today      = new Date();
+    const elapsed    = Math.max(1, Math.min(
+      Math.floor((today - startDate) / 86400000) + 1,
+      reg.duration ? parseInt(reg.duration) * 30 : 45
+    ));
+    const presentDays = await Attendance.countDocuments({
+      user: reg.user._id, domain: reg.domain, date: { $gte: startDate },
+    });
+    const attPct = Math.round((presentDays / elapsed) * 100);
+
+    const meetsWeeks = weeksCompleted >= 1;
+    const meetsAtt   = attPct >= 80;
+    const eligible   = meetsWeeks && meetsAtt && ['active','completed'].includes(reg.status);
+
+    res.json({
+      success: true,
+      isCompleteBundle: true,
+      eligible,
+      weeksCompleted,
+      weeksRequired: 1,
+      attendancePct: attPct,
+      attendanceRequired: 80,
+      presentDays,
+      elapsed,
+      meetsWeeks,
+      meetsAtt,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ── SEND CERTIFICATE ──────────────────────────────────────────────────────────
 router.post('/send-certificate/:id', async (req, res) => {
   try {
+    const Attendance = require('../models/Attendance');
     const reg = await Registration.findById(req.params.id).populate('user');
     if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
     if (!['active', 'completed'].includes(reg.status)) {
       return res.status(400).json({ success: false, message: 'Internship must be active or completed to send certificate.' });
     }
 
+    const isCompleteBundle = (reg.package && /complete/i.test(reg.package)) || Number(reg.amount) >= 1099;
+
+    // ── Eligibility gate for Complete Bundle students ─────────────────────────
+    if (isCompleteBundle) {
+      // 1. Must have completed at least 1 week (≥10% of 9 weeks)
+      const cp = reg.courseProgress || {};
+      const weeksCompleted = Object.values(cp).filter(w => w && w.projectDone).length;
+      if (weeksCompleted < 1) {
+        return res.status(400).json({
+          success: false,
+          message: `Not eligible: student has not completed any weeks yet (0/9). Minimum 1 week required.`,
+          eligibility: { weeksCompleted, weeksRequired: 1, attendancePct: null, attendanceRequired: 80 },
+        });
+      }
+
+      // 2. Attendance must be ≥ 80% of elapsed days
+      const startDate  = new Date(reg.startDate);
+      const today      = new Date();
+      const msPerDay   = 86400000;
+      const elapsed    = Math.max(1, Math.min(
+        Math.floor((today - startDate) / msPerDay) + 1,
+        reg.duration ? parseInt(reg.duration) * 30 : 45
+      ));
+      const presentDays = await Attendance.countDocuments({
+        user: reg.user._id,
+        domain: reg.domain,
+        date: { $gte: startDate },
+      });
+      const attPct = Math.round((presentDays / elapsed) * 100);
+
+      if (attPct < 80) {
+        return res.status(400).json({
+          success: false,
+          message: `Not eligible: attendance is ${attPct}% (${presentDays}/${elapsed} days). Minimum 80% required.`,
+          eligibility: { weeksCompleted, weeksRequired: 1, attendancePct: attPct, attendanceRequired: 80 },
+        });
+      }
+    }
+
     const certBuf = await generateCertificatePDF(reg.user, reg);
-    // Certificate is available for student to download from portal — no email sent
 
     reg.status = 'certificate_sent';
     reg.sentAt = new Date();
@@ -301,14 +393,15 @@ router.post('/send-certificate/:id', async (req, res) => {
       details: { certId: reg.certId, email: reg.user.email },
       req,
     });
-    // Notify student
     pushNotification(reg.user._id, {
       type: 'success',
       title: '🎓 Certificate Issued!',
       message: `Your QR-verified certificate for ${reg.domain} has been issued! Go to the Certificates tab to download and share it.`,
       regId: reg._id,
     });
-    res.json({ success: true, message: `Certificate sent to ${reg.user.email}` });
+    res.json({ success: true, message: `Certificate issued for ${reg.user.email}` });
+    // Award the Certified badge
+    setImmediate(() => checkAndAwardBadges(reg.user._id).catch(() => {}));
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -342,7 +435,75 @@ router.get('/registration/:id', async (req, res) => {
   }
 });
 
-// ── GET ALL USERS ─────────────────────────────────────────────────────────────
+// ── GET SINGLE REGISTRATION ───────────────────────────────────────────────────
+router.get('/registration/:id', async (req, res) => {
+  try {
+    const reg = await Registration.findById(req.params.id).populate('user');
+    if (!reg) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: reg });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── GET STUDENT ENGAGEMENT (progress + attendance + badges) ───────────────────
+router.get('/student-engagement/:regId', async (req, res) => {
+  try {
+    const Attendance = require('../models/Attendance');
+    const reg = await Registration.findById(req.params.regId).populate('user');
+    if (!reg) return res.status(404).json({ success: false, message: 'Not found.' });
+
+    // Course progress summary
+    const cp = reg.courseProgress || {};
+    const weeksCompleted = Object.values(cp).filter(w => w.projectDone).length;
+    const topicsCompleted = Object.values(cp).reduce((s, w) =>
+      s + Object.values(w.topicStatus || {}).filter(st => st === 'completed').length, 0);
+
+    // Attendance
+    const totalAttendance = await Attendance.countDocuments({ user: reg.user._id, domain: reg.domain });
+    const last30 = await Attendance.find({
+      user: reg.user._id,
+      domain: reg.domain,
+      date: { $gte: new Date(Date.now() - 30 * 86400000) },
+    }).select('dateStr').lean();
+
+    // Badges (reuse same logic)
+    const regs = await Registration.find({ user: reg.user._id }).sort({ createdAt: 1 });
+    const badges = computeBadges(regs);
+
+    res.json({
+      success: true,
+      courseProgress: { weeksCompleted, topicsCompleted, raw: cp },
+      attendance: { totalDays: totalAttendance, last30Dates: last30.map(r => r.dateStr) },
+      badges,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+function computeBadges(regs) {
+  const firstReg    = regs[0] || null;
+  const paidReg     = regs.find(r => r.payment?.approved || ['payment_verified','active','completed','certificate_sent'].includes(r.status));
+  const portalReg   = regs.find(r => r.tasks?.some(t => t.title === 'Login to Portal' && t.completed));
+  const projReg     = regs.find(r => r.tasks?.some(t => t.title === 'Submit Final Project' && t.completed));
+  const completedReg= regs.find(r => ['completed','certificate_sent'].includes(r.status));
+  const certReg     = regs.find(r => r.status === 'certificate_sent');
+  const fastReg     = regs.find(r => ['completed','certificate_sent'].includes(r.status) && r.endDate && r.updatedAt && new Date(r.updatedAt) < new Date(r.endDate));
+  const bundleReg   = regs.find(r => (r.package && /complete/i.test(r.package)) || Number(r.amount) >= 1099);
+  return [
+    { id:'registered',    icon:'🚀', name:'First Step',        earned: !!firstReg },
+    { id:'payment_hero',  icon:'💳', name:'Payment Hero',      earned: !!paidReg },
+    { id:'portal_pioneer',icon:'🔑', name:'Portal Pioneer',    earned: !!portalReg },
+    { id:'go_getter',     icon:'🎯', name:'Go-Getter',         earned: !!projReg },
+    { id:'course_complete',icon:'🏆',name:'Course Complete',   earned: !!completedReg },
+    { id:'certificate_pro',icon:'⭐',name:'Certificate Pro',   earned: !!certReg },
+    { id:'fast_finisher', icon:'⚡', name:'Fast Finisher',     earned: !!fastReg },
+    { id:'bundle_buyer',  icon:'💎', name:'Power Learner',     earned: !!bundleReg },
+  ];
+}
+
+
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password -otp').sort({ createdAt: -1 });
@@ -445,6 +606,9 @@ router.post('/bulk-send-certificates', async (req, res) => {
         await reg.save();
 
         results.sent.push({ id, name: reg.user.fullName, certId: reg.certId });
+
+        // Award certified badge async
+        setImmediate(() => checkAndAwardBadges(reg.user._id).catch(() => {}));
       } catch (e) {
         results.failed.push({ id, reason: e.message });
       }

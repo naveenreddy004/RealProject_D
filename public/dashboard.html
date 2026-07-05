@@ -694,6 +694,17 @@
         regData = data.registration || (allRegistrations[0] || null);
         const user = data.user;
 
+        // ── PACKAGE ROUTING GUARD ─────────────────────────────────────────────
+        // If the student paid for the Complete Bundle (₹1099), they belong on
+        // student-menu.html — not here. Redirect silently.
+        const isCompletePkg = allRegistrations.some(r =>
+          (r.package && /complete/i.test(r.package)) || Number(r.amount) >= 1099
+        );
+        if (isCompletePkg) {
+          location.href = '/student-menu.html';
+          return;
+        }
+
         // Sidebar profile
         document.getElementById('sb-av').textContent = (user.fullName||'?').slice(0,2).toUpperCase();
         document.getElementById('sb-name').textContent = user.fullName;

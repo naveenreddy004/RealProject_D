@@ -3,6 +3,10 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const Registration = require('../models/Registration');
+const Attendance = require('../models/Attendance');
+const AssignmentProgress = require('../models/AssignmentProgress');
+const LearningLog = require('../models/LearningLog');
+const { checkAndAwardBadges } = require('../utils/badgeChecker');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { authStudent } = require('../middleware/auth');
@@ -419,6 +423,469 @@ router.post('/notifications/read', authStudent, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Could not mark as read.' });
+  }
+});
+
+// ── GET COURSE PROGRESS ───────────────────────────────────────────────────────
+router.get('/course-progress', authStudent, async (req, res) => {
+  try {
+    const { domain } = req.query;
+    const reg = await Registration.findOne({
+      user: req.user._id,
+      ...(domain ? { domain } : {}),
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    }).sort({ createdAt: -1 });
+    if (!reg) return res.json({ success: true, progress: {} });
+    res.json({ success: true, progress: reg.courseProgress || {} });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch progress.' });
+  }
+});
+
+// ── SAVE COURSE PROGRESS ──────────────────────────────────────────────────────
+router.put('/course-progress', authStudent, async (req, res) => {
+  try {
+    const { domain, progress, completedWeek } = req.body;
+    if (!domain || !progress) return res.status(400).json({ success: false, message: 'domain and progress required.' });
+
+    const reg = await Registration.findOne({
+      user: req.user._id,
+      domain,
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    }).sort({ createdAt: -1 });
+    if (!reg) return res.status(404).json({ success: false, message: 'No active registration found.' });
+
+    reg.courseProgress = progress;
+    reg.markModified('courseProgress');
+    await reg.save();
+
+    // If a week was just completed, queue an email notification
+    if (completedWeek) {
+      const user = req.user;
+      setImmediate(() => {
+        const { queueEmail } = require('../utils/emailQueue');
+        queueEmail('weekComplete', { user, reg, weekNum: completedWeek.num, weekTitle: completedWeek.title });
+      });
+    }
+
+    // Check for newly unlocked badges (async, non-blocking)
+    setImmediate(() => checkAndAwardBadges(req.user._id).catch(() => {}));
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not save progress.' });
+  }
+});
+
+// ── SAVE / UPDATE TODAY'S LEARNING LOG ────────────────────────────────────────
+router.post('/learning-log', authStudent, async (req, res) => {
+  try {
+    const { domain, log } = req.body;
+    if (!domain) return res.status(400).json({ success: false, message: 'domain required.' });
+    if (!log || log.trim().length < 5)
+      return res.status(400).json({ success: false, message: 'Log must be at least 5 characters.' });
+    if (log.trim().length > 1000)
+      return res.status(400).json({ success: false, message: 'Log too long (max 1000 chars).' });
+
+    const reg = await Registration.findOne({
+      user: req.user._id, domain,
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    });
+    if (!reg) return res.status(403).json({ success: false, message: 'No active registration.' });
+
+    const ist     = new Date(Date.now() + 5.5 * 3600000);
+    const dateStr = ist.toISOString().slice(0, 10);
+    const date    = new Date(dateStr + 'T00:00:00.000Z');
+
+    await LearningLog.findOneAndUpdate(
+      { user: req.user._id, domain, dateStr },
+      { log: log.trim(), date, dateStr },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    res.json({ success: true, dateStr });
+    // Check badges async — never blocks the response
+    setImmediate(() => checkAndAwardBadges(req.user._id).catch(() => {}));
+  } catch (err) {
+    if (err.code === 11000) return res.json({ success: true });
+    res.status(500).json({ success: false, message: 'Could not save log.' });
+  }
+});
+
+// ── GET LEARNING LOGS ─────────────────────────────────────────────────────────
+router.get('/learning-log', authStudent, async (req, res) => {
+  try {
+    const { domain } = req.query;
+    const filter = { user: req.user._id };
+    if (domain) filter.domain = domain;
+    const logs = await LearningLog.find(filter).sort({ date: -1 }).limit(60).lean();
+    const ist      = new Date(Date.now() + 5.5 * 3600000);
+    const todayStr = ist.toISOString().slice(0, 10);
+    const todayLog = logs.find(l => l.dateStr === todayStr) || null;
+    res.json({ success: true, logs, todayLog, todayStr });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch logs.' });
+  }
+});
+
+// ── GET BADGES ────────────────────────────────────────────────────────────────
+// Only course-progress milestones count — not just signing up or paying.
+router.get('/badges', authStudent, async (req, res) => {
+  try {
+    const regs = await Registration.find({ user: req.user._id }).sort({ createdAt: 1 });
+    const badges = [];
+
+    // Pull course progress from all registrations
+    const allCP = {};
+    regs.forEach(r => {
+      const cp = r.courseProgress || {};
+      Object.entries(cp).forEach(([wid, wdata]) => {
+        const week = parseInt(wid);
+        if (!allCP[week]) allCP[week] = wdata;
+      });
+    });
+
+    const completedWeeks  = Object.values(allCP).filter(w => w && w.projectDone).length;
+    const allTopicsDone   = Object.values(allCP).reduce((s, w) =>
+      s + Object.values(w?.topicStatus || {}).filter(st => st === 'completed').length, 0);
+    const allQuizzesDone  = Object.values(allCP).filter(w => w && w.weekQuizDone).length;
+
+    // Attendance data
+    const totalAtt = await Attendance.countDocuments({ user: req.user._id });
+
+    // Learning log data
+    const totalLogs = await LearningLog.countDocuments({ user: req.user._id });
+
+    // Registration-level flags
+    const anyCert    = regs.some(r => r.status === 'certificate_sent');
+    const certReg    = regs.find(r => r.status === 'certificate_sent');
+    const anyComplete = regs.some(r => ['completed','certificate_sent'].includes(r.status));
+    const completedReg = regs.find(r => ['completed','certificate_sent'].includes(r.status));
+    const fastReg    = regs.find(r =>
+      ['completed','certificate_sent'].includes(r.status) &&
+      r.endDate && r.updatedAt && new Date(r.updatedAt) < new Date(r.endDate)
+    );
+
+    // ── LEARNING BADGES — earned only through actual course work ──────────────
+
+    // 1. First Topic — completed first topic quiz
+    badges.push({
+      id: 'first_topic',
+      icon: '📖',
+      name: 'First Steps',
+      desc: 'Complete 5 topic quizzes in the course (score ≥80% each)',
+      earned: allTopicsDone >= 5,
+      earnedAt: allTopicsDone >= 5 ? new Date() : null,
+    });
+
+    // 2. Week 1 Complete — submitted Week 1 mini project
+    badges.push({
+      id: 'week1_done',
+      icon: '🏁',
+      name: 'Week 1 Finisher',
+      desc: 'Submit your first weekly mini project on GitHub',
+      earned: completedWeeks >= 1,
+      earnedAt: completedWeeks >= 1 ? new Date() : null,
+    });
+
+    // 3. Halfway There — 5 of 9 weeks done (>50%)
+    badges.push({
+      id: 'halfway',
+      icon: '⚡',
+      name: 'Halfway There',
+      desc: 'Complete 5 of 9 full weeks (topics + quiz + project)',
+      earned: completedWeeks >= 5,
+      earnedAt: completedWeeks >= 5 ? new Date() : null,
+    });
+
+    // 4. Quiz Crusher — passed ALL 9 week assessment quizzes
+    badges.push({
+      id: 'quiz_crusher',
+      icon: '🎯',
+      name: 'Quiz Crusher',
+      desc: 'Pass all 9 weekly assessment quizzes with ≥80% score',
+      earned: allQuizzesDone >= 9,
+      earnedAt: allQuizzesDone >= 9 ? new Date() : null,
+    });
+
+    // 5. Consistent Learner — 21 attendance days (3 weeks)
+    badges.push({
+      id: 'consistent',
+      icon: '🔥',
+      name: 'Consistent Learner',
+      desc: 'Open your course dashboard on 21 separate days',
+      earned: totalAtt >= 21,
+      earnedAt: totalAtt >= 21 ? new Date() : null,
+    });
+
+    // 6. Journal Writer — wrote 15 daily learning logs (2+ weeks straight)
+    badges.push({
+      id: 'journal',
+      icon: '✏️',
+      name: 'Journal Writer',
+      desc: 'Write 15 daily learning log entries',
+      earned: totalLogs >= 15,
+      earnedAt: totalLogs >= 15 ? new Date() : null,
+    });
+
+    // 7. Problem Solver — 30 LeetCode problems done (1/3 of assignments)
+    let totalProblemsCompleted = 0;
+    let problemSolverEarned    = false;
+    let allAssignmentsDone     = false;
+    for (const reg of regs) {
+      const ap = await AssignmentProgress.findOne({ user: req.user._id, domain: reg.domain });
+      if (ap) {
+        const count = Object.keys(ap.completed || {}).length;
+        if (count > totalProblemsCompleted) totalProblemsCompleted = count;
+        if (count >= 90) allAssignmentsDone = true;
+        if (count >= 30) problemSolverEarned = true;
+      }
+    }
+    badges.push({
+      id: 'problem_solver',
+      icon: '💻',
+      name: 'Problem Solver',
+      desc: 'Complete 30 LeetCode problems in daily assignments',
+      earned: problemSolverEarned,
+      earnedAt: problemSolverEarned ? new Date() : null,
+    });
+
+    // 8. All 9 Weeks — course fully completed
+    badges.push({
+      id: 'course_complete',
+      icon: '🏆',
+      name: 'Course Complete',
+      desc: 'Complete all 9 weeks — topics, quizzes and projects',
+      earned: completedWeeks >= 9,
+      earnedAt: completedWeeks >= 9 ? completedReg?.updatedAt || new Date() : null,
+    });
+
+    // 9. Fast Finisher — finished before end date
+    badges.push({
+      id: 'fast_finisher',
+      icon: '🚀',
+      name: 'Fast Finisher',
+      desc: 'Complete the entire program ahead of your scheduled end date',
+      earned: !!fastReg,
+      earnedAt: fastReg?.updatedAt || null,
+    });
+
+    // 10. Assignment Master — all 90 LeetCode problems done
+    badges.push({
+      id: 'assignment_master',
+      icon: '🏅',
+      name: 'Assignment Master',
+      desc: 'Complete all 90 LeetCode problems across all 45 days',
+      earned: allAssignmentsDone,
+      earnedAt: allAssignmentsDone ? new Date() : null,
+    });
+
+    // 11. Certificate Earned
+    badges.push({
+      id: 'certified',
+      icon: '🎓',
+      name: 'Certified',
+      desc: 'Receive your QR-verified internship certificate from avRoN Tech',
+      earned: anyCert,
+      earnedAt: certReg?.sentAt || null,
+    });
+
+    const earned = badges.filter(b => b.earned).length;
+    res.json({ success: true, badges, earned, total: badges.length });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch badges.' });
+  }
+});
+
+// ── GET ASSIGNMENT PROGRESS ───────────────────────────────────────────────────
+router.get('/assignments', authStudent, async (req, res) => {
+  try {
+    const { domain } = req.query;
+    const reg = await Registration.findOne({
+      user: req.user._id,
+      ...(domain ? { domain } : {}),
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    }).sort({ createdAt: -1 });
+
+    if (!reg) return res.json({ success: true, completed: {}, todayDay: 1, totalDays: 45 });
+
+    // Calculate current day based on start date
+    const startDate = new Date(reg.startDate);
+    const now       = new Date();
+    const elapsed   = Math.floor((now - startDate) / 86400000) + 1;
+    const todayDay  = Math.max(1, Math.min(elapsed, 45));
+
+    let ap = await AssignmentProgress.findOne({ user: req.user._id, domain: reg.domain });
+    if (!ap) ap = { completed: {} };
+
+    // Check if yesterday was missed — for nudge notification
+    const yesterdayDay = todayDay - 1;
+    let yesterdayMissed = false;
+    if (yesterdayDay >= 1) {
+      const y0 = ap.completed[`${yesterdayDay}-0`];
+      const y1 = ap.completed[`${yesterdayDay}-1`];
+      yesterdayMissed = !y0 || !y1;
+    }
+
+    res.json({
+      success: true,
+      completed: ap.completed || {},
+      todayDay,
+      totalDays: 45,
+      startDate: reg.startDate,
+      yesterdayMissed,
+      yesterdayDay,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch assignments.' });
+  }
+});
+
+// ── MARK PROBLEM COMPLETE / INCOMPLETE ────────────────────────────────────────
+router.post('/assignments/complete', authStudent, async (req, res) => {
+  try {
+    const { domain, day, problemIndex, done } = req.body;
+    if (!domain || day == null || problemIndex == null)
+      return res.status(400).json({ success: false, message: 'domain, day, problemIndex required.' });
+
+    const reg = await Registration.findOne({
+      user: req.user._id, domain,
+      status: { $in: ['payment_verified','active','completed','certificate_sent'] },
+    });
+    if (!reg) return res.status(403).json({ success: false, message: 'No active registration.' });
+
+    const key = `${day}-${problemIndex}`;
+    let ap = await AssignmentProgress.findOne({ user: req.user._id, domain });
+    if (!ap) {
+      ap = new AssignmentProgress({ user: req.user._id, domain, completed: {} });
+    }
+
+    if (done) {
+      ap.completed[key] = { completedAt: new Date() };
+    } else {
+      delete ap.completed[key];
+    }
+    ap.markModified('completed');
+    await ap.save();
+
+    // Check if all 45 days complete → push notification + flag for badge
+    const totalCompleted = Object.keys(ap.completed).length;
+    if (totalCompleted >= 90) { // 45 days × 2 problems
+      const existingNotif = await Notification.findOne({
+        user: req.user._id, title: '🏅 Problem Solver Badge Unlocked!'
+      });
+      if (!existingNotif) {
+        await Notification.create({
+          user: req.user._id,
+          type: 'success',
+          title: '🏅 Problem Solver Badge Unlocked!',
+          message: 'You completed all 45 days of LeetCode assignments! The Problem Solver badge is yours.',
+        });
+      }
+    }
+
+    res.json({ success: true, totalCompleted });
+    setImmediate(() => checkAndAwardBadges(req.user._id).catch(() => {}));
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not update progress.' });
+  }
+});
+
+// ── MARK ATTENDANCE ───────────────────────────────────────────────────────────
+// Called by course-dashboard.html on load. Idempotent — safe to call many times.
+router.post('/attendance/mark', authStudent, async (req, res) => {
+  try {
+    const { domain } = req.body;
+    if (!domain) return res.status(400).json({ success: false, message: 'domain required.' });
+
+    // Verify student has an active registration for this domain
+    const reg = await Registration.findOne({
+      user: req.user._id,
+      domain,
+      status: { $in: ['payment_verified', 'active', 'completed', 'certificate_sent'] },
+    });
+    if (!reg) return res.status(403).json({ success: false, message: 'No active registration for this domain.' });
+
+    // Build today's date string in IST (UTC+5:30)
+    const now    = new Date();
+    const ist    = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const dateStr = ist.toISOString().slice(0, 10); // YYYY-MM-DD
+    const date    = new Date(dateStr + 'T00:00:00.000Z');
+
+    // Upsert — insert only if not already present today
+    await Attendance.updateOne(
+      { user: req.user._id, domain, dateStr },
+      { $setOnInsert: { user: req.user._id, domain, date, dateStr } },
+      { upsert: true }
+    );
+
+    res.json({ success: true, date: dateStr });
+    setImmediate(() => checkAndAwardBadges(req.user._id).catch(() => {}));
+  } catch (err) {
+    if (err.code === 11000) {
+      // Already marked today — still check badges in case threshold just reached
+      setImmediate(() => checkAndAwardBadges(req.user._id).catch(() => {}));
+      return res.json({ success: true, alreadyMarked: true });
+    }
+    res.status(500).json({ success: false, message: 'Could not mark attendance.' });
+  }
+});
+
+// ── GET ATTENDANCE STATS ──────────────────────────────────────────────────────
+router.get('/attendance', authStudent, async (req, res) => {
+  try {
+    const regs = await Registration.find({
+      user: req.user._id,
+      status: { $in: ['payment_verified', 'active', 'completed', 'certificate_sent'] },
+    });
+    if (!regs.length) return res.json({ success: true, overall: 0, byDomain: [] });
+
+    const results = [];
+
+    for (const reg of regs) {
+      const totalDays  = reg.duration ? parseInt(reg.duration) * 30 : 45;
+      const startDate  = new Date(reg.startDate);
+      const today      = new Date();
+
+      // Count days elapsed since start (capped at total)
+      const msPerDay   = 24 * 60 * 60 * 1000;
+      const elapsed    = Math.max(1, Math.min(
+        Math.floor((today - startDate) / msPerDay) + 1,
+        totalDays
+      ));
+
+      // Count distinct days with attendance
+      const presentDays = await Attendance.countDocuments({
+        user:   req.user._id,
+        domain: reg.domain,
+        date:   { $gte: startDate },
+      });
+
+      const pct = Math.round((presentDays / elapsed) * 100);
+
+      // All attendance dates since start (for full calendar)
+      const allRecords = await Attendance.find({
+        user:   req.user._id,
+        domain: reg.domain,
+        date:   { $gte: startDate },
+      }).select('dateStr').lean();
+      results.push({
+        domain:      reg.domain,
+        totalDays,
+        elapsed,
+        presentDays,
+        percentage:  Math.min(pct, 100),
+        recentDates: allRecords.map(r => r.dateStr),
+      });
+    }
+
+    // Overall attendance across all courses
+    const overall = results.length
+      ? Math.round(results.reduce((s, r) => s + r.percentage, 0) / results.length)
+      : 0;
+
+    res.json({ success: true, overall, byDomain: results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch attendance.' });
   }
 });
 

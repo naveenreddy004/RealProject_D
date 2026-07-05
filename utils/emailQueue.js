@@ -12,7 +12,7 @@
 
 const {
   sendConfirmationEmail, sendOTPEmail, sendPasswordResetOTPEmail, sendOfferLetterEmail,
-  sendPaymentRejectedEmail,
+  sendPaymentRejectedEmail, sendWeekCompletionEmail,
 } = require('./emailService');
 
 const handlers = {
@@ -21,6 +21,7 @@ const handlers = {
   passwordResetOtp: (p) => sendPasswordResetOTPEmail(p.user, p.otp),
   offerLetter:      (p) => sendOfferLetterEmail(p.user, p.reg, p.pdfBuffer),
   paymentRejected:  (p) => sendPaymentRejectedEmail(p.user, p.reg, p.reason),
+  weekComplete:     (p) => sendWeekCompletionEmail(p.user, p.reg, p.weekNum, p.weekTitle),
 };
 
 let emailQueue = null;

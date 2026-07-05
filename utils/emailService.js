@@ -345,6 +345,45 @@ async function sendTicketEmail(user, ticket) {
   console.log(`✉️ Ticket ${ticket.id} emailed to support and confirmed to ${user.email}`);
 }
 
+// ── 7. Week Completion ────────────────────────────────────────────────────────
+async function sendWeekCompletionEmail(user, reg, weekNum, weekTitle) {
+  const name    = (reg && reg.registrantName) || user.fullName;
+  const BASE    = process.env.BASE_URL || `https://${DOMAIN}`;
+  const isLast  = weekNum >= 9;
+  const html = wrap(`
+    <h2>${isLast ? '🎓 Course Complete!' : `🎉 Week ${weekNum} Done!`}</h2>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:16px;">avRoN Technologies — ${reg.domain}</p>
+    <p>Hey <b>${name}</b>! ${isLast
+      ? `Congratulations — you've completed all 9 weeks of the <b>${reg.domain}</b> course!`
+      : `You've completed <b>Week ${weekNum}: ${weekTitle}</b> of your <b>${reg.domain}</b> course.`
+    }</p>
+    <div class="kv">
+      <div class="kv-row"><span class="lbl">✅ Week Completed</span><span class="val">Week ${weekNum}: ${weekTitle}</span></div>
+      <div class="kv-row"><span class="lbl">📈 Progress</span><span class="val">${weekNum} / 9 weeks done</span></div>
+      <div class="kv-row"><span class="lbl">🆔 Cert ID</span><span class="val" style="font-family:monospace;">${reg.certId}</span></div>
+    </div>
+    ${isLast
+      ? `<p>Your certificate will be issued shortly after admin review. Keep an eye on your email!</p>`
+      : `<p>Keep the momentum — Week ${weekNum + 1} is now unlocked. Head back to your course dashboard to continue.</p>`
+    }
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${BASE}/course-dashboard.html?domain=${encodeURIComponent(reg.domain)}" class="cta">
+        ${isLast ? 'View Your Progress →' : `Start Week ${weekNum + 1} →`}
+      </a>
+    </div>
+    <hr class="divider">
+    <div class="signoff">Keep going,<br><b>Team avRoN Technologies</b></div>
+  `);
+  await sendMail({
+    to: user.email,
+    subject: isLast
+      ? `🎓 Course Complete — ${reg.domain} | avRoN Technologies`
+      : `✅ Week ${weekNum} Complete — ${reg.domain} | avRoN Technologies`,
+    html,
+  });
+  console.log(`✉️ Week ${weekNum} completion email sent to ${user.email}`);
+}
+
 module.exports = {
   sendConfirmationEmail,
   sendOfferLetterEmail,
@@ -353,4 +392,5 @@ module.exports = {
   sendPasswordResetOTPEmail,
   sendTicketEmail,
   sendRevocationEmail,
+  sendWeekCompletionEmail,
 };
