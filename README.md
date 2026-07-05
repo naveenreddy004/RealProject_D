@@ -1,217 +1,149 @@
-# 🎓 CertifyPro v3 — Complete Setup Guide
+# avRoN Tech — Internship Platform
 
-## 📁 Project Structure
+A full-stack internship management platform with interactive course dashboards, LeetCode daily assignments, attendance tracking, badge system, and certificate management.
+
+---
+
+## Project Structure
+
 ```
-certifypro-v3/
-├── server.js              # Main Express server
-├── models/
-│   ├── User.js            # Student model (password + OTP)
-│   └── Registration.js    # Internship registration model
-├── routes/
-│   ├── auth.js            # Register, Login, OTP, Change Password
-│   ├── student.js         # Dashboard, Payment, Tasks
-│   └── admin.js           # Admin panel APIs
-├── middleware/
-│   └── auth.js            # JWT verification + Admin key
-├── utils/
-│   ├── emailService.js    # 7 email templates
-│   └── pdfGenerator.js    # Certificate + Receipt PDF
-├── public/
-│   ├── index.html         # Website 1 — Landing + Registration
-│   ├── portal.html        # Website 2 — Login (OTP + Password)
-│   ├── dashboard.html     # Student Dashboard + UPI Payment
-│   ├── admin.html         # Admin Panel with Charts
-│   └── verify.html        # QR Certificate Verification
-├── certificates/          # (removed — PDFs now stored in MongoDB as binary)
-├── .env.example           # Environment template
-└── package.json
+avRoN-tech/
+├── middleware/          # Express middleware (auth)
+├── models/             # Mongoose models
+│   ├── User.js
+│   ├── Registration.js
+│   ├── Attendance.js
+│   ├── AssignmentProgress.js
+│   ├── CourseContent.js
+│   ├── DailyAssignment.js
+│   ├── LearningLog.js
+│   ├── Notification.js
+│   └── ActivityLog.js
+├── routes/             # Express API routes
+│   ├── auth.js         # Login, OTP, register
+│   ├── student.js      # Student portal APIs
+│   ├── admin.js        # Admin panel APIs
+│   ├── payment.js      # Razorpay (disabled) + UPI
+│   └── courses.js      # Course content from DB
+├── utils/              # Shared utilities
+│   ├── emailService.js
+│   ├── emailQueue.js
+│   ├── badgeChecker.js
+│   ├── pdfGenerator.js
+│   ├── notify.js
+│   ├── activityLogger.js
+│   ├── curricula.js
+│   └── logger.js
+├── public/             # Frontend (static)
+│   ├── index.html          # Landing page
+│   ├── register.html       # Registration + UPI payment
+│   ├── portal.html         # Student login
+│   ├── dashboard.html      # ₹299 Basic student portal
+│   ├── student-menu.html   # ₹1099 Complete Bundle portal
+│   ├── course-dashboard.html  # Interactive 9-week course
+│   ├── verify.html         # Certificate verification
+│   ├── admin/
+│   │   ├── dashboard.html  # Admin panel
+│   │   └── login.html
+│   └── uploads/            # Payment screenshots
+├── scripts/
+│   ├── seeds/          # DB seed scripts (run once)
+│   │   ├── seedCourseContent.js   # Seed 9-week Java course to MongoDB
+│   │   ├── seedAssignments.js     # Seed 45 days of LeetCode problems
+│   │   ├── seedCompleteBundle.js  # Seed test complete-bundle student
+│   │   └── seedDummyStudent.js    # Seed test basic student
+│   └── dev/            # Dev/utility scripts (not for production)
+├── logs/               # Winston log files
+├── server.js           # Express app entry point
+├── package.json
+├── .env                # Environment variables (never commit)
+└── .env.example        # Example env vars
 ```
 
 ---
 
-## 🚀 Quick Start
+## Setup
 
-### Step 1 — Install Node.js
-Download from https://nodejs.org (v18+)
-
-### Step 2 — Install dependencies
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### Step 3 — Set up MongoDB Atlas (FREE)
-
-1. Go to https://mongodb.com/atlas → Create free account
-2. Create a free **M0 cluster** (takes 2 min)
-3. Click **Database Access** → Add new user → set username + password
-4. Click **Network Access** → Add IP Address → **Allow access from anywhere** (0.0.0.0/0)
-5. Click **Connect** on your cluster → **Connect your application**
-6. Copy the connection string — it looks like:
-   ```
-   mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/
-   ```
-7. Add `/certifypro` before the `?` → final string:
-   ```
-   mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/certifypro?retryWrites=true&w=majority
-   ```
-
-### Step 4 — Configure environment
+### 2. Configure environment
 ```bash
-cp .env .env
-```
-Edit `.env`:
-```env
-MONGODB_URI=mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/certifypro?retryWrites=true&w=majority
-
-JWT_SECRET=any-long-random-string-min-32-chars-change-this
-
-EMAIL_USER=your-gmail@gmail.com
-EMAIL_PASS=your-gmail-app-password
-
-UPI_ID=yourname@upi
-UPI_NAME=CertifyPro
-UPI_AMOUNT=199
-
-ADMIN_KEY=your-strong-admin-key
-ADMIN_EMAIL=your-admin-email@gmail.com   # Gets notified when payment submitted
-
-BASE_URL=http://localhost:3000
-PORT=3000
+cp .env.example .env
+# Fill in: MONGODB_URI, JWT_SECRET, EMAIL_USER, EMAIL_PASS, UPI_ID, UPI_NAME
 ```
 
-#### Gmail App Password:
-1. Gmail → Google Account → Security
-2. Enable 2-Step Verification
-3. Search "App Passwords" → Create new → Copy it → paste as EMAIL_PASS
-
-### Step 5 — Run
+### 3. Seed course content to MongoDB
 ```bash
-npm start
+node scripts/seeds/seedCourseContent.js
+node scripts/seeds/seedAssignments.js
 ```
 
-Console shows:
-```
-✅ MongoDB Connected Successfully
-🚀 CertifyPro v3 running at http://localhost:3000
-🔑 Portal:   http://localhost:3000/portal
-📊 Admin:    http://localhost:3000/admin
-🔍 Verify:   http://localhost:3000/verify
-```
-
----
-
-## 🌐 Pages
-
-| URL | Purpose |
-|-----|---------|
-| `localhost:3000` | Landing page + Registration form |
-| `localhost:3000/portal` | Student login (OTP + Password) |
-| `localhost:3000/dashboard` | Student dashboard + UPI payment |
-| `localhost:3000/admin` | Admin panel |
-| `localhost:3000/verify?id=CPXXXXXXXX` | Certificate verification (QR scan) |
-
----
-
-## 📧 Email Flow
-
-| When | Email Sent | To |
-|------|-----------|-----|
-| Form submitted | Confirmation | Student |
-| +2 minutes | Portal invite with login link | Student |
-| Student requests OTP | OTP code | Student |
-| Student submits payment | Payment receipt | Student |
-| Student submits payment | Alert with UTR | Admin |
-| Admin verifies payment | Payment confirmed + internship active | Student |
-| Admin sends certificate | Certificate PDF attached | Student |
-
----
-
-## 💳 Payment Flow
-
-```
-Student logs in → Sees UPI QR code + UPI ID
-→ Opens GPay/PhonePe/Paytm → Scans QR
-→ Pays ₹199 → Gets UTR number
-→ Enters UTR + uploads screenshot → Submits
-→ Admin gets email alert with UTR
-→ Admin checks UTR in bank/UPI app
-→ Admin clicks "Verify Payment" in admin panel
-→ Student gets email: Payment confirmed, internship active!
-→ Student completes tasks → Admin sends certificate
-→ Student gets PDF with QR code
-→ Anyone scans QR → Sees verify page with student details
+### 4. Run
+```bash
+npm start          # production
+npm run dev        # development (nodemon)
 ```
 
 ---
 
-## 🔐 Auth Flow
+## Two Student Portals
 
-```
-FIRST TIME LOGIN:
-Email → Send OTP → Enter OTP → Set Password → JWT token stored
-(Next login: Email + Password directly)
+| Plan | Price | Portal | Features |
+|------|-------|--------|----------|
+| Basic | ₹199-299 | `/dashboard.html` | Curriculum roadmap, offer letter, certificate |
+| Complete Bundle | ₹1099 | `/student-menu.html` + `/course-dashboard.html` | Interactive 9-week course, quizzes, projects, LeetCode assignments, attendance, badges |
 
-RETURNING USER:
-Email + Password → JWT token stored
-
-FORGOT PASSWORD:
-Email → Send OTP → Enter OTP → Set New Password → JWT token
-```
+**Routing:** After login, `portal.html` calls `/api/student/dashboard`, checks the registration package, and routes to the correct portal automatically.
 
 ---
 
-## 🚀 Deploy to Internet (Free)
+## Key APIs
 
-### Railway.app (Recommended)
-1. Push code to GitHub
-2. Railway.app → New Project → Deploy from GitHub
-3. Add environment variables in Railway dashboard
-4. Change BASE_URL to your Railway URL
-
-### Render.com
-1. Push to GitHub
-2. Render → New Web Service → Connect repo
-3. Build: `npm install` | Start: `node server.js`
-4. Add environment variables
-
----
-
-## 📊 Admin Panel Features
-- Overview dashboard with charts (daily registrations, top domains)
-- Revenue tracking
-- Payment verification section (UTR + screenshot review)
-- All registrations with search + filter
-- Certificate management (send, download PDF)
-- Student management
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/auth/register` | Register + create user |
+| POST | `/api/auth/login` | Password login |
+| GET | `/api/student/dashboard` | Student dashboard data |
+| GET | `/api/courses/content/:slug` | Course weeks from MongoDB |
+| PUT | `/api/student/course-progress` | Save quiz/project progress |
+| GET | `/api/student/assignments/problems` | Today's LeetCode problems |
+| POST | `/api/student/assignments/complete` | Mark problem done |
+| POST | `/api/student/attendance/mark` | Mark present for today |
+| GET | `/api/student/badges` | Compute badges from progress |
+| POST | `/api/student/learning-log` | Save daily log |
+| GET | `/api/admin/registrations` | All registrations |
+| POST | `/api/admin/send-certificate/:id` | Issue certificate |
 
 ---
 
-## 🔧 API Endpoints
+## Admin Panel
 
-### Auth
-- `POST /api/auth/register` — Register new student
-- `POST /api/auth/login` — Password login
-- `POST /api/auth/send-otp` — Send OTP
-- `POST /api/auth/verify-otp` — Verify OTP + optional set password
-- `GET  /api/auth/me` — Get current user (JWT required)
-- `POST /api/auth/change-password` — Change password
+Access: `/admin/dashboard.html`  
+Credentials: set in `.env` as `ADMIN_EMAIL` and `ADMIN_PASSWORD`
 
-### Student (JWT required)
-- `GET  /api/student/dashboard` — Dashboard data + UPI details
-- `POST /api/student/submit-payment` — Submit UTR + screenshot
-- `POST /api/student/mark-complete` — Mark internship complete
-- `GET  /api/student/receipt` — Download payment receipt PDF
-- `GET  /api/student/verify/:certId` — Verify certificate (public)
+**Tabs:** Overview · Revenue · Payments · All Registrations · **Complete Bundle** (new) · Certificates · Students · Activity Log
 
-### Admin (Admin key required)
-- `GET  /api/admin/stats` — Overview analytics
-- `GET  /api/admin/registrations` — All registrations (filter + search)
-- `POST /api/admin/verify-payment/:id` — Verify payment
-- `POST /api/admin/reject-payment/:id` — Reject payment
-- `POST /api/admin/mark-complete/:id` — Mark complete
-- `POST /api/admin/send-certificate/:id` — Generate + email certificate
-- `POST /api/admin/reject/:id` — Reject registration
-- `GET  /api/admin/users` — All students
+**Complete Bundle tab** shows per-student: weeks completed, attendance calendar, badges earned, eligibility indicator for certificate.
 
-### UPI
-- `GET  /api/upi-qr` — Get UPI QR code as base64 image
+**Certificate eligibility (₹1099 students):**
+- Must have completed ≥ 1 week (project submitted)
+- Must have ≥ 80% attendance
+
+---
+
+## MongoDB Collections
+
+| Collection | Purpose |
+|------------|---------|
+| `users` | Student accounts |
+| `registrations` | Enrollment + payment + courseProgress |
+| `coursecontents` | 9-week Java Full Stack curriculum |
+| `dailyassignments` | 45 days × 2 LeetCode problems |
+| `assignmentprogresses` | Per-student completion map |
+| `attendances` | One doc per student per day per domain |
+| `learninglogs` | Daily journal entries |
+| `notifications` | In-portal notifications |
+| `activitylogs` | Admin action history |
