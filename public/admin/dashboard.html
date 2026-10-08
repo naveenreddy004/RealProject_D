@@ -354,6 +354,7 @@
         <button class="sb-link" onclick="gv('certificates',this)"><span class="ico">🏆</span> Certificates</button>
         <button class="sb-link" onclick="gv('users',this)"><span class="ico">👥</span> Students</button>
         <div class="sb-sec">System</div>
+        <button class="sb-link" onclick="gv('tickets',this)"><span class="ico">🎫</span> Support Tickets <span class="sb-badge" id="ticket-badge" style="display:none;">0</span></button>
         <button class="sb-link" onclick="gv('activity',this)"><span class="ico">📜</span> Activity Log</button>
     </div>
     <div class="sb-foot">
@@ -387,7 +388,7 @@
             <div style="margin-top:22px;">
                 <label style="display:block;font-size:12px;color:#9eb2c8;font-weight:600;margin-bottom:7px;letter-spacing:.02em;">Admin Email</label>
                 <input type="email" id="adminEmail" placeholder="admin@avrontech.in" autocomplete="username"
-                       style="width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:all .2s;"
+                       style="width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;border-radius:7px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;"
                        onfocus="this.style.borderColor='#608BC1';this.style.background='#1a2e4f';this.style.boxShadow='0 0 0 3px rgba(96,139,193,.15)'"
                        onblur="this.style.borderColor='#1a2c4a';this.style.background='#152844';this.style.boxShadow='none'">
             </div>
@@ -396,18 +397,18 @@
             <div style="margin-top:18px;">
                 <label style="display:block;font-size:12px;color:#9eb2c8;font-weight:600;margin-bottom:7px;letter-spacing:.02em;">Password</label>
                 <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="current-password"
-                       style="width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:all .2s;"
+                       style="width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;border-radius:7px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;"
                        onfocus="this.style.borderColor='#608BC1';this.style.background='#1a2e4f';this.style.boxShadow='0 0 0 3px rgba(96,139,193,.15)'"
                        onblur="this.style.borderColor='#1a2c4a';this.style.background='#152844';this.style.boxShadow='none'"
                        onkeydown="if(event.key==='Enter')login()">
             </div>
 
             <!-- Error -->
-            <div id="loginErr" style="display:none;font-size:12.5px;color:#fda4af;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);padding:9px 12px;border-radius:7px;margin-top:14px;"></div>
+            <div id="loginErr" style="display:none;font-size:12.5px;color:#fda4af;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);padding:9px 12px;border-radius:7px;margin-top:14px;" role="alert" aria-live="assertive"></div>
 
             <!-- Button -->
             <button id="loginBtn" onclick="login()"
-                    style="width:100%;background:#608BC1;color:#0B192C;border:none;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;"
+                    style="width:100%;background:#608BC1;color:#0B192C;border:none;border-radius:7px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;min-height:48px;"
                     onmouseover="if(!this.disabled)this.style.background='#7ba0d4'"
                     onmouseout="this.style.background='#608BC1'">
                 <span id="loginBtnTxt">Sign in to Admin Console →</span>
@@ -601,6 +602,63 @@
                 </div>
             </div>
 
+            <!-- ══ SUPPORT TICKETS ══ -->
+            <div class="view" id="view-tickets">
+                <!-- Summary chips -->
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;" id="tk-summary-bar">
+                    <div class="stat-card" style="flex:1;min-width:120px;padding:14px 18px;">
+                        <div class="stat-lbl">Open</div>
+                        <div class="stat-val" id="tk-s-open" style="color:#1e40af;">—</div>
+                    </div>
+                    <div class="stat-card" style="flex:1;min-width:120px;padding:14px 18px;">
+                        <div class="stat-lbl">In Progress</div>
+                        <div class="stat-val" id="tk-s-inprogress" style="color:#d97706;">—</div>
+                    </div>
+                    <div class="stat-card" style="flex:1;min-width:120px;padding:14px 18px;">
+                        <div class="stat-lbl">Resolved</div>
+                        <div class="stat-val" id="tk-s-resolved" style="color:var(--ok);">—</div>
+                    </div>
+                </div>
+
+                <div class="tbl-card">
+                    <div class="tbl-head">
+                        <h3>Student Support Tickets</h3>
+                        <div class="tbl-filters">
+                            <select class="fi-select" id="tk-filter-status" onchange="loadTickets()">
+                                <option value="all">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                            <select class="fi-select" id="tk-filter-priority" onchange="loadTickets()">
+                                <option value="all">All Priority</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="High">High</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <button class="ref-btn" onclick="loadTickets()">↻</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead><tr>
+                                <th>Ticket ID</th>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>SLA</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr></thead>
+                            <tbody id="tk-tbody"><tr><td colspan="8" class="loader"></td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- ══ ACTIVITY LOG ══ -->
             <div class="view" id="view-activity">
                 <div class="tbl-card">
@@ -703,6 +761,7 @@ const hdrsk = () => ({
       'complete-bundle':['Complete Bundle Students','₹1099 internship — course progress, attendance & badges'],
       certificates:['Certificates','Manage and send student certificates'],
       users:['Students','All registered students'],
+      tickets:['Support Tickets','Student support requests — review, respond and resolve'],
       activity:['Activity Log','Admin action history'],
     };
 
@@ -729,12 +788,21 @@ const hdrsk = () => ({
 
 async function login(){
   const email = document.getElementById('adminEmail').value.trim();
-  const password = document.getElementById('adminPassword').value;
+  const password = document.getElementById('adminPassword').value.trim(); // FIXED: Now trimming password
   const errEl = document.getElementById('loginErr');
   errEl.style.display = 'none';
 
+  // Enhanced validation
   if(!email || !password){
     errEl.textContent = 'Email and password are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+  
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!emailRegex.test(email)){
+    errEl.textContent = 'Please enter a valid email address.';
     errEl.style.display = 'block';
     return;
   }
@@ -744,27 +812,60 @@ async function login(){
   const bt  = document.getElementById('loginBtnTxt');
   btn.disabled = true; sp.style.display = 'block'; bt.textContent = 'Signing in...';
 
+  // Create timeout controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
   try{
     const res = await fetch('/api/auth/admin/login', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({email, password})
+      body: JSON.stringify({email, password}),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     const d = await res.json();
+    
     if(d.success){
       AK = d.token;
-      localStorage.setItem('avr_admin_token', d.token);
-      document.getElementById('loginOverlay').style.display = 'none';
-      loadCurrent();
+      // Atomic storage with error handling
+      try {
+        localStorage.setItem('avr_admin_token', d.token);
+        if(d.admin) localStorage.setItem('avr_admin_user', JSON.stringify(d.admin));
+        
+        // Small delay to ensure storage completes
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        document.getElementById('loginOverlay').style.display = 'none';
+        loadCurrent();
+      } catch(storageErr) {
+        console.error('Storage error:', storageErr);
+        errEl.textContent = 'Failed to save session. Please check browser storage.';
+        errEl.style.display = 'block';
+        btn.disabled = false; sp.style.display = 'none'; bt.textContent = 'Sign in to Admin Console →';
+      }
     } else {
-      errEl.textContent = d.message || 'Invalid credentials.';
+      // Sanitize error message to prevent XSS
+      const safeMsg = String(d.message || 'Invalid credentials.').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      errEl.innerHTML = safeMsg;
       errEl.style.display = 'block';
       btn.disabled = false; sp.style.display = 'none'; bt.textContent = 'Sign in to Admin Console →';
     }
-  } catch {
-    errEl.textContent = 'Network error. Is server running?';
+  } catch(err) {
+    clearTimeout(timeoutId);
+    
+    let errorMsg = 'Network error. Is server running?';
+    if(err.name === 'AbortError') {
+      errorMsg = 'Request timeout. Please check your connection.';
+    } else if(err.message.includes('Failed to fetch')) {
+      errorMsg = 'Network error. Please check your internet connection.';
+    }
+    
+    errEl.textContent = errorMsg;
     errEl.style.display = 'block';
     btn.disabled = false; sp.style.display = 'none'; bt.textContent = 'Sign in to Admin Console →';
+    console.error('Login error:', err);
   }
 }
 function logout(){
@@ -874,6 +975,7 @@ function closeSidebar(){
       else if(curView==='complete-bundle') loadCompleteBundle();
       else if(curView==='certificates') loadCerts();
       else if(curView==='users') loadUsers();
+      else if(curView==='tickets') loadTickets();
       else if(curView==='activity') loadActivity();
     }
 
@@ -1448,6 +1550,152 @@ function closeSidebar(){
           <td style="font-size:12px;">${fmt(u.createdAt)}</td>
           <td style="font-size:12px;">${fmt(u.lastLogin)}</td>
         </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--mut);padding:32px;">No students yet</td></tr>';
+    }
+
+    // ── SUPPORT TICKETS ───────────────────────────────────────────────────────
+    const tkPriorityColour = { Urgent:'#dc2626', High:'#d97706', Normal:'#608BC1', Low:'#6b7280' };
+
+    async function loadTickets(){
+      const status   = document.getElementById('tk-filter-status')?.value   || 'all';
+      const priority = document.getElementById('tk-filter-priority')?.value || 'all';
+      const tbody    = document.getElementById('tk-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loader"></td></tr>';
+
+      try{
+        const params = new URLSearchParams();
+        if(status   !== 'all') params.set('status',   status);
+        if(priority !== 'all') params.set('priority', priority);
+        const r = await fetch('/api/admin/tickets?' + params.toString(), { headers: hdrsk() });
+        const d = await r.json();
+        if(!d.success){ tbody.innerHTML='<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--mut);">Failed to load.</td></tr>'; return; }
+
+        // Update summary chips
+        const c = d.counts || {};
+        document.getElementById('tk-s-open').textContent       = c.open        ?? 0;
+        document.getElementById('tk-s-inprogress').textContent = c.in_progress  ?? 0;
+        document.getElementById('tk-s-resolved').textContent   = c.resolved     ?? 0;
+
+        // Update sidebar badge — open + in_progress
+        const urgent = (c.open ?? 0) + (c.in_progress ?? 0);
+        const badge  = document.getElementById('ticket-badge');
+        if(badge){ badge.textContent = urgent; badge.style.display = urgent ? 'inline' : 'none'; }
+
+        const tickets = d.tickets || [];
+        if(!tickets.length){
+          tbody.innerHTML = '<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--mut);">No tickets found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = tickets.map(t => {
+          const priColour  = tkPriorityColour[t.priority] || '#608BC1';
+          const slaHtml    = tkSlaHtml(t);
+          const statusHtml = tkStatusBadge(t.status);
+          const studentName = t.user?.fullName || t.studentName || '—';
+          const studentEmail = t.user?.email  || t.studentEmail || '';
+          return `
+            <tr>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--steel);font-weight:700;">${t.ticketId}</td>
+              <td>
+                <div style="font-weight:700;font-size:13px;">${studentName}</div>
+                <div style="font-size:11px;color:var(--mut);">${studentEmail}</div>
+              </td>
+              <td style="max-width:220px;">
+                <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.subject}</div>
+                <div style="font-size:11.5px;color:var(--mut);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.message?.slice(0,80)}${t.message?.length>80?'…':''}</div>
+              </td>
+              <td style="font-size:12.5px;">${t.category || '—'}</td>
+              <td><span style="color:${priColour};font-weight:800;font-size:12.5px;">${t.priority}</span></td>
+              <td>${slaHtml}</td>
+              <td>${statusHtml}</td>
+              <td>
+                <div class="acts">
+                  ${t.status !== 'in_progress' && t.status !== 'resolved' && t.status !== 'closed'
+                    ? `<button class="act steel" onclick="tkSetStatus('${t._id}','in_progress')">▶ Start</button>` : ''}
+                  ${t.status !== 'resolved' && t.status !== 'closed'
+                    ? `<button class="act ok" onclick="tkResolvePrompt('${t._id}','${t.ticketId.replace(/'/g,'')}','${(t.subject||'').replace(/'/g,'').replace(/"/g,'')}')">✓ Resolve</button>` : ''}
+                  ${t.status === 'resolved' || t.status === 'closed'
+                    ? `<button class="act" onclick="tkSetStatus('${t._id}','open')" title="Reopen">↩ Reopen</button>` : ''}
+                  ${t.status !== 'closed'
+                    ? `<button class="act danger" onclick="tkSetStatus('${t._id}','closed')">✕ Close</button>` : ''}
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
+      } catch(e){
+        document.getElementById('tk-tbody').innerHTML =
+          '<tr><td colspan="8" style="padding:30px;text-align:center;color:var(--mut);">Error loading tickets.</td></tr>';
+      }
+    }
+
+    function tkStatusBadge(status){
+      const cfg = {
+        open:        { label:'Open',        bg:'#dbeafe', color:'#1e40af' },
+        in_progress: { label:'In Progress', bg:'#fef3c7', color:'#92400e' },
+        resolved:    { label:'Resolved',    bg:'#dcfce7', color:'#15803d' },
+        closed:      { label:'Closed',      bg:'#e5e7eb', color:'#475569' },
+      };
+      const c = cfg[status] || { label: status, bg:'#e5e7eb', color:'#475569' };
+      return `<span style="background:${c.bg};color:${c.color};font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:5px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;">${c.label}</span>`;
+    }
+
+    function tkSlaHtml(t){
+      if(t.status === 'resolved' || t.status === 'closed'){
+        const when = t.resolvedAt ? fmtT(t.resolvedAt) : '—';
+        return `<span style="color:var(--ok);font-size:11.5px;font-weight:700;">✅ ${when}</span>`;
+      }
+      if(!t.slaDeadline) return '<span style="color:var(--mut);font-size:11.5px;">—</span>';
+      const diff = new Date(t.slaDeadline).getTime() - Date.now();
+      if(diff <= 0){
+        const over = Math.abs(diff);
+        const h = Math.floor(over/3600000), m = Math.floor((over%3600000)/60000);
+        return `<span style="color:#dc2626;font-weight:800;font-size:11.5px;">⚠️ Overdue ${h>0?h+'h ':''}${m}m</span>`;
+      }
+      const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000);
+      const col = diff < 2*3600000 ? '#d97706' : 'var(--ok)';
+      return `<span style="color:${col};font-size:11.5px;font-weight:700;">⏰ ${h>0?h+'h ':''}${m}m left</span>`;
+    }
+
+    async function tkSetStatus(id, status){
+      try{
+        const r = await fetch(`/api/admin/ticket/${id}`, {
+          method:'PATCH', headers: hdrs(),
+          body: JSON.stringify({ status }),
+        });
+        const d = await r.json();
+        if(d.success){ toast(`Ticket ${status.replace('_',' ')}.`); loadTickets(); }
+        else toast(d.message || 'Failed', true);
+      } catch{ toast('Network error', true); }
+    }
+
+    function tkResolvePrompt(id, ticketId, subject){
+      // Reuse existing modal for resolution note
+      document.getElementById('modal-body').innerHTML = `
+        <p style="font-size:13.5px;color:var(--mut);margin-bottom:14px;">
+          Resolving ticket <b style="font-family:'JetBrains Mono',monospace;color:var(--steel);">${ticketId}</b><br>
+          <span style="font-weight:600;color:var(--night);">${subject}</span>
+        </p>
+        <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px;">Resolution Note (optional — shown to student)</label>
+        <textarea id="tk-resolution-note" rows="4"
+          style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:13.5px;resize:vertical;outline:none;"
+          placeholder="Describe how the issue was resolved…"></textarea>`;
+      document.getElementById('modal-btns').innerHTML = `
+        <button class="btn-mod secondary" onclick="document.getElementById('modal').classList.remove('open')">Cancel</button>
+        <button class="btn-mod ok" onclick="tkResolveConfirm('${id}')">✅ Mark Resolved & Notify Student</button>`;
+      document.getElementById('modal').classList.add('open');
+    }
+
+    async function tkResolveConfirm(id){
+      const resolution = document.getElementById('tk-resolution-note')?.value?.trim() || '';
+      document.getElementById('modal').classList.remove('open');
+      try{
+        const r = await fetch(`/api/admin/ticket/${id}`, {
+          method:'PATCH', headers: hdrs(),
+          body: JSON.stringify({ status:'resolved', resolution }),
+        });
+        const d = await r.json();
+        if(d.success){ toast('✅ Ticket resolved. Student notified by email.'); loadTickets(); }
+        else toast(d.message || 'Failed', true);
+      } catch{ toast('Network error', true); }
     }
 
     // ── ACTIVITY LOG ──────────────────────────────────────────────────────────────

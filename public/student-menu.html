@@ -252,16 +252,23 @@
     .help-chan .ic{font-size:18px;margin-bottom:6px;}
     .help-chan b{display:block;font-size:13px;color:var(--midnight);font-weight:700;}
     .help-chan span{font-size:11.5px;color:var(--mut);}
-    .tk-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;}
+    .tk-list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow-y:auto;}
     .tk-empty{padding:30px 16px;text-align:center;color:var(--mut);font-size:13px;border:1.5px dashed var(--line);border-radius:9px;}
-    .tk-item{padding:13px 15px;border:1px solid var(--line);border-radius:9px;background:#fff;}
-    .tk-item .row1{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .tk-item{padding:13px 15px;border:1px solid var(--line);border-radius:9px;background:#fff;transition:box-shadow .2s;}
+    .tk-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.07);}
+    .tk-item .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
     .tk-item .tk-subj{font-size:13.5px;font-weight:700;color:var(--midnight);}
     .tk-item .tk-meta{font-size:11px;color:var(--mut);margin-top:4px;}
     .tk-item .tk-msg{font-size:12.5px;color:var(--ink2);margin-top:8px;line-height:1.5;background:var(--soft);padding:8px 10px;border-radius:6px;}
-    .tk-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.06em;}
+    .tk-item .tk-resolution{font-size:12.5px;color:#15803d;margin-top:8px;line-height:1.5;background:#f0fdf4;border-left:3px solid #15803d;padding:8px 10px;border-radius:0 6px 6px 0;}
+    .tk-item .tk-resolution .res-label{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#15803d;margin-bottom:4px;}
+    .tk-sla{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:5px;}
+    .tk-sla.ok{color:#15803d;}
+    .tk-sla.warn{color:#d97706;}
+    .tk-sla.over{color:#dc2626;}
+    .tk-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;flex-shrink:0;}
     .tk-status.open{background:#dbeafe;color:#1e40af;}
-    .tk-status.progress{background:#fef3c7;color:#92400e;}
+    .tk-status.in_progress{background:#fef3c7;color:#92400e;}
     .tk-status.resolved{background:#dcfce7;color:#15803d;}
     .tk-status.closed{background:#e5e7eb;color:#475569;}
     .tk-id{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--steel);font-weight:700;}
@@ -1835,56 +1842,124 @@
     }catch(_){}
   }
 
-  // ── Support tickets (localStorage) ───────────────────────────────────
-  function tKey(){ return 'sm_tickets_' + (localStorage.getItem('cp_user') || 'anon'); }
-  function getTickets(){ try{ return JSON.parse(localStorage.getItem(tKey())||'[]'); }catch{ return []; } }
-  function setTickets(arr){ localStorage.setItem(tKey(), JSON.stringify(arr)); }
-  function newTicketId(){ return 'TKT-'+Date.now().toString(36).toUpperCase().slice(-6)+'-'+Math.floor(Math.random()*900+100); }
+  // ── Support tickets (API-backed) ─────────────────────────────────────
+  // No more localStorage — tickets live in the DB now.
 
   async function submitTicket(){
     const subject  = document.getElementById('tk-subject').value.trim();
     const message  = document.getElementById('tk-message').value.trim();
     const category = document.getElementById('tk-category').value;
     const priority = document.getElementById('tk-priority').value;
+
     if(subject.length < 4){ showToast('Please enter a subject (min 4 chars).', true); return; }
     if(message.length < 10){ showToast('Please describe the issue (min 10 chars).', true); return; }
-    const ticketId = newTicketId();
-    const tickets = getTickets();
-    tickets.unshift({ id: ticketId, subject, message, category, priority, status:'open', createdAt: Date.now() });
-    setTickets(tickets);
-    document.getElementById('tk-subject').value = '';
-    document.getElementById('tk-message').value = '';
-    document.getElementById('tk-priority').value = 'Normal';
-    renderTickets();
-    showToast('Ticket submitted ✓ Our team will reach out shortly.');
+
+    const btn = document.querySelector('#sec-support .btn-pay');
+    const origTxt = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Submitting…';
+
     try{
-      await fetch('/api/student/ticket', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body: JSON.stringify({subject, message, category, priority, ticketId}),
+      const res = await fetch('/api/student/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ subject, message, category, priority }),
       });
-    }catch(_){}
+      const d = await res.json();
+      if(d.success){
+        document.getElementById('tk-subject').value  = '';
+        document.getElementById('tk-message').value  = '';
+        document.getElementById('tk-priority').value = 'Normal';
+        showToast("✅ Ticket submitted! We'll respond within 12 hours.");
+        await renderTickets();   // refresh list from API
+      } else {
+        showToast(d.message || 'Failed to submit ticket.', true);
+      }
+    } catch(e){
+      showToast('Network error. Please try again.', true);
+    } finally {
+      btn.disabled = false; btn.textContent = origTxt;
+    }
   }
 
-  function renderTickets(){
-    const tickets = getTickets();
-    const list = document.getElementById('tkList');
-    document.getElementById('tk-count').textContent = tickets.length;
-    if(!tickets.length){
-      list.innerHTML = '<div class="tk-empty">No tickets yet. Use the form on the left to raise one.</div>';
-      return;
+  async function renderTickets(){
+    const list  = document.getElementById('tkList');
+    const count = document.getElementById('tk-count');
+    list.innerHTML = '<div class="tk-empty" style="border:none;">Loading…</div>';
+
+    try{
+      const res = await fetch('/api/student/tickets', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const d = await res.json();
+      if(!d.success){ list.innerHTML = '<div class="tk-empty">Could not load tickets.</div>'; return; }
+
+      const tickets = d.tickets || [];
+      count.textContent = tickets.length;
+
+      if(!tickets.length){
+        list.innerHTML = '<div class="tk-empty">No tickets yet. Use the form on the left to raise one.</div>';
+        return;
+      }
+
+      list.innerHTML = tickets.map(t => {
+        const statusLabel = { open:'Open', in_progress:'In Progress', resolved:'Resolved', closed:'Closed' }[t.status] || t.status;
+        const slaHtml = buildSlaHtml(t);
+        const resolutionHtml = (t.status === 'resolved' || t.status === 'closed') && t.resolution
+          ? `<div class="tk-resolution"><div class="res-label">✅ Resolution from support</div>${escapeHtml(t.resolution)}</div>`
+          : '';
+        return `
+          <div class="tk-item">
+            <div class="row1">
+              <div style="min-width:0;">
+                <div class="tk-subj">${escapeHtml(t.subject)}</div>
+                <div class="tk-meta">
+                  <span class="tk-id">${t.ticketId}</span>
+                  &nbsp;·&nbsp;${escapeHtml(t.category)}
+                  &nbsp;·&nbsp;${escapeHtml(t.priority)}
+                  &nbsp;·&nbsp;${timeAgo(t.createdAt)}
+                </div>
+                ${slaHtml}
+              </div>
+              <span class="tk-status ${t.status}">${statusLabel}</span>
+            </div>
+            <div class="tk-msg">${escapeHtml(t.message)}</div>
+            ${resolutionHtml}
+          </div>`;
+      }).join('');
+    } catch(e){
+      list.innerHTML = '<div class="tk-empty">Could not load tickets.</div>';
     }
-    list.innerHTML = tickets.map(t => `
-      <div class="tk-item">
-        <div class="row1">
-          <div>
-            <div class="tk-subj">${escapeHtml(t.subject)}</div>
-            <div class="tk-meta"><span class="tk-id">${t.id}</span> · ${t.category} · ${t.priority} · ${timeAgo(t.createdAt)}</div>
-          </div>
-          <span class="tk-status ${t.status==='in_progress'?'progress':t.status}">${t.status.replace('_',' ')}</span>
-        </div>
-        <div class="tk-msg">${escapeHtml(t.message)}</div>
-      </div>`).join('');
+  }
+
+  function buildSlaHtml(t){
+    // Resolved / closed — show when it was resolved
+    if(t.status === 'resolved' || t.status === 'closed'){
+      const resolvedAt = t.resolvedAt ? timeAgo(t.resolvedAt) : '';
+      return `<div class="tk-sla ok">✅ Resolved ${resolvedAt ? resolvedAt : ''}</div>`;
+    }
+    // No SLA deadline set
+    if(!t.slaDeadline) return '';
+
+    const now  = Date.now();
+    const end  = new Date(t.slaDeadline).getTime();
+    const diff = end - now;
+
+    if(diff <= 0){
+      // SLA breached
+      const over = Math.abs(diff);
+      return `<div class="tk-sla over">⚠️ SLA overdue by ${humanDur(over)} — we're on it</div>`;
+    }
+
+    // Within SLA — show countdown
+    const cls = diff < 2 * 3600 * 1000 ? 'warn' : 'ok';
+    return `<div class="tk-sla ${cls}">⏰ Response due in ${humanDur(diff)}</div>`;
+  }
+
+  function humanDur(ms){
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    if(h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
   }
 
   // ── Change password ───────────────────────────────────────────────────

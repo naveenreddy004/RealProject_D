@@ -6,6 +6,7 @@ const Registration = require('../models/Registration');
 const Attendance = require('../models/Attendance');
 const AssignmentProgress = require('../models/AssignmentProgress');
 const LearningLog = require('../models/LearningLog');
+const SupportTicket = require('../models/SupportTicket');
 const { checkAndAwardBadges } = require('../utils/badgeChecker');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
@@ -373,29 +374,78 @@ router.get('/verify/:certId', async (req, res) => {
 // ── SUBMIT SUPPORT TICKET ─────────────────────────────────────────────────────
 router.post('/ticket', authStudent, async (req, res) => {
   try {
-    const { subject, message, category, priority, ticketId } = req.body;
-    if (!subject || subject.trim().length < 4) return res.status(400).json({ success: false, message: 'Subject too short.' });
-    if (!message || message.trim().length < 10) return res.status(400).json({ success: false, message: 'Message too short.' });
+    const { subject, message, category, priority } = req.body;
+    if (!subject || subject.trim().length < 4)
+      return res.status(400).json({ success: false, message: 'Subject too short.' });
+    if (!message || message.trim().length < 10)
+      return res.status(400).json({ success: false, message: 'Please describe the issue (min 10 chars).' });
 
-    // Escape HTML to prevent injection in admin email
-    const escapeHtml = (str) => String(str)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+    // Generate unique ticket ID
+    const ticketId = 'TKT-' + Date.now().toString(36).toUpperCase().slice(-6) +
+                     '-' + Math.floor(Math.random() * 900 + 100);
 
+    // SLA = 12 hours from now
+    const slaDeadline = new Date(Date.now() + 12 * 60 * 60 * 1000);
+
+    // Get most recent registration for reference
+    const reg = await Registration.findOne({ user: req.user._id }).sort({ createdAt: -1 }).select('_id').lean();
+
+    const ticket = await SupportTicket.create({
+      ticketId,
+      user:         req.user._id,
+      reg:          reg ? reg._id : null,
+      subject:      subject.trim(),
+      message:      message.trim(),
+      category:     category  || 'General',
+      priority:     priority  || 'Normal',
+      status:       'open',
+      slaDeadline,
+      studentEmail: req.user.email,
+      studentName:  req.user.fullName,
+    });
+
+    // Fire-and-forget email (does NOT block the response)
     const { sendTicketEmail } = require('../utils/emailService');
     setImmediate(() => {
       sendTicketEmail(req.user, {
-        id: ticketId || ('TKT-' + Date.now().toString(36).toUpperCase().slice(-6)),
-        subject: escapeHtml(subject.trim()),
-        message: escapeHtml(message.trim()),
-        category: escapeHtml(category || 'General'),
-        priority: escapeHtml(priority || 'Normal'),
+        id:       ticket.ticketId,
+        subject:  ticket.subject,
+        message:  ticket.message,
+        category: ticket.category,
+        priority: ticket.priority,
       }).catch(e => console.error('Ticket email error:', e.message));
     });
 
-    res.json({ success: true, message: 'Ticket submitted. We will get back to you within 24 hours.' });
+    res.json({
+      success: true,
+      message: 'Ticket submitted. We will respond within 12 hours.',
+      ticket: {
+        _id:         ticket._id,
+        ticketId:    ticket.ticketId,
+        subject:     ticket.subject,
+        category:    ticket.category,
+        priority:    ticket.priority,
+        status:      ticket.status,
+        slaDeadline: ticket.slaDeadline,
+        createdAt:   ticket.createdAt,
+      },
+    });
   } catch (err) {
+    console.error('Ticket submit error:', err);
     res.status(500).json({ success: false, message: 'Failed to submit ticket.' });
+  }
+});
+
+// ── GET MY TICKETS ────────────────────────────────────────────────────────────
+router.get('/tickets', authStudent, async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+    res.json({ success: true, tickets });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not fetch tickets.' });
   }
 });
 

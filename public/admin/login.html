@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">
 <title>Admin Login — avRoN Tech</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -23,19 +23,30 @@ body::after{content:'';position:absolute;width:600px;height:600px;border-radius:
 .tag{display:inline-block;font-size:11px;font-weight:700;color:#608BC1;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
 h1{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;color:#fff;letter-spacing:-.4px;}
 .sub{font-size:13.5px;color:#9eb2c8;margin-top:8px;line-height:1.6;}
-.fg{margin-top:22px;}
+.fg{margin-top:22px;position:relative;}
 label{display:block;font-size:12px;color:#9eb2c8;font-weight:600;margin-bottom:7px;letter-spacing:.02em;}
-.fi{width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;color:#fff;font-size:14px;font-family:inherit;transition:all .2s;}
-.fi:focus{outline:none;border-color:#608BC1;background:#1a2e4f;box-shadow:0 0 0 3px rgba(96,139,193,.15);}
+.fi{width:100%;padding:13px 14px;background:#152844;border:1px solid #1a2c4a;border-radius:7px;color:#fff;font-size:14px;font-family:inherit;transition:border-color .2s,background .2s,box-shadow .2s;min-height:44px;}
+.fi:focus{outline:2px solid transparent;outline-offset:2px;border-color:#608BC1;background:#1a2e4f;box-shadow:0 0 0 3px rgba(96,139,193,.15);}
 .fi::placeholder{color:#5a7396;}
-.err{display:none;font-size:12.5px;color:#fda4af;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);padding:9px 12px;border-radius:7px;margin-top:14px;}
-.btn{width:100%;background:#608BC1;color:#0B192C;border:none;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;}
+.fi::-ms-reveal{display:none;}
+.pwd-wrap{position:relative;}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#7186a0;cursor:pointer;padding:4px 8px;font-size:16px;transition:color .2s;user-select:none;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+.pwd-toggle:hover{color:#9eb2c8;}
+.pwd-toggle:focus{outline:2px solid #608BC1;outline-offset:2px;border-radius:4px;}
+.caps-warn{display:none;font-size:11px;color:#fbbf24;margin-top:6px;animation:fadeIn .3s ease;}
+.err{display:none;font-size:12.5px;color:#fda4af;background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);padding:9px 12px;border-radius:7px;margin-top:14px;animation:fadeIn .3s ease;}
+.err.show{display:block;}
+.btn{width:100%;background:#608BC1;color:#0B192C;border:none;border-radius:7px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;min-height:48px;}
 .btn:hover:not(:disabled){background:#7ba0d4;}
+.btn:focus{outline:2px solid #fff;outline-offset:2px;}
 .btn:disabled{opacity:.6;cursor:not-allowed;}
 .spin{display:none;width:14px;height:14px;border:2px solid rgba(11,25,44,.3);border-top-color:#0B192C;border-radius:50%;animation:rot .7s linear infinite;}
 @keyframes rot{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 .foot{text-align:center;margin-top:22px;font-size:12.5px;color:#7186a0;}
-.foot a{color:#608BC1;text-decoration:none;}
+.foot a{color:#608BC1;text-decoration:none;transition:color .2s;}
+.foot a:hover{color:#7ba0d4;}
+.foot a:focus{outline:2px solid #608BC1;outline-offset:2px;border-radius:2px;}
 @media (max-width:480px){
   body{padding:16px;overflow-x:hidden;}
   body::after{display:none;}
@@ -55,57 +66,350 @@ label{display:block;font-size:12px;color:#9eb2c8;font-weight:600;margin-bottom:7
   <h1>Secure Login</h1>
   <p class="sub">Authenticate with your admin credentials to access the avRoN Tech admin console.</p>
 
-  <div class="fg">
-    <label>Admin Email</label>
-    <input type="email" class="fi" id="email" placeholder="admin@avrontech.in" autocomplete="username" data-testid="admin-email">
-  </div>
-  <div class="fg">
-    <label>Password</label>
-    <input type="password" class="fi" id="password" placeholder="Enter password" autocomplete="current-password" data-testid="admin-password" onkeydown="if(event.key==='Enter')login()">
-  </div>
+  <form id="loginForm" onsubmit="handleSubmit(event)" novalidate>
+    <div class="fg">
+      <label for="email">Admin Email</label>
+      <input 
+        type="email" 
+        class="fi" 
+        id="email" 
+        name="email"
+        placeholder="admin@avrontech.in" 
+        autocomplete="username" 
+        aria-label="Admin Email Address"
+        aria-required="true"
+        aria-describedby="errMsg"
+        required
+        data-testid="admin-email">
+    </div>
+    
+    <div class="fg">
+      <label for="password">Password</label>
+      <div class="pwd-wrap">
+        <input 
+          type="password" 
+          class="fi" 
+          id="password" 
+          name="password"
+          placeholder="Enter password" 
+          autocomplete="current-password" 
+          aria-label="Admin Password"
+          aria-required="true"
+          aria-describedby="errMsg capsWarn"
+          required
+          data-testid="admin-password"
+          style="padding-right:48px;">
+        <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Toggle password visibility" tabindex="0">
+          <span id="eyeIcon">👁️</span>
+        </button>
+      </div>
+      <div class="caps-warn" id="capsWarn" role="status" aria-live="polite">⚠️ Caps Lock is ON</div>
+    </div>
 
-  <div class="err" id="errMsg">—</div>
+    <div class="err" id="errMsg" role="alert" aria-live="assertive"></div>
 
-  <button class="btn" id="loginBtn" onclick="login()" data-testid="admin-login-btn">
-    <span id="btnTxt">Sign in to Admin Console →</span>
-    <div class="spin" id="spin"></div>
-  </button>
+    <button type="submit" class="btn" id="loginBtn" data-testid="admin-login-btn">
+      <span id="btnTxt">Sign in to Admin Console →</span>
+      <div class="spin" id="spin"></div>
+    </button>
+  </form>
 
   <div class="foot">
-    Not an admin? <a href="/">Back to home</a>
+    Not an admin? <a href="/" tabindex="0">Back to home</a>
   </div>
 </div>
 
 <script>
-const t = localStorage.getItem('avr_admin_token');
-if(t) location.href='/admin/dashboard';
+// ══════════════════════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIGURATION
+// ══════════════════════════════════════════════════════════════════════════════
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+const REQUEST_TIMEOUT = 30000; // 30 seconds
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-async function login(){
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const errEl = document.getElementById('errMsg');
-  errEl.style.display='none';
-  if(!email || !password){errEl.textContent='Email and password required.';errEl.style.display='block';return;}
-  const btn = document.getElementById('loginBtn'),
-        sp  = document.getElementById('spin'),
-        bt  = document.getElementById('btnTxt');
-  btn.disabled = true; sp.style.display='block'; bt.textContent='Signing in...';
-  try{
-    const res = await fetch('/api/auth/admin/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-    const d = await res.json();
-    if(d.success){
-     localStorage.setItem('avr_admin_token', d.token);
-  localStorage.setItem('avr_admin_user', JSON.stringify(d.admin));
-  location.href='/admin/dashboard';
-    }else{
-      errEl.textContent = d.message || 'Login failed.';errEl.style.display='block';
-      btn.disabled=false; sp.style.display='none'; bt.textContent='Sign in to Admin Console →';
+// ══════════════════════════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ══════════════════════════════════════════════════════════════════════════════
+let loginAttempts = 0;
+let isSubmitting = false;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TOKEN VALIDATION ON PAGE LOAD
+// ══════════════════════════════════════════════════════════════════════════════
+(async function initAuth() {
+  const token = localStorage.getItem('avr_admin_token');
+  if (!token) return;
+
+  // Validate token with backend before redirecting
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const res = await fetch('/api/admin/verify-token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.valid) {
+        window.location.href = '/admin/dashboard';
+        return;
+      }
     }
-  }catch{
-    errEl.textContent='Network error.';errEl.style.display='block';
-    btn.disabled=false; sp.style.display='none'; bt.textContent='Sign in to Admin Console →';
+    
+    // Token invalid - clear it
+    localStorage.removeItem('avr_admin_token');
+    localStorage.removeItem('avr_admin_user');
+  } catch (err) {
+    // Token validation failed - clear and continue to login
+    console.warn('Token validation failed:', err.message);
+    localStorage.removeItem('avr_admin_token');
+    localStorage.removeItem('avr_admin_user');
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BRUTE FORCE PROTECTION
+// ══════════════════════════════════════════════════════════════════════════════
+function checkLockout() {
+  const lockoutUntil = localStorage.getItem('admin_lockout_until');
+  if (lockoutUntil) {
+    const remaining = parseInt(lockoutUntil) - Date.now();
+    if (remaining > 0) {
+      const minutes = Math.ceil(remaining / 60000);
+      showError(`Too many failed attempts. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`);
+      return true;
+    } else {
+      localStorage.removeItem('admin_lockout_until');
+      loginAttempts = 0;
+    }
+  }
+  return false;
+}
+
+function recordFailedAttempt() {
+  loginAttempts++;
+  if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+    const lockoutUntil = Date.now() + LOCKOUT_DURATION;
+    localStorage.setItem('admin_lockout_until', lockoutUntil.toString());
+    showError(`Too many failed attempts. Account locked for 15 minutes.`);
+    return true;
+  }
+  return false;
+}
+
+function resetAttempts() {
+  loginAttempts = 0;
+  localStorage.removeItem('admin_lockout_until');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function showError(message) {
+  const errEl = document.getElementById('errMsg');
+  // Sanitize message to prevent XSS
+  const sanitized = String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  errEl.textContent = sanitized;
+  errEl.classList.add('show');
+  
+  // Focus management for accessibility
+  setTimeout(() => {
+    document.getElementById('email').focus();
+  }, 100);
+}
+
+function hideError() {
+  const errEl = document.getElementById('errMsg');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+}
+
+function setLoading(loading) {
+  const btn = document.getElementById('loginBtn');
+  const spin = document.getElementById('spin');
+  const btnTxt = document.getElementById('btnTxt');
+  
+  btn.disabled = loading;
+  spin.style.display = loading ? 'block' : 'none';
+  btnTxt.textContent = loading ? 'Signing in...' : 'Sign in to Admin Console →';
+  isSubmitting = loading;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VALIDATION
+// ══════════════════════════════════════════════════════════════════════════════
+function validateEmail(email) {
+  return EMAIL_REGEX.test(email);
+}
+
+function validateInputs(email, password) {
+  if (!email || !password) {
+    showError('Email and password are required.');
+    return false;
+  }
+  
+  if (!validateEmail(email)) {
+    showError('Please enter a valid email address.');
+    return false;
+  }
+  
+  if (password.length < 6) {
+    showError('Password must be at least 6 characters.');
+    return false;
+  }
+  
+  return true;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PASSWORD TOGGLE
+// ══════════════════════════════════════════════════════════════════════════════
+document.getElementById('pwdToggle').addEventListener('click', function() {
+  const pwdInput = document.getElementById('password');
+  const eyeIcon = document.getElementById('eyeIcon');
+  
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    eyeIcon.textContent = '🙈';
+    this.setAttribute('aria-label', 'Hide password');
+  } else {
+    pwdInput.type = 'password';
+    eyeIcon.textContent = '👁️';
+    this.setAttribute('aria-label', 'Show password');
+  }
+  
+  pwdInput.focus();
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CAPS LOCK DETECTION
+// ══════════════════════════════════════════════════════════════════════════════
+document.getElementById('password').addEventListener('keyup', function(e) {
+  const capsWarn = document.getElementById('capsWarn');
+  if (e.getModifierState && e.getModifierState('CapsLock')) {
+    capsWarn.style.display = 'block';
+  } else {
+    capsWarn.style.display = 'none';
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN LOGIN HANDLER
+// ══════════════════════════════════════════════════════════════════════════════
+function handleSubmit(event) {
+  event.preventDefault();
+  login();
+}
+
+async function login() {
+  // Prevent double submission
+  if (isSubmitting) return;
+  
+  // Check lockout
+  if (checkLockout()) return;
+  
+  hideError();
+  
+  // Get and trim values (CRITICAL FIX)
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  
+  // Validate inputs
+  if (!validateInputs(email, password)) return;
+  
+  setLoading(true);
+  
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  
+  try {
+    const res = await fetch('/api/auth/admin/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, password }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    const data = await res.json();
+    
+    if (data.success && data.token) {
+      // Reset attempts on success
+      resetAttempts();
+      
+      // Store token and user data atomically
+      try {
+        localStorage.setItem('avr_admin_token', data.token);
+        localStorage.setItem('avr_admin_user', JSON.stringify(data.admin));
+        
+        // Small delay to ensure storage completes
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Redirect
+        window.location.href = '/admin/dashboard';
+      } catch (storageError) {
+        console.error('Storage error:', storageError);
+        showError('Failed to save session. Please check browser storage.');
+        setLoading(false);
+      }
+    } else {
+      // Record failed attempt
+      const isLocked = recordFailedAttempt();
+      
+      if (!isLocked) {
+        const remaining = MAX_LOGIN_ATTEMPTS - loginAttempts;
+        const attemptsMsg = remaining > 0 ? ` (${remaining} attempt${remaining > 1 ? 's' : ''} remaining)` : '';
+        showError((data.message || 'Invalid credentials.') + attemptsMsg);
+      }
+      
+      setLoading(false);
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    setLoading(false);
+    
+    if (err.name === 'AbortError') {
+      showError('Request timeout. Please check your connection and try again.');
+    } else if (err.message.includes('Failed to fetch')) {
+      showError('Network error. Please check your internet connection.');
+    } else {
+      showError('An error occurred. Please try again.');
+    }
+    
+    console.error('Login error:', err);
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KEYBOARD NAVIGATION ENHANCEMENT
+// ══════════════════════════════════════════════════════════════════════════════
+document.getElementById('email').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('password').focus();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FOCUS MANAGEMENT ON PAGE LOAD
+// ══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  // Focus email field for better UX
+  setTimeout(() => {
+    document.getElementById('email').focus();
+  }, 100);
+});
 </script>
 </body>
 </html>

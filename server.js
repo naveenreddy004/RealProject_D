@@ -40,9 +40,21 @@ app.use(morgan('combined', { stream: logger.stream }));
 app.use('/api/payment/razorpay/webhook', express.raw({ type: 'application/json' }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-const registerLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: 'Too many requests. Try again later.' } });
-const loginLimiter       = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
-const payPublicLimiter   = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: { success: false, message: 'Too many payment submissions. Try again later.' } });
+const registerLimiter    = rateLimit({ 
+  windowMs: 15 * 60 * 1000, 
+  max: 10, 
+  message: { success: false, message: 'Too many registration attempts. Please try again in 15 minutes.' } 
+});
+const loginLimiter       = rateLimit({ 
+  windowMs: 15 * 60 * 1000, 
+  max: 20, 
+  message: { success: false, message: 'Too many login attempts. Please try again in 15 minutes.' }
+});
+const payPublicLimiter   = rateLimit({ 
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
+  message: { success: false, message: 'Too many payment submissions. Please wait 15 minutes before trying again.' } 
+});
 const otpLimiter         = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 3,
@@ -295,7 +307,8 @@ app.get('/admin',           (req, res) => res.redirect('/admin/login'));
 app.get('/admin/login',     (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html')));
 app.get('/refund-policy',       (req, res) => res.sendFile(path.join(__dirname, 'public', 'refund-policy.html')));
-app.get('/privacy-policy',      (req, res) => res.sendFile(path.join(__dirname, 'public', 'refund-policy.html')));
+app.get('/privacy-policy',      (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy-policy.html')));
+app.get('/terms-and-conditions', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms-and-conditions.html')));
 app.get('/course-dashboard',    (req, res) => res.sendFile(path.join(__dirname, 'public', 'course-dashboard.html')));
 
 // ── Global error handler ──────────────────────────────────────────────────────
@@ -313,6 +326,20 @@ async function seedAdmin() {
     logger.error('❌ JWT_SECRET is not set. Refusing to start.');
     process.exit(1);
   }
+  
+  // Enhanced JWT secret validation
+  if (process.env.JWT_SECRET.length < 32) {
+    logger.error(`❌ JWT_SECRET must be at least 32 characters. Current length: ${process.env.JWT_SECRET.length}`);
+    logger.error('   Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    process.exit(1);
+  }
+  
+  if (process.env.JWT_SECRET === 'change_this_to_a_random_32_char_string') {
+    logger.error('❌ JWT_SECRET is using default value. NEVER use default in production!');
+    logger.error('   Generate secure secret: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+    process.exit(1);
+  }
+  
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
     logger.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables.');
     process.exit(1);

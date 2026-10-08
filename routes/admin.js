@@ -873,4 +873,109 @@ router.delete('/broadcast/:id', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPPORT TICKETS
+// ══════════════════════════════════════════════════════════════════════════════
+const SupportTicket = require('../models/SupportTicket');
+
+// ── GET ALL TICKETS (with filters) ───────────────────────────────────────────
+router.get('/tickets', async (req, res) => {
+  try {
+    const { status, priority, page = 1, limit = 30 } = req.query;
+    const filter = {};
+    if (status   && status   !== 'all') filter.status   = status;
+    if (priority && priority !== 'all') filter.priority = priority;
+
+    const skip  = (Number(page) - 1) * Number(limit);
+    const total = await SupportTicket.countDocuments(filter);
+
+    const tickets = await SupportTicket.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .populate('user', 'fullName email')
+      .lean();
+
+    // Mark SLA broken on any overdue open/in_progress tickets
+    const now = Date.now();
+    tickets.forEach(t => {
+      if (['open', 'in_progress'].includes(t.status) && t.slaDeadline) {
+        t.slaBroken = new Date(t.slaDeadline).getTime() < now;
+      }
+    });
+
+    // Counts by status for dashboard badges
+    const [openCount, inProgressCount, resolvedCount] = await Promise.all([
+      SupportTicket.countDocuments({ status: 'open' }),
+      SupportTicket.countDocuments({ status: 'in_progress' }),
+      SupportTicket.countDocuments({ status: 'resolved' }),
+    ]);
+
+    res.json({
+      success: true,
+      tickets,
+      total,
+      counts: { open: openCount, in_progress: inProgressCount, resolved: resolvedCount },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── UPDATE TICKET STATUS (resolve / close / reopen / in_progress) ─────────────
+router.patch('/ticket/:id', async (req, res) => {
+  try {
+    const { status, resolution } = req.body;
+
+    const allowed = ['open', 'in_progress', 'resolved', 'closed'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status.' });
+    }
+
+    const ticket = await SupportTicket.findById(req.params.id).populate('user', 'fullName email');
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
+
+    const prevStatus = ticket.status;
+    ticket.status = status;
+
+    if (status === 'resolved' || status === 'closed') {
+      ticket.resolvedAt = new Date();
+      ticket.resolvedBy = req.admin?.email || 'Admin';
+      if (resolution && resolution.trim()) ticket.resolution = resolution.trim();
+    }
+
+    // If re-opened, clear resolution fields
+    if (status === 'open' || status === 'in_progress') {
+      ticket.resolvedAt  = null;
+      ticket.resolvedBy  = null;
+      if (status === 'open') ticket.resolution = null;
+    }
+
+    await ticket.save();
+
+    // Send resolution email to student when resolved
+    if (status === 'resolved' && prevStatus !== 'resolved' && ticket.user?.email) {
+      const { sendTicketResolutionEmail } = require('../utils/emailService');
+      setImmediate(() => {
+        sendTicketResolutionEmail(ticket.user, ticket)
+          .catch(e => console.error('Resolution email error:', e.message));
+      });
+
+      // Push in-app notification to student
+      try {
+        const { pushNotification } = require('../utils/notify');
+        pushNotification(ticket.user._id, {
+          type: 'success',
+          title: '✅ Support Ticket Resolved',
+          message: `Your ticket "${ticket.subject}" has been resolved.`,
+        });
+      } catch (_) {}
+    }
+
+    res.json({ success: true, ticket });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

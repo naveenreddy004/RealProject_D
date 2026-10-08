@@ -89,6 +89,58 @@ async function sendMail({ to, subject, html, attachments = [] }) {
   return gmailTransporter().sendMail({ from, to, subject, html, attachments });
 }
 
+// ── Unified send with explicit replyTo (used for support tickets) ─────────────
+async function sendMailWithReplyTo({ to, replyTo, subject, html, attachments = [] }) {
+  // Resend supports replyTo
+  if (process.env.RESEND_API_KEY) {
+    const body = {
+      from:     process.env.EMAIL_FROM || 'avRoN Tech <onboarding@resend.dev>',
+      to:       [to],
+      reply_to: replyTo,
+      subject,
+      html,
+    };
+    if (attachments.length > 0) {
+      body.attachments = attachments.map(a => ({
+        filename: a.filename,
+        content:  Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(a.content).toString('base64'),
+      }));
+    }
+    const response = await fetch('https://api.resend.com/emails', {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(`Resend API error: ${data.message || JSON.stringify(data)}`);
+    return data;
+  }
+
+  // Brevo supports replyTo
+  if (process.env.BREVO_SMTP_KEY) {
+    const replyEmail = replyTo.match(/<(.+)>/) ? replyTo.match(/<(.+)>/)[1] : replyTo;
+    const replyName  = replyTo.match(/^"?(.+?)"?\s*</) ? replyTo.match(/^"?(.+?)"?\s*</)[1].replace(/"/g, '') : '';
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method:  'POST',
+      headers: { 'api-key': process.env.BREVO_SMTP_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender:  { name: 'avRoN Tech', email: process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_USER },
+        to:      [{ email: to }],
+        replyTo: { email: replyEmail, name: replyName },
+        subject,
+        htmlContent: html,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(`Brevo API error: ${data.message || JSON.stringify(data)}`);
+    return data;
+  }
+
+  // Gmail SMTP fallback — supports replyTo natively
+  const from = `"avRoN Tech" <${process.env.EMAIL_USER}>`;
+  return gmailTransporter().sendMail({ from, to, replyTo, subject, html, attachments });
+}
+
 const BRAND = 'avRoN Tech';
 const DOMAIN = 'avRoNTech.in';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com';
@@ -303,46 +355,103 @@ async function sendRevocationEmail(user, reg, reason) {
 
 // ── 5. Support Ticket notification ───────────────────────────────────────────
 async function sendTicketEmail(user, ticket) {
-  const html = wrap(`
-    <h2>New Support Ticket — ${ticket.id}</h2>
+  const priorityColour = {
+    Urgent: '#dc2626', High: '#d97706', Normal: '#608BC1', Low: '#6b7280',
+  };
+  const colour = priorityColour[ticket.priority] || '#608BC1';
+
+  // ── Email 1: to YOUR support inbox — with student's email as Reply-To ──────
+  const adminHtml = wrap(`
+    <h2>🎫 New Support Ticket — ${ticket.id}</h2>
+    <p style="color:${colour};font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;">
+      Priority: ${ticket.priority}
+    </p>
     <div class="kv">
-      <div class="kv-row"><span class="lbl">Ticket ID</span><span class="val">${ticket.id}</span></div>
-      <div class="kv-row"><span class="lbl">Student</span><span class="val">${user.fullName}</span></div>
-      <div class="kv-row"><span class="lbl">Email</span><span class="val">${user.email}</span></div>
-      <div class="kv-row"><span class="lbl">Category</span><span class="val">${ticket.category}</span></div>
-      <div class="kv-row"><span class="lbl">Priority</span><span class="val">${ticket.priority}</span></div>
-      <div class="kv-row"><span class="lbl">Subject</span><span class="val">${ticket.subject}</span></div>
+      <div class="kv-row"><span class="lbl">🎫 Ticket ID</span><span class="val" style="font-family:monospace;">${ticket.id}</span></div>
+      <div class="kv-row"><span class="lbl">👤 Student</span><span class="val">${user.fullName}</span></div>
+      <div class="kv-row"><span class="lbl">📧 Email</span><span class="val"><a href="mailto:${user.email}" style="color:#608BC1;">${user.email}</a></span></div>
+      <div class="kv-row"><span class="lbl">📂 Category</span><span class="val">${ticket.category}</span></div>
+      <div class="kv-row"><span class="lbl">🚦 Priority</span><span class="val" style="color:${colour};font-weight:800;">${ticket.priority}</span></div>
+      <div class="kv-row"><span class="lbl">📋 Subject</span><span class="val">${ticket.subject}</span></div>
+      <div class="kv-row"><span class="lbl">⏰ SLA Deadline</span><span class="val" style="color:#dc2626;">Respond within 12 hours</span></div>
     </div>
-    <p><b>Message:</b></p>
-    <div style="background:#f7f9fc;border-left:3px solid #608BC1;padding:14px 18px;border-radius:0 6px 6px 0;font-size:14px;color:#1a1a1a;line-height:1.7;white-space:pre-wrap;">${ticket.message}</div>
-    <hr class="divider">
-    <p class="muted">Reply directly to <b>${user.email}</b> to respond to this student.</p>
+    <p style="font-weight:700;margin-top:16px;color:#0B192C;">Message from student:</p>
+    <div style="background:#f7f9fc;border-left:4px solid ${colour};padding:16px 18px;border-radius:0 8px 8px 0;font-size:14px;color:#1a1a1a;line-height:1.8;white-space:pre-wrap;margin-bottom:16px;">${ticket.message}</div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;">
+      💡 <b>To reply:</b> Just hit <b>Reply</b> in your email client — it goes directly to <b>${user.email}</b>. Or resolve the ticket from the <a href="${process.env.BASE_URL || 'https://avrontech.in'}/admin/dashboard" style="color:#608BC1;">Admin Panel → Tickets</a>.
+    </div>
   `);
-  // Send to support inbox
-  await sendMail({
-    to: process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com',
-    subject: `[${ticket.priority}] Support Ticket ${ticket.id} — ${ticket.subject}`,
-    html,
+
+  // KEY FIX: replyTo is set to the STUDENT's email so hitting Reply goes to them
+  await sendMailWithReplyTo({
+    to:      process.env.SUPPORT_EMAIL || 'support.avrontech@gmail.com',
+    replyTo: `"${user.fullName}" <${user.email}>`,
+    subject: `[${ticket.priority}] 🎫 ${ticket.id} — ${ticket.subject}`,
+    html:    adminHtml,
   });
-  // Also confirm to student
+
+  // ── Email 2: confirmation to student ─────────────────────────────────────
+  const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
   const confirmHtml = wrap(`
-    <h2>We received your ticket</h2>
-    <p>Hi ${user.fullName}, your support ticket has been submitted successfully. Our team will get back to you within 24 hours.</p>
+    <h2>✅ We received your ticket!</h2>
+    <p style="color:#608BC1;font-size:12px;font-weight:600;letter-spacing:.04em;margin-bottom:16px;">avRoN Technologies — Support</p>
+    <p>Hi <b>${user.fullName}</b>, your support request has been received. Our team will get back to you <b>within 12 hours</b>.</p>
     <div class="kv">
-      <div class="kv-row"><span class="lbl">Ticket ID</span><span class="val">${ticket.id}</span></div>
-      <div class="kv-row"><span class="lbl">Subject</span><span class="val">${ticket.subject}</span></div>
-      <div class="kv-row"><span class="lbl">Priority</span><span class="val">${ticket.priority}</span></div>
+      <div class="kv-row"><span class="lbl">🎫 Ticket ID</span><span class="val" style="font-family:monospace;">${ticket.id}</span></div>
+      <div class="kv-row"><span class="lbl">📋 Subject</span><span class="val">${ticket.subject}</span></div>
+      <div class="kv-row"><span class="lbl">📂 Category</span><span class="val">${ticket.category}</span></div>
+      <div class="kv-row"><span class="lbl">🚦 Priority</span><span class="val">${ticket.priority}</span></div>
+      <div class="kv-row"><span class="lbl">⏰ Response By</span><span class="val" style="color:#15803d;font-weight:800;">Within 12 hours</span></div>
     </div>
-    <p class="muted">For urgent issues you can also email us directly at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
+    <p>You can track the status of your ticket anytime from your <b>Support & Help Desk</b> tab in the portal.</p>
+    <p class="muted">Need faster help? Email us directly at <a href="mailto:${SUPPORT_EMAIL}" style="color:#608BC1;">${SUPPORT_EMAIL}</a></p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${BASE}/student-menu.html" class="cta">Go to Portal →</a>
+    </div>
     <hr class="divider">
     <div class="signoff">Regards,<br><b>avRoN Tech Support Team</b></div>
   `);
+
   await sendMail({
-    to: user.email,
-    subject: `Ticket Received: ${ticket.subject} [${ticket.id}]`,
-    html: confirmHtml,
+    to:      user.email,
+    subject: `✅ Ticket Received [${ticket.id}] — ${ticket.subject}`,
+    html:    confirmHtml,
   });
-  console.log(`✉️ Ticket ${ticket.id} emailed to support and confirmed to ${user.email}`);
+
+  console.log(`✉️ Ticket ${ticket.id} → support inbox (reply-to: ${user.email}) + confirmed to student`);
+}
+
+// ── 5b. Ticket Resolution email (to student when admin resolves) ─────────────
+async function sendTicketResolutionEmail(user, ticket) {
+  const BASE = process.env.BASE_URL || `https://${DOMAIN}`;
+  const html = wrap(`
+    <h2>✅ Your ticket has been resolved!</h2>
+    <p style="color:#15803d;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;">Status: Resolved</p>
+    <p>Hi <b>${user.fullName}</b>, great news — our support team has resolved your ticket.</p>
+    <div class="kv">
+      <div class="kv-row"><span class="lbl">🎫 Ticket ID</span><span class="val" style="font-family:monospace;">${ticket.ticketId}</span></div>
+      <div class="kv-row"><span class="lbl">📋 Subject</span><span class="val">${ticket.subject}</span></div>
+      <div class="kv-row"><span class="lbl">🕐 Resolved At</span><span class="val">${fmt(ticket.resolvedAt || new Date())}</span></div>
+      ${ticket.resolvedBy ? `<div class="kv-row"><span class="lbl">👤 Resolved By</span><span class="val">${ticket.resolvedBy}</span></div>` : ''}
+    </div>
+    ${ticket.resolution ? `
+    <p style="font-weight:700;margin-top:16px;color:#0B192C;">Resolution Note:</p>
+    <div style="background:#f0fdf4;border-left:4px solid #15803d;padding:16px 18px;border-radius:0 8px 8px 0;font-size:14px;color:#1a1a1a;line-height:1.8;white-space:pre-wrap;margin-bottom:16px;">${ticket.resolution}</div>
+    ` : ''}
+    <p>If this didn't fully resolve your issue, please raise a new ticket from your portal and we'll look into it again.</p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${BASE}/student-menu.html" class="cta">Back to Portal →</a>
+    </div>
+    <hr class="divider">
+    <div class="signoff">Thanks for your patience,<br><b>avRoN Tech Support Team</b></div>
+  `);
+
+  await sendMail({
+    to:      user.email,
+    subject: `✅ Resolved [${ticket.ticketId}] — ${ticket.subject}`,
+    html,
+  });
+  console.log(`✉️ Resolution email sent to ${user.email} for ticket ${ticket.ticketId}`);
 }
 
 // ── 7. Week Completion ────────────────────────────────────────────────────────
@@ -391,6 +500,8 @@ module.exports = {
   sendOTPEmail,
   sendPasswordResetOTPEmail,
   sendTicketEmail,
+  sendTicketResolutionEmail,
   sendRevocationEmail,
   sendWeekCompletionEmail,
+  sendMailWithReplyTo,
 };

@@ -252,27 +252,87 @@ router.post('/change-password-verify', authStudent, async (req, res) => {
 router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required.' });
+    
+    // Trim inputs to prevent whitespace issues
+    const trimmedEmail = email?.trim();
+    const trimmedPassword = password?.trim();
+    
+    if (!trimmedEmail || !trimmedPassword) {
+      return res.status(400).json({ success: false, message: 'Email and password required.' });
+    }
 
-    const user = await User.findOne({ email: email.toLowerCase(), isAdmin: true });
-    if (!user || !user.isActive) return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+    // Find admin user - check isAdmin FIRST before expensive operations
+    const user = await User.findOne({ email: trimmedEmail.toLowerCase(), isAdmin: true });
+    
+    // Check account status BEFORE password comparison (timing attack prevention)
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+    }
+    
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: 'Admin account is disabled.' });
+    }
 
-    const match = await user.comparePassword(password);
-    if (!match) return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+    // Now do expensive password comparison
+    const match = await user.comparePassword(trimmedPassword);
+    if (!match) {
+      return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+    }
 
+    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    const token = generateToken(user._id, { isAdmin: true });
+    // Generate token with shorter expiry for admin (3 days instead of 7)
+    const token = generateToken(user._id, { isAdmin: true, exp: Math.floor(Date.now() / 1000) + (3 * 24 * 60 * 60) });
+    
     res.json({
       success: true,
       message: 'Welcome back, admin.',
       token,
-      admin: { fullName: user.fullName, email: user.email },
+      admin: { 
+        id: user._id,
+        fullName: user.fullName, 
+        email: user.email 
+      },
     });
   } catch (err) {
     console.error('Admin login error:', err);
     res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+// ── ADMIN TOKEN VERIFICATION ──────────────────────────────────────────────────
+router.post('/admin/verify-token', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ success: false, valid: false, message: 'No token provided.' });
+    }
+
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if token has admin flag
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ success: false, valid: false, message: 'Not an admin token.' });
+    }
+
+    // Verify user still exists and is active admin
+    const user = await User.findById(decoded.id).select('isAdmin isActive');
+    
+    if (!user || !user.isAdmin || !user.isActive) {
+      return res.status(403).json({ success: false, valid: false, message: 'Admin privileges revoked.' });
+    }
+
+    res.json({ success: true, valid: true, admin: { id: user._id } });
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, valid: false, message: 'Invalid or expired token.' });
+    }
+    console.error('Token verification error:', err);
+    res.status(500).json({ success: false, valid: false, message: 'Verification failed.' });
   }
 });
 
